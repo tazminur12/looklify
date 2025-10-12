@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CompactThemeToggle } from '../components/ThemeToggle';
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -206,8 +205,6 @@ export default function DashboardLayout({ children }) {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
-              {/* Theme Toggle */}
-              <CompactThemeToggle />
 
               {/* Profile dropdown */}
               <div className="relative">
