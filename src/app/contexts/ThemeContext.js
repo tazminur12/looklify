@@ -18,21 +18,31 @@ export const ThemeProvider = ({ children }) => {
 
   // Load theme from localStorage on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('looklify-theme');
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else {
-      // Check system preference
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      setTheme(systemTheme);
+    try {
+      const savedTheme = localStorage.getItem('looklify-theme');
+      if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+        setTheme(savedTheme);
+      } else {
+        // Check system preference
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        setTheme(systemTheme);
+      }
+    } catch (error) {
+      console.warn('Failed to load theme from localStorage:', error);
+      setTheme('light'); // Default to light theme
+    } finally {
+      setMounted(true);
     }
-    setMounted(true);
   }, []);
 
   // Save theme to localStorage and apply to document
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem('looklify-theme', theme);
+      try {
+        localStorage.setItem('looklify-theme', theme);
+      } catch (error) {
+        console.warn('Failed to save theme to localStorage:', error);
+      }
       
       // Apply theme class to html element for Tailwind dark mode
       if (theme === 'dark') {
@@ -52,17 +62,21 @@ export const ThemeProvider = ({ children }) => {
   // Listen for system theme changes
   useEffect(() => {
     if (mounted) {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = (e) => {
-        // Only auto-switch if user hasn't manually set a theme
-        const savedTheme = localStorage.getItem('looklify-theme');
-        if (!savedTheme) {
-          setTheme(e.matches ? 'dark' : 'light');
-        }
-      };
+      try {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (e) => {
+          // Only auto-switch if user hasn't manually set a theme
+          const savedTheme = localStorage.getItem('looklify-theme');
+          if (!savedTheme) {
+            setTheme(e.matches ? 'dark' : 'light');
+          }
+        };
 
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
+      } catch (error) {
+        console.warn('Failed to set up system theme listener:', error);
+      }
     }
   }, [mounted]);
 
