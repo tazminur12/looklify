@@ -34,7 +34,6 @@ module.exports = {
     themes: [
       {
         light: {
-          ...require("daisyui/src/theming/themes")["light"],
           primary: "#8b5cf6",
           secondary: "#ec4899",
           accent: "#f59e0b",
@@ -48,7 +47,6 @@ module.exports = {
           error: "#ef4444",
         },
         dark: {
-          ...require("daisyui/src/theming/themes")["dark"],
           primary: "#a78bfa",
           secondary: "#f472b6",
           accent: "#fbbf24",
