@@ -33,7 +33,13 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     if (mounted) {
       localStorage.setItem('looklify-theme', theme);
-      document.documentElement.setAttribute('data-theme', theme);
+      
+      // Apply theme class to html element for Tailwind dark mode
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
       
       // Update meta theme-color for mobile browsers
       const metaThemeColor = document.querySelector('meta[name="theme-color"]');
