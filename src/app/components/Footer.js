@@ -3,10 +3,10 @@ import Link from 'next/link';
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Company Info */}
-          <div className="space-y-4">
+          <div className="space-y-4 sm:col-span-2 lg:col-span-1">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-lg">L</span>
@@ -15,7 +15,7 @@ export default function Footer() {
                 LOOKLIFY
               </span>
             </div>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm leading-relaxed">
               Your premium destination for beauty and skincare products. Discover the latest trends and premium quality products.
             </p>
             <div className="flex space-x-4">
@@ -45,40 +45,40 @@ export default function Footer() {
           {/* Quick Links */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Quick Links</h3>
-            <ul className="space-y-2">
-              <li><Link href="/about" className="text-gray-400 hover:text-purple-400 transition-colors">About Us</Link></li>
-              <li><Link href="/contact" className="text-gray-400 hover:text-purple-400 transition-colors">Contact</Link></li>
-              <li><Link href="/blog" className="text-gray-400 hover:text-purple-400 transition-colors">Blog</Link></li>
-              <li><Link href="/careers" className="text-gray-400 hover:text-purple-400 transition-colors">Careers</Link></li>
-              <li><Link href="/press" className="text-gray-400 hover:text-purple-400 transition-colors">Press</Link></li>
+            <ul className="space-y-3">
+              <li><Link href="/about" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">About Us</Link></li>
+              <li><Link href="/contact" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">Contact</Link></li>
+              <li><Link href="/blog" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">Blog</Link></li>
+              <li><Link href="/careers" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">Careers</Link></li>
+              <li><Link href="/press" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">Press</Link></li>
             </ul>
           </div>
 
           {/* Customer Service */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Customer Service</h3>
-            <ul className="space-y-2">
-              <li><Link href="/help" className="text-gray-400 hover:text-purple-400 transition-colors">Help Center</Link></li>
-              <li><Link href="/shipping" className="text-gray-400 hover:text-purple-400 transition-colors">Shipping Info</Link></li>
-              <li><Link href="/returns" className="text-gray-400 hover:text-purple-400 transition-colors">Returns</Link></li>
-              <li><Link href="/size-guide" className="text-gray-400 hover:text-purple-400 transition-colors">Size Guide</Link></li>
-              <li><Link href="/track-order" className="text-gray-400 hover:text-purple-400 transition-colors">Track Your Order</Link></li>
+            <ul className="space-y-3">
+              <li><Link href="/help" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">Help Center</Link></li>
+              <li><Link href="/shipping" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">Shipping Info</Link></li>
+              <li><Link href="/returns" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">Returns</Link></li>
+              <li><Link href="/size-guide" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">Size Guide</Link></li>
+              <li><Link href="/track-order" className="text-gray-400 hover:text-purple-400 transition-colors text-sm block py-1">Track Your Order</Link></li>
             </ul>
           </div>
 
           {/* Newsletter */}
-          <div className="space-y-4">
+          <div className="space-y-4 sm:col-span-2 lg:col-span-1">
             <h3 className="text-lg font-semibold">Stay Updated</h3>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm leading-relaxed">
               Subscribe to our newsletter for the latest beauty trends and exclusive offers.
             </p>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 text-sm"
               />
-              <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 font-medium">
+              <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 font-medium text-sm">
                 Subscribe
               </button>
             </div>
@@ -86,27 +86,30 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-gray-800 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
-              <p className="text-gray-400 text-sm">
+        <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8">
+          <div className="flex flex-col space-y-6 sm:space-y-4">
+            {/* Copyright and Links */}
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+              <p className="text-gray-400 text-sm text-center sm:text-left">
                 © 2024 Looklify. All rights reserved.
               </p>
-              <div className="flex space-x-6">
-                <Link href="/privacy" className="text-gray-400 hover:text-purple-400 transition-colors text-sm">
+              <div className="flex flex-wrap justify-center sm:justify-end gap-4 sm:gap-6">
+                <Link href="/privacy" className="text-gray-400 hover:text-purple-400 transition-colors text-sm py-1">
                   Privacy Policy
                 </Link>
-                <Link href="/terms" className="text-gray-400 hover:text-purple-400 transition-colors text-sm">
+                <Link href="/terms" className="text-gray-400 hover:text-purple-400 transition-colors text-sm py-1">
                   Terms of Service
                 </Link>
-                <Link href="/cookies" className="text-gray-400 hover:text-purple-400 transition-colors text-sm">
+                <Link href="/cookies" className="text-gray-400 hover:text-purple-400 transition-colors text-sm py-1">
                   Cookie Policy
                 </Link>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            
+            {/* Payment Methods */}
+            <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4">
               <span className="text-gray-400 text-sm">We accept:</span>
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap justify-center gap-2">
                 <div className="w-8 h-6 bg-blue-600 rounded flex items-center justify-center">
                   <span className="text-white text-xs font-bold">V</span>
                 </div>

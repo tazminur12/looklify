@@ -16,19 +16,19 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Image Background */}
-      <section className="relative h-[70vh] w-full">
+      <section className="relative h-[60vh] sm:h-[65vh] lg:h-[70vh] w-full">
         <ImageSlider />
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Looklify?</h2>
-            <p className="text-lg text-gray-600">Experience the difference with our premium beauty solutions</p>
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Why Choose Looklify?</h2>
+            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">Experience the difference with our premium beauty solutions</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div className="text-center group">
               <div className="w-20 h-20 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
