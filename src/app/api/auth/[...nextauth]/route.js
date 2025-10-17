@@ -8,6 +8,7 @@ import User from '../../../../models/User';
 
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -69,13 +70,19 @@ export const authOptions = {
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
+    async jwt({ token, user, account, trigger }) {
+      // Handle JWT decryption errors gracefully
+      try {
+        if (user) {
+          token.id = user.id;
+          token.role = user.role;
+        }
       
       // Handle OAuth providers (Google, GitHub)
       if (account && (account.provider === 'google' || account.provider === 'github')) {
@@ -112,13 +119,32 @@ export const authOptions = {
       }
       
       return token;
+      } catch (error) {
+        console.error('JWT callback error:', error);
+        // Return a minimal token to prevent complete failure
+        return {
+          ...token,
+          error: 'JWT_DECRYPTION_ERROR'
+        };
+      }
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
+      try {
+        if (token) {
+          session.user.id = token.id;
+          session.user.role = token.role;
+          
+          // Handle JWT decryption errors
+          if (token.error === 'JWT_DECRYPTION_ERROR') {
+            console.warn('JWT decryption error detected, clearing session');
+            return null;
+          }
+        }
+        return session;
+      } catch (error) {
+        console.error('Session callback error:', error);
+        return null;
       }
-      return session;
     },
   },
   pages: {

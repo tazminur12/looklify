@@ -9,9 +9,7 @@ export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  const validateEmail = (email) => {
-    return /\S+@\S+\.\S+/.test(email);
-  };
+  const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,19 +19,25 @@ export default function ForgotPasswordPage() {
       setError('Email is required');
       return;
     }
-
     if (!validateEmail(email)) {
       setError('Please enter a valid email address');
       return;
     }
 
     setIsLoading(true);
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error || 'Something went wrong. Please try again.');
+        return;
+      }
       setIsSubmitted(true);
-    } catch (error) {
+    } catch (err) {
       setError('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -61,25 +65,15 @@ export default function ForgotPasswordPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Check your email</h2>
             <p className="text-gray-600 mb-6">
               We&apos;ve sent a password reset link to <strong>{email}</strong>
             </p>
             <p className="text-sm text-gray-500 mb-6">
               Didn&apos;t receive the email? Check your spam folder or{' '}
-              <button
-                onClick={() => setIsSubmitted(false)}
-                className="text-purple-600 hover:text-purple-500 font-medium"
-              >
-                try again
-              </button>
+              <button onClick={() => setIsSubmitted(false)} className="text-purple-600 hover:text-purple-500 font-medium">try again</button>
             </p>
-            
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center w-full py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200"
-            >
+            <Link href="/login" className="inline-flex items-center justify-center w-full py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200">
               Back to Sign In
             </Link>
           </div>
@@ -91,30 +85,21 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        {/* Header */}
         <div className="text-center">
           <Link href="/" className="flex items-center justify-center space-x-3 mb-6">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-xl">L</span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              LOOKLIFY
-            </span>
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">LOOKLIFY</span>
           </Link>
           <h2 className="text-3xl font-bold text-gray-900">Forgot your password?</h2>
-          <p className="mt-2 text-gray-600">
-            No worries, we&apos;ll send you reset instructions
-          </p>
+          <p className="mt-2 text-gray-600">No worries, we&apos;ll send you reset instructions</p>
         </div>
 
-        {/* Forgot Password Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
-              </label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,18 +113,13 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                    error ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${error ? 'border-red-300' : 'border-gray-300'}`}
                   placeholder="Enter your email address"
                 />
               </div>
-              {error && (
-                <p className="mt-1 text-sm text-red-600">{error}</p>
-              )}
+              {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -158,26 +138,19 @@ export default function ForgotPasswordPage() {
               )}
             </button>
 
-            {/* Back to Login Link */}
             <div className="text-center">
-              <Link href="/login" className="text-sm text-purple-600 hover:text-purple-500 font-medium">
-                ← Back to Sign In
-              </Link>
+              <Link href="/login" className="text-sm text-purple-600 hover:text-purple-500 font-medium">← Back to Sign In</Link>
             </div>
           </form>
         </div>
 
-        {/* Additional Links */}
         <div className="text-center space-y-2">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-            ← Back to homepage
-          </Link>
-          <p className="text-xs text-gray-400">
-            Remember your password?{' '}
-            <Link href="/login" className="hover:text-gray-600">Sign in here</Link>
-          </p>
+          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">← Back to homepage</Link>
+          <p className="text-xs text-gray-400">Remember your password? <Link href="/login" className="hover:text-gray-600">Sign in here</Link></p>
         </div>
       </div>
     </div>
   );
 }
+
+
