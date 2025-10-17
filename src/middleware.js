@@ -6,6 +6,13 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
 
+    // Dashboard routes - Only Super Admin and Admin
+    if (pathname.startsWith('/dashboard')) {
+      if (!token || !['Super Admin', 'Admin'].includes(token.role)) {
+        return NextResponse.redirect(new URL('/unauthorized', req.url));
+      }
+    }
+
     // Admin routes
     if (pathname.startsWith('/admin')) {
       if (!token || !['Super Admin', 'Admin'].includes(token.role)) {

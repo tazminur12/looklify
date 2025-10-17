@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import AuthSessionProvider from "./providers/SessionProvider";
+import { AuthProvider } from "./contexts/AuthContext";
 import LayoutWrapper from "./components/LayoutWrapper";
 
 const geistSans = Geist({
@@ -44,11 +45,13 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 transition-colors duration-300`}
       >
         <AuthSessionProvider>
-          <div className="min-h-screen flex flex-col bg-white transition-colors duration-300">
-            <LayoutWrapper>
-              {children}
-            </LayoutWrapper>
-          </div>
+          <AuthProvider>
+            <div className="min-h-screen flex flex-col bg-white transition-colors duration-300">
+              <LayoutWrapper>
+                {children}
+              </LayoutWrapper>
+            </div>
+          </AuthProvider>
         </AuthSessionProvider>
       </body>
     </html>

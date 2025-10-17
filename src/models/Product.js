@@ -279,7 +279,6 @@ ProductSchema.virtual('stockStatus').get(function() {
 // Indexes for better performance
 ProductSchema.index({ name: 'text', description: 'text', tags: 'text' });
 ProductSchema.index({ category: 1, status: 1 });
-ProductSchema.index({ sku: 1 });
 ProductSchema.index({ price: 1 });
 ProductSchema.index({ rating: 1 });
 ProductSchema.index({ createdAt: -1 });
