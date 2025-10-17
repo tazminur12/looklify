@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../auth/[...nextauth]/route';
 import User from '../../../../../models/User';
-import { connectDB } from '../../../../../lib/mongodb';
+import connectDB from '../../../../../lib/db';
 import { ROLES } from '../../../../../lib/auth';
 
 export async function PATCH(request, { params }) {
