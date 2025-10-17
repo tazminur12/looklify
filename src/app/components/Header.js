@@ -279,12 +279,12 @@ export default function Header() {
       {/* Desktop Navigation Bar */}
       <nav className="hidden md:block bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center space-x-2 lg:space-x-4 py-2 lg:py-3">
+          <div className="flex items-center justify-center space-x-1 lg:space-x-2 py-1 lg:py-1.5">
             {navigationItems.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-white hover:text-purple-100 font-semibold transition-all duration-200 text-sm whitespace-nowrap px-3 py-2 rounded-lg hover:bg-purple-500/30 hover:shadow-sm"
+                className="text-white hover:text-purple-100 font-medium transition-all duration-200 text-xs whitespace-nowrap px-2 py-1 rounded-md hover:bg-purple-500/30 hover:shadow-sm"
               >
                 {item.name}
               </Link>
