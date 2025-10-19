@@ -11,6 +11,8 @@ export const authOptions = {
   debug: process.env.NODE_ENV === 'development',
   // Ensure NEXTAUTH_URL is properly set for production
   ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
+  // Add trustHost for Vercel deployment
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -74,6 +76,11 @@ export const authOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
+    // Add secure cookie settings for production
+    ...(process.env.NODE_ENV === 'production' && {
+      secure: true,
+      sameSite: 'lax',
+    }),
   },
   jwt: {
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -89,6 +96,17 @@ export const authOptions = {
         if (user) {
           token.id = user.id;
           token.role = user.role;
+        }
+        
+        // Debug logging for production
+        if (process.env.NODE_ENV === 'production') {
+          console.log('JWT callback:', {
+            hasToken: !!token,
+            hasUser: !!user,
+            userRole: user?.role,
+            tokenRole: token?.role,
+            trigger
+          });
         }
       
       // Handle OAuth providers (Google, GitHub)
