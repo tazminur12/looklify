@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
+import { useCart } from '../contexts/CartContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { data: session, status } = useSession();
+  const { getCartCount } = useCart();
   const profileMenuRef = useRef(null);
 
   // Close profile menu when clicking outside
@@ -117,7 +119,7 @@ export default function Header() {
                 <svg className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7V6a3 3 0 116 0v1m-9 0h12l-1.2 11.04A2 2 0 0114.81 21H9.19a2 2 0 01-1.99-1.96L7 7z" />
                 </svg>
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold text-[10px]">0</span>
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold text-[10px]">{getCartCount()}</span>
               </div>
               <span className="hidden sm:block text-sm font-semibold">Cart</span>
             </Link>
@@ -170,37 +172,19 @@ export default function Header() {
                       >
                         Orders
                       </Link>
-                      <Link
-                        href="/settings"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
-                        onClick={() => setIsProfileMenuOpen(false)}
-                      >
-                        Settings
-                      </Link>
                       
                       {/* Admin Links */}
                       {session.user?.role && ['Super Admin', 'Admin'].includes(session.user.role) && (
                         <>
                           <div className="border-t border-gray-100 my-1"></div>
                           <Link
-                            href="/admin"
+                            href="/dashboard"
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                             onClick={() => setIsProfileMenuOpen(false)}
                           >
                             Admin Panel
                           </Link>
                         </>
-                      )}
-                      
-                      {/* Staff Links */}
-                      {session.user?.role && ['Super Admin', 'Admin', 'Staff'].includes(session.user.role) && (
-                        <Link
-                          href="/staff"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                        >
-                          Staff Panel
-                        </Link>
                       )}
                       
                       <div className="border-t border-gray-100 my-1"></div>

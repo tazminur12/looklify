@@ -4,9 +4,11 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useCart } from '../contexts/CartContext';
 
 function ShopContent() {
   const searchParams = useSearchParams();
+  const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -91,8 +93,10 @@ function ShopContent() {
     return 0;
   };
 
-  const handleAddToCart = (productId) => {
-    console.log('Adding to cart:', productId);
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    // You can add a toast notification here
+    alert(`${product.name} কার্টে যোগ করা হয়েছে!`);
   };
 
   const handleBuyNow = (productId) => {
@@ -354,7 +358,7 @@ function ShopContent() {
 
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => handleAddToCart(product._id)}
+                            onClick={() => handleAddToCart(product)}
                             className="flex-1 px-3 py-2 text-sm border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50"
                           >
                             কার্টে যোগ করুন

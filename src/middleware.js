@@ -18,7 +18,10 @@ export default withAuth(
 
     // Dashboard routes - Only Super Admin and Admin
     if (pathname.startsWith('/dashboard')) {
-      if (!token || !['Super Admin', 'Admin'].includes(token.role)) {
+      if (!token) {
+        return NextResponse.redirect(new URL('/login', req.url));
+      }
+      if (!['Super Admin', 'Admin'].includes(token.role)) {
         return NextResponse.redirect(new URL('/unauthorized', req.url));
       }
     }

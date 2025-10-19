@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import AuthSessionProvider from "./providers/SessionProvider";
 import { AuthProvider } from "./contexts/AuthContext";
+import { CartProvider } from "./contexts/CartContext";
 import LayoutWrapper from "./components/LayoutWrapper";
 
 const geistSans = Geist({
@@ -46,11 +47,13 @@ export default function RootLayout({ children }) {
       >
         <AuthSessionProvider>
           <AuthProvider>
-            <div className="min-h-screen flex flex-col bg-white transition-colors duration-300">
-              <LayoutWrapper>
-                {children}
-              </LayoutWrapper>
-            </div>
+            <CartProvider>
+              <div className="min-h-screen flex flex-col bg-white transition-colors duration-300">
+                <LayoutWrapper>
+                  {children}
+                </LayoutWrapper>
+              </div>
+            </CartProvider>
           </AuthProvider>
         </AuthSessionProvider>
       </body>

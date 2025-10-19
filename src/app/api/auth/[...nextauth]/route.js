@@ -9,7 +9,7 @@ import User from '../../../../models/User';
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
-  // Add NEXTAUTH_URL for production
+  // Ensure NEXTAUTH_URL is properly set for production
   ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
   providers: [
     GoogleProvider({
@@ -77,10 +77,10 @@ export const authOptions = {
   },
   jwt: {
     maxAge: 30 * 24 * 60 * 60, // 30 days
-    // Add encryption for production
-    ...(process.env.NODE_ENV === 'production' && {
-      encryption: true,
-    }),
+    // Remove encryption in production to avoid issues
+    // ...(process.env.NODE_ENV === 'production' && {
+    //   encryption: true,
+    // }),
   },
   callbacks: {
     async jwt({ token, user, account, trigger }) {
@@ -150,7 +150,8 @@ export const authOptions = {
         return session;
       } catch (error) {
         console.error('Session callback error:', error);
-        return null;
+        // Return session instead of null to prevent logout
+        return session;
       }
     },
   },

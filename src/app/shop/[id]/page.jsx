@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useCart } from '../../contexts/CartContext';
 
 export default function ProductDetailsPage() {
   const params = useParams();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -54,8 +56,8 @@ export default function ProductDetailsPage() {
   };
 
   const handleAddToCart = () => {
-    // Add to cart functionality
-    console.log('Adding to cart:', { productId: product._id, quantity });
+    addToCart(product);
+    alert(`${product.name} কার্টে যোগ করা হয়েছে!`);
   };
 
   const handleBuyNow = () => {
