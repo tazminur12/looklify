@@ -1,115 +1,81 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
-import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// POST /api/upload - Upload image to Cloudinary
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    console.log('Upload API called');
     
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Check if Cloudinary is configured
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_UPLOAD_PRESET) {
+      console.error('Cloudinary not configured');
+      return NextResponse.json({ 
+        error: 'Image upload service not configured. Please contact administrator.' 
+      }, { status: 500 });
     }
 
     const formData = await request.formData();
     const file = formData.get('file');
-    const folder = formData.get('folder') || 'looklify';
-    const type = formData.get('type') || 'image'; // 'image' or 'icon'
-
+    
+    console.log('File received:', file ? file.name : 'No file');
+    
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 });
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'Only image files are allowed' }, { status: 400 });
+    }
+
+    // Create FormData for Cloudinary
+    const cloudinaryFormData = new FormData();
+    cloudinaryFormData.append('file', file);
+    cloudinaryFormData.append('upload_preset', process.env.CLOUDINARY_UPLOAD_PRESET);
+
+    console.log('Uploading to Cloudinary...');
 
     // Upload to Cloudinary
-    const uploadOptions = {
-      folder: `${folder}/${type}s`,
-      resource_type: 'auto',
-      transformation: type === 'icon' ? [
-        { width: 200, height: 200, crop: 'fill', quality: 'auto' }
-      ] : [
-        { width: 1200, height: 800, crop: 'limit', quality: 'auto' }
-      ]
-    };
-
-    const result = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        uploadOptions,
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      ).end(buffer);
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        url: result.secure_url,
-        publicId: result.public_id,
-        width: result.width,
-        height: result.height,
-        format: result.format
-      },
-      message: 'File uploaded successfully'
-    });
-
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    return NextResponse.json(
-      { error: 'Failed to upload file', details: error.message },
-      { status: 500 }
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: 'POST',
+        body: cloudinaryFormData,
+      }
     );
-  }
-}
 
-// DELETE /api/upload - Delete image from Cloudinary
-export async function DELETE(request) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.log('Cloudinary response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Cloudinary error:', errorText);
+      return NextResponse.json({ 
+        error: 'Failed to upload to image service' 
+      }, { status: 500 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const publicId = searchParams.get('publicId');
+    const data = await response.json();
+    console.log('Cloudinary response:', data);
 
-    if (!publicId) {
-      return NextResponse.json({ error: 'Public ID is required' }, { status: 400 });
-    }
-
-    // Delete from Cloudinary
-    const result = await cloudinary.uploader.destroy(publicId);
-
-    if (result.result === 'ok') {
+    if (data.secure_url) {
       return NextResponse.json({
         success: true,
-        message: 'File deleted successfully'
+        url: data.secure_url,
+        publicId: data.public_id,
       });
     } else {
-      return NextResponse.json({
-        error: 'Failed to delete file',
-        details: result.result
-      }, { status: 400 });
+      console.error('No secure_url in response:', data);
+      return NextResponse.json({ 
+        error: 'Upload failed - no URL returned from image service' 
+      }, { status: 500 });
     }
-
   } catch (error) {
-    console.error('Error deleting file:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete file', details: error.message },
-      { status: 500 }
-    );
+    console.error('Upload error:', error);
+    return NextResponse.json({ 
+      error: 'Upload failed: ' + error.message 
+    }, { status: 500 });
   }
 }
