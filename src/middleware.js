@@ -5,6 +5,16 @@ export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
+    
+    // Debug logging for production issues
+    if (process.env.NODE_ENV === 'production' && pathname.startsWith('/dashboard')) {
+      console.log('Dashboard access attempt:', {
+        pathname,
+        hasToken: !!token,
+        userRole: token?.role,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Dashboard routes - Only Super Admin and Admin
     if (pathname.startsWith('/dashboard')) {

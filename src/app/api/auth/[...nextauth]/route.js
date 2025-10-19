@@ -9,6 +9,8 @@ import User from '../../../../models/User';
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
+  // Add NEXTAUTH_URL for production
+  ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -71,9 +73,14 @@ export const authOptions = {
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // 24 hours
   },
   jwt: {
     maxAge: 30 * 24 * 60 * 60, // 30 days
+    // Add encryption for production
+    ...(process.env.NODE_ENV === 'production' && {
+      encryption: true,
+    }),
   },
   callbacks: {
     async jwt({ token, user, account, trigger }) {

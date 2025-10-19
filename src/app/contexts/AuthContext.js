@@ -20,6 +20,15 @@ export function AuthProvider({ children }) {
     } else {
       setUser(null);
       setLoading(false);
+      
+      // Debug logging for production issues
+      if (process.env.NODE_ENV === 'production') {
+        console.log('AuthContext: User not authenticated', {
+          status,
+          hasSession: !!session,
+          timestamp: new Date().toISOString()
+        });
+      }
     }
   }, [session, status]);
 
