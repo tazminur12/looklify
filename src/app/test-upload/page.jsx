@@ -27,8 +27,10 @@ export default function TestUploadPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('folder', 'looklify-images');
+      formData.append('type', 'image');
 
-      console.log('Uploading file:', file.name, 'Size:', file.size);
+      console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -36,6 +38,16 @@ export default function TestUploadPage() {
       });
 
       console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        setError(`Server returned ${response.status}: ${text.substring(0, 200)}...`);
+        return;
+      }
 
       const data = await response.json();
       console.log('Response data:', data);

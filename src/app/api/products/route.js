@@ -67,6 +67,9 @@ export async function GET(request) {
         .limit(limit)
         .populate('createdBy', 'name email')
         .populate('updatedBy', 'name email')
+        .populate('brand', 'name slug logo')
+        .populate('category', 'name slug')
+        .populate('subcategory', 'name slug')
         .lean(),
       Product.countDocuments(filter)
     ]);
@@ -196,6 +199,9 @@ export async function POST(request) {
     // Populate the created product
     const populatedProduct = await Product.findById(product._id)
       .populate('createdBy', 'name email')
+      .populate('brand', 'name slug logo')
+      .populate('category', 'name slug')
+      .populate('subcategory', 'name slug')
       .lean();
 
     return NextResponse.json({

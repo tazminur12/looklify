@@ -10,9 +10,67 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [subcategories, setSubcategories] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loadingSubcategories, setLoadingSubcategories] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState(new Set());
   const { data: session, status } = useSession();
   const { getCartCount } = useCart();
   const profileMenuRef = useRef(null);
+
+  // Fetch categories and subcategories from backend
+  useEffect(() => {
+    const fetchCategoriesAndSubcategories = async () => {
+      try {
+        setLoadingSubcategories(true);
+        setLoadingCategories(true);
+        const response = await fetch('/api/shop/filters');
+        const data = await response.json();
+        
+        if (data.success) {
+          // Set main categories
+          if (data.data.categories) {
+            setCategories(data.data.categories);
+          }
+          
+          // Flatten all subcategories from all parent categories
+          if (data.data.subcategories) {
+            const allSubcategories = Object.values(data.data.subcategories).flat();
+            setSubcategories(allSubcategories);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching categories and subcategories:', error);
+        // Fallback to hardcoded data if API fails
+        setCategories([
+          { name: 'Skin Care', slug: 'skin-care' },
+          { name: 'Hair Care', slug: 'hair-care' },
+          { name: 'Lip Care', slug: 'lip-care' },
+          { name: 'Eye Care', slug: 'eye-care' },
+          { name: 'Body Care', slug: 'body-care' },
+          { name: 'Facial Care', slug: 'facial-care' },
+          { name: 'Teeth Care', slug: 'teeth-care' },
+          { name: 'Health & Beauty', slug: 'health-beauty' }
+        ]);
+        setSubcategories([
+          { name: 'Skin Care', slug: 'skin-care' },
+          { name: 'Hair Care', slug: 'hair-care' },
+          { name: 'Lip Care', slug: 'lip-care' },
+          { name: 'Eye Care', slug: 'eye-care' },
+          { name: 'Body Care', slug: 'body-care' },
+          { name: 'Facial Care', slug: 'facial-care' },
+          { name: 'Teeth Care', slug: 'teeth-care' },
+          { name: 'Health & Beauty', slug: 'health-beauty' }
+        ]);
+      } finally {
+        setLoadingSubcategories(false);
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategoriesAndSubcategories();
+  }, []);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -28,43 +86,50 @@ export default function Header() {
     };
   }, []);
 
-  const navigationItems = [
+  // Static navigation items
+  const staticNavigationItems = [
     { name: 'Home', href: '/' },
     { name: 'Shop', href: '/shop' },
-    { name: 'Skin Care', href: '/shop/skin-care' },
-    { name: 'Hair Care', href: '/shop/hair-care' },
-    { name: 'Lip Care', href: '/shop/lip-care' },
-    { name: 'Eye Care', href: '/shop/eye-care' },
-    { name: 'Body Care', href: '/shop/body-care' },
-    { name: 'Facial Care', href: '/shop/facial-care' },
-    { name: 'Teeth Care', href: '/shop/teeth-care' },
-    { name: 'Health & Beauty', href: '/shop/health-beauty' },
     { name: 'Combo Deals', href: '/shop/combo-deals' },
     { name: 'Flash Sale', href: '/shop/flash-sale' },
   ];
 
-  // Mobile-optimized navigation items (fewer items for mobile)
+  // Dynamic navigation items from backend
+  const dynamicNavigationItems = categories.map(category => ({
+    name: category.name,
+    href: `/shop/${category.slug}`
+  }));
+
+  // Combine static and dynamic items
+  const navigationItems = [...staticNavigationItems, ...dynamicNavigationItems];
+
+  // Mobile-optimized navigation items (only Home and Shop)
   const mobileNavigationItems = [
     { name: 'Home', href: '/' },
-    { name: 'Shop', href: '/shop' },
-    { name: 'Skin Care', href: '/shop/skin-care' },
-    { name: 'Hair Care', href: '/shop/hair-care' },
-    { name: 'Lip Care', href: '/shop/lip-care' },
-    { name: 'Eye Care', href: '/shop/eye-care' },
-    { name: 'Body Care', href: '/shop/body-care' },
-    { name: 'Facial Care', href: '/shop/facial-care' },
+    { name: 'Shop', href: '/shop' }
   ];
 
-  const subCategories = [
-    'Skin Care',
-    'Hair Care', 
-    'Lip Care',
-    'Eye Care',
-    'Body Care',
-    'Facial Care',
-    'Teeth Care',
-    'Health & Beauty'
-  ];
+  // Group subcategories by parent category
+  const subcategoriesByParent = subcategories.reduce((acc, subcategory) => {
+    const parentName = subcategory.parent?.name || 'Other';
+    if (!acc[parentName]) {
+      acc[parentName] = [];
+    }
+    acc[parentName].push(subcategory);
+    return acc;
+  }, {});
+
+  // Toggle category expansion
+  const toggleCategory = (categoryName) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(categoryName)) {
+      newExpanded.delete(categoryName);
+    } else {
+      newExpanded.add(categoryName);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
 
   return (
     <header className="bg-white shadow-lg sticky top-0 z-60 border-b border-gray-100">
@@ -90,12 +155,16 @@ export default function Header() {
           <div className="hidden lg:flex flex-1 max-w-2xl mx-6 lg:mx-8">
             <div className="flex items-center w-full shadow-sm border border-purple-200 rounded-xl overflow-hidden bg-white hover:shadow-md transition-all duration-300">
               <select className="bg-gray-50 border-r border-purple-200 px-4 py-3.5 text-sm text-gray-700 focus:outline-none focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[180px] cursor-pointer font-medium">
-                <option value="">Select Category</option>
-                {subCategories.map((category) => (
-                  <option key={category} value={category.toLowerCase().replace(' ', '-')}>
-                    {category}
-                  </option>
-                ))}
+                <option value="">Select Subcategory</option>
+                {loadingSubcategories ? (
+                  <option value="" disabled>Loading...</option>
+                ) : (
+                  subcategories.map((subcategory) => (
+                    <option key={subcategory._id || subcategory.slug} value={subcategory.slug}>
+                      {subcategory.name}
+                    </option>
+                  ))
+                )}
               </select>
               <input 
                 type="text" 
@@ -239,12 +308,16 @@ export default function Header() {
         <div className="lg:hidden bg-white border-t border-purple-100 px-4 py-4 shadow-sm">
           <div className="flex items-center space-x-3">
             <select className="bg-gray-50 border border-purple-200 rounded-xl px-4 py-3.5 text-sm text-gray-700 focus:outline-none focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent flex-1 font-medium">
-              <option value="">All Categories</option>
-              {subCategories.map((category) => (
-                <option key={category} value={category.toLowerCase().replace(' ', '-')}>
-                  {category}
-                </option>
-              ))}
+              <option value="">All Subcategories</option>
+              {loadingSubcategories ? (
+                <option value="" disabled>Loading...</option>
+              ) : (
+                subcategories.map((subcategory) => (
+                  <option key={subcategory._id || subcategory.slug} value={subcategory.slug}>
+                    {subcategory.name}
+                  </option>
+                ))
+              )}
             </select>
             <input 
               type="text" 
@@ -283,7 +356,7 @@ export default function Header() {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-purple-100 shadow-xl max-h-[calc(100vh-200px)] overflow-y-auto">
           <div className="px-4 py-6 space-y-3">
-            {/* Mobile Navigation Items */}
+            {/* Mobile Navigation Items - Only Home and Shop */}
             {mobileNavigationItems.map((item) => (
               <Link
                 key={item.name}
@@ -298,19 +371,65 @@ export default function Header() {
             {/* Divider */}
             <div className="border-t border-purple-100 my-6"></div>
             
-            {/* Additional Categories */}
+            {/* Categories Section with Expandable Subcategories */}
             <div className="space-y-3">
-              <h3 className="px-4 text-sm font-bold text-gray-500 uppercase tracking-wider">More Categories</h3>
-              {navigationItems.filter(item => !mobileNavigationItems.includes(item)).map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="block px-4 py-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-all duration-200 text-sm hover:shadow-sm"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              <h3 className="px-4 text-sm font-bold text-gray-500 uppercase tracking-wider">
+                {loadingCategories ? 'Loading Categories...' : 'Categories'}
+              </h3>
+              {loadingCategories ? (
+                <div className="px-4 py-2 text-gray-500 text-sm">Loading...</div>
+              ) : (
+                categories.map((category) => {
+                  const isExpanded = expandedCategories.has(category.name);
+                  const categorySubcategories = subcategoriesByParent[category.name] || [];
+                  
+                  return (
+                    <div key={category._id || category.slug} className="space-y-1">
+                      {/* Category Header - Clickable to expand/collapse */}
+                      <div className="flex items-center justify-between">
+                        <Link
+                          href={`/shop/${category.slug}`}
+                          className="flex-1 px-4 py-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-all duration-200 text-sm hover:shadow-sm"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {category.name}
+                        </Link>
+                        {categorySubcategories.length > 0 && (
+                          <button
+                            onClick={() => toggleCategory(category.name)}
+                            className="px-2 py-2.5 text-gray-400 hover:text-purple-600 transition-colors duration-200"
+                          >
+                            <svg 
+                              className={`w-4 h-4 transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* Subcategories - Show when expanded */}
+                      {isExpanded && categorySubcategories.length > 0 && (
+                        <div className="ml-4 space-y-1">
+                          {categorySubcategories.map((subcategory) => (
+                            <Link
+                              key={subcategory._id || subcategory.slug}
+                              href={`/shop/${subcategory.slug}`}
+                              className="block px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-normal transition-all duration-200 text-sm hover:shadow-sm"
+                              onClick={() => setIsMenuOpen(false)}
+                            >
+                              {subcategory.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
             
             {/* User Actions */}

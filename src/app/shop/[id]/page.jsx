@@ -57,7 +57,7 @@ export default function ProductDetailsPage() {
 
   const handleAddToCart = () => {
     addToCart(product);
-    alert(`${product.name} কার্টে যোগ করা হয়েছে!`);
+    alert(`${product.name} added to cart!`);
   };
 
   const handleBuyNow = () => {
@@ -77,7 +77,7 @@ export default function ProductDetailsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="h-12 w-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-gray-600">পণ্য লোড হচ্ছে...</p>
+          <p className="mt-4 text-gray-600">Loading product...</p>
         </div>
       </div>
     );
@@ -90,13 +90,13 @@ export default function ProductDetailsPage() {
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             📦
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">পণ্য পাওয়া যায়নি</h3>
-          <p className="text-gray-500 mb-4">{error || 'এই পণ্যটি আর পাওয়া যায় না'}</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Product not found</h3>
+          <p className="text-gray-500 mb-4">{error || 'This product is no longer available'}</p>
           <Link
             href="/shop"
             className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700"
           >
-            অন্যান্য পণ্য দেখুন
+            See other products
           </Link>
         </div>
       </div>
@@ -111,15 +111,15 @@ export default function ProductDetailsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-purple-600">হোম</Link>
+          <Link href="/" className="hover:text-purple-600">Home</Link>
           <span>/</span>
-          <Link href="/shop" className="hover:text-purple-600">দোকান</Link>
+          <Link href="/shop" className="hover:text-purple-600">Shop</Link>
           <span>/</span>
           <Link href={`/shop/${product.category.toLowerCase().replace(' ', '-')}`} className="hover:text-purple-600">
             {product.category}
           </Link>
           <span>/</span>
-          <span className="text-gray-900">{product.bengaliName || product.name}</span>
+          <span className="text-gray-900">{product.name}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -175,7 +175,7 @@ export default function ProductDetailsPage() {
             {/* Product Details */}
             <div className="bg-white rounded-lg p-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {product.bengaliName || product.name}
+                {product.name}
               </h1>
               
               {/* Rating */}
@@ -195,44 +195,44 @@ export default function ProductDetailsPage() {
                   ))}
                 </div>
                 <span className="text-sm text-gray-600">
-                  {product.rating?.average || 0} ({product.rating?.count || 0} রিভিউ)
+                  {product.rating?.average || 0} ({product.rating?.count || 0} reviews)
                 </span>
               </div>
 
               {/* Sales Info */}
               <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
-                <span>{product.soldCount || 0} টি বিক্রিত হয়েছে</span>
-                <span>{product.watchersCount || 0} জন দেখছেন</span>
+                <span>{product.soldCount || 0} sold</span>
+                <span>{product.watchersCount || 0} watching</span>
               </div>
 
               {/* Product Info */}
               <div className="space-y-2 mb-6">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">পণ্য কোড:</span>
+                  <span className="text-gray-600">Product Code:</span>
                   <span className="font-medium">{product.productCode}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">ব্র্যান্ড:</span>
+                  <span className="text-gray-600">Brand:</span>
                   <span className="font-medium">{product.brand}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">উৎপাদনের দেশ:</span>
+                  <span className="text-gray-600">Origin:</span>
                   <span className="font-medium">{product.origin}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">আকার:</span>
+                  <span className="text-gray-600">Size:</span>
                   <span className="font-medium">{product.weight?.value} {product.weight?.unit}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">ক্যাটাগরি:</span>
+                  <span className="text-gray-600">Category:</span>
                   <span className="font-medium">{product.category}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">অবস্থা:</span>
+                  <span className="text-gray-600">Status:</span>
                   <span className={`font-medium ${
                     product.stock > 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {product.stock > 0 ? 'স্টকে আছে' : 'স্টক নেই'}
+                    {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
                   </span>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export default function ProductDetailsPage() {
               {/* Quantity Selector */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  পরিমাণ
+                  Quantity
                 </label>
                 <div className="flex items-center space-x-3">
                   <button
@@ -286,13 +286,13 @@ export default function ProductDetailsPage() {
                   onClick={handleAddToCart}
                   className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 font-medium"
                 >
-                  কার্টে যোগ করুন
+                  Add to Cart
                 </button>
                 <button
                   onClick={handleBuyNow}
                   className="w-full px-6 py-3 border-2 border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 font-medium"
                 >
-                  এখনই কিনুন
+                  Buy Now
                 </button>
               </div>
             </div>
@@ -300,7 +300,7 @@ export default function ProductDetailsPage() {
             {/* Related Products */}
             {relatedProducts.length > 0 && (
               <div className="bg-white rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">সম্পর্কিত পণ্য</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Related Products</h3>
                 <div className="space-y-4">
                   {relatedProducts.slice(0, 3).map((relatedProduct) => (
                     <Link
@@ -317,7 +317,7 @@ export default function ProductDetailsPage() {
                       />
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900 text-sm">
-                          {relatedProduct.bengaliName || relatedProduct.name}
+                          {relatedProduct.name}
                         </h4>
                         <div className="flex items-center space-x-2">
                           <span className="font-bold text-purple-600">৳{relatedProduct.price}</span>
@@ -341,10 +341,10 @@ export default function ProductDetailsPage() {
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
               {[
-                { id: 'description', label: 'বর্ণনা' },
-                { id: 'ingredients', label: 'উপাদান' },
-                { id: 'usage', label: 'ব্যবহার' },
-                { id: 'reviews', label: 'রিভিউ' }
+                { id: 'description', label: 'Description' },
+                { id: 'ingredients', label: 'Ingredients' },
+                { id: 'usage', label: 'Usage' },
+                { id: 'reviews', label: 'Reviews' }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -366,12 +366,12 @@ export default function ProductDetailsPage() {
               <div className="space-y-4">
                 {product.bengaliDescription && (
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">বাংলা বর্ণনা:</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">Bengali Description:</h4>
                     <p className="text-gray-700 whitespace-pre-line">{product.bengaliDescription}</p>
                   </div>
                 )}
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">ইংরেজি বর্ণনা:</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2">English Description:</h4>
                   <p className="text-gray-700 whitespace-pre-line">{product.description}</p>
                 </div>
               </div>
@@ -379,7 +379,7 @@ export default function ProductDetailsPage() {
 
             {activeTab === 'ingredients' && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-4">উপাদানসমূহ:</h4>
+                <h4 className="font-semibold text-gray-900 mb-4">Ingredients:</h4>
                 {product.ingredients && product.ingredients.length > 0 ? (
                   <ul className="list-disc list-inside space-y-2 text-gray-700">
                     {product.ingredients.map((ingredient, index) => (
@@ -387,14 +387,14 @@ export default function ProductDetailsPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-gray-500">উপাদানের তথ্য পাওয়া যায়নি</p>
+                  <p className="text-gray-500">Ingredient information not available</p>
                 )}
               </div>
             )}
 
             {activeTab === 'usage' && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-4">ব্যবহারের নির্দেশনা:</h4>
+                <h4 className="font-semibold text-gray-900 mb-4">Usage Instructions:</h4>
                 {product.features && product.features.length > 0 ? (
                   <ul className="list-disc list-inside space-y-2 text-gray-700">
                     {product.features.map((feature, index) => (
@@ -402,20 +402,20 @@ export default function ProductDetailsPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-gray-500">ব্যবহারের নির্দেশনা পাওয়া যায়নি</p>
+                  <p className="text-gray-500">Usage instructions not available</p>
                 )}
               </div>
             )}
 
             {activeTab === 'reviews' && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-4">রিভিউসমূহ:</h4>
+                <h4 className="font-semibold text-gray-900 mb-4">Reviews:</h4>
                 <div className="text-center py-8">
                   <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     ⭐
                   </div>
-                  <p className="text-gray-500">কোনো রিভিউ নেই</p>
-                  <p className="text-sm text-gray-400 mt-1">প্রথম রিভিউ দিন এবং অন্যদের সাহায্য করুন</p>
+                  <p className="text-gray-500">No reviews yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Be the first to review and help others</p>
                 </div>
               </div>
             )}

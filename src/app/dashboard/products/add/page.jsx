@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 
 export default function AddProductPage() {
   const { data: session, status } = useSession();
@@ -11,15 +12,23 @@ export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [brands, setBrands] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [skinTypes, setSkinTypes] = useState([]);
+  const [skinConcerns, setSkinConcerns] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     bengaliName: '',
     description: '',
     bengaliDescription: '',
-    category: 'Skin Care',
+    category: '',
     subcategory: '',
     price: '',
     originalPrice: '',
+    offerPrice: '',
+    offerPercentage: '',
     sku: '',
     productCode: '',
     stock: '',
@@ -46,7 +55,7 @@ export default function AddProductPage() {
     tags: [''],
     images: [
       {
-        url: '/slider/1.webp',
+        url: '',
         alt: '',
         isPrimary: true
       }
@@ -67,21 +76,61 @@ export default function AddProductPage() {
     }
   });
 
-  const categories = [
-    'Skin Care',
-    'Hair Care',
-    'Lip Care',
-    'Eye Care',
-    'Body Care',
-    'Facial Care',
-    'Teeth Care',
-    'Health & Beauty',
-    'Makeup',
-    'Tools'
-  ];
 
-  const skinTypes = ['Normal', 'Dry', 'Oily', 'Combination', 'Sensitive', 'All Types'];
-  const skinConcerns = ['Acne', 'Aging', 'Dark Spots', 'Dryness', 'Oiliness', 'Sensitivity', 'Uneven Skin Tone', 'Wrinkles'];
+  // Fetch brands, categories, and subcategories using shop/filters API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoadingData(true);
+        const response = await fetch('/api/shop/filters');
+        
+        if (response.ok) {
+          const data = await response.json();
+          setBrands(data.data.brands || []);
+          setCategories(data.data.categories || []);
+          setSkinTypes(data.data.skinTypes || []);
+          setSkinConcerns(data.data.skinConcerns || []);
+        } else {
+          throw new Error('Failed to fetch filter data');
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load brands and categories');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    if (session) {
+      fetchData();
+    }
+  }, [session]);
+
+  // Fetch subcategories when brand changes
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      if (formData.brand) {
+        try {
+          const response = await fetch(`/api/shop/filters?brand=${formData.brand}`);
+          if (response.ok) {
+            const data = await response.json();
+            // Get all subcategories and filter by selected category
+            const allSubcategories = Object.values(data.data.subcategories).flat();
+            const filteredSubcategories = formData.category 
+              ? allSubcategories.filter(sub => sub.parent?._id === formData.category)
+              : allSubcategories;
+            setSubcategories(filteredSubcategories);
+          }
+        } catch (error) {
+          console.error('Error fetching subcategories:', error);
+        }
+      } else {
+        setSubcategories([]);
+      }
+    };
+
+    fetchSubcategories();
+  }, [formData.brand, formData.category]);
 
   // Image upload function
   const handleImageUpload = async (file, index) => {
@@ -145,10 +194,34 @@ export default function AddProductPage() {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value
+      };
+
+      // Auto-calculate offer percentage when offer price changes
+      if (field === 'offerPrice' && value && formData.price) {
+        const originalPrice = parseFloat(formData.price);
+        const offerPrice = parseFloat(value);
+        if (originalPrice > offerPrice) {
+          const percentage = Math.round(((originalPrice - offerPrice) / originalPrice) * 100);
+          newData.offerPercentage = percentage.toString();
+        }
+      }
+
+      // Auto-calculate offer price when offer percentage changes
+      if (field === 'offerPercentage' && value && formData.price) {
+        const originalPrice = parseFloat(formData.price);
+        const percentage = parseFloat(value);
+        if (percentage > 0 && percentage < 100) {
+          const offerPrice = originalPrice - (originalPrice * percentage / 100);
+          newData.offerPrice = offerPrice.toFixed(2);
+        }
+      }
+
+      return newData;
+    });
     
     // Clear error when user starts typing
     if (errors[field]) {
@@ -200,6 +273,8 @@ export default function AddProductPage() {
     if (!formData.sku.trim()) newErrors.sku = 'SKU is required';
     if (!formData.productCode.trim()) newErrors.productCode = 'Product code is required';
     if (formData.stock === '' || formData.stock < 0) newErrors.stock = 'Valid stock quantity is required';
+    if (!formData.brand) newErrors.brand = 'Brand is required';
+    if (!formData.category) newErrors.category = 'Category is required';
 
     // SKU format validation (alphanumeric with dashes/underscores)
     if (formData.sku && !/^[A-Z0-9-_]+$/i.test(formData.sku.trim())) {
@@ -209,6 +284,15 @@ export default function AddProductPage() {
     // Price validation
     if (formData.originalPrice && formData.originalPrice <= formData.price) {
       newErrors.originalPrice = 'Original price must be higher than current price';
+    }
+
+    // Offer price validation
+    if (formData.offerPrice && formData.offerPrice >= formData.price) {
+      newErrors.offerPrice = 'Offer price must be lower than current price';
+    }
+
+    if (formData.offerPercentage && (formData.offerPercentage < 0 || formData.offerPercentage > 100)) {
+      newErrors.offerPercentage = 'Offer percentage must be between 0 and 100';
     }
 
     // Image validation
@@ -236,6 +320,8 @@ export default function AddProductPage() {
         ...formData,
         price: parseFloat(formData.price),
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
+        offerPrice: formData.offerPrice ? parseFloat(formData.offerPrice) : null,
+        offerPercentage: formData.offerPercentage ? parseFloat(formData.offerPercentage) : null,
         stock: parseInt(formData.stock),
         lowStockThreshold: parseInt(formData.lowStockThreshold),
         soldCount: parseInt(formData.soldCount),
@@ -272,6 +358,7 @@ export default function AddProductPage() {
       const result = await response.json();
 
       if (result.success) {
+        toast.success('Product created successfully!');
         router.push('/dashboard/products');
       } else {
         if (result.details && Array.isArray(result.details)) {
@@ -285,24 +372,29 @@ export default function AddProductPage() {
             }
           });
           setErrors(serverErrors);
+          toast.error('Please fix the validation errors');
         } else {
           setErrors({ submit: result.error || 'Failed to create product' });
+          toast.error(result.error || 'Failed to create product');
         }
       }
     } catch (error) {
       console.error('Error creating product:', error);
       setErrors({ submit: 'Network error. Please try again.' });
+      toast.error('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (status === 'loading') {
+  if (status === 'loading' || loadingData) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="h-12 w-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            {status === 'loading' ? 'Loading...' : 'Loading brands and categories...'}
+          </p>
         </div>
       </div>
     );
@@ -382,43 +474,57 @@ export default function AddProductPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Brand *
+              </label>
+              <select
+                value={formData.brand}
+                onChange={(e) => handleInputChange('brand', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm ${
+                  errors.brand ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
+                }`}
+              >
+                <option value="">Select Brand</option>
+                {brands.map(brand => (
+                  <option key={brand._id} value={brand._id}>{brand.name}</option>
+                ))}
+              </select>
+              {errors.brand && <p className="mt-1 text-xs text-red-600">{errors.brand}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Category *
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => handleInputChange('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm ${
+                  errors.category ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
+                }`}
               >
+                <option value="">Select Category</option>
                 {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
+                  <option key={category._id} value={category._id}>{category.name}</option>
                 ))}
               </select>
+              {errors.category && <p className="mt-1 text-xs text-red-600">{errors.category}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Subcategory
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.subcategory}
                 onChange={(e) => handleInputChange('subcategory', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
-                placeholder="e.g., Face Serum, Shampoo"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Brand
-              </label>
-              <input
-                type="text"
-                value={formData.brand}
-                onChange={(e) => handleInputChange('brand', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
-                placeholder="Brand name"
-              />
+                disabled={!formData.brand || !formData.category}
+              >
+                <option value="">Select Subcategory</option>
+                {subcategories.map(subcategory => (
+                  <option key={subcategory._id} value={subcategory._id}>{subcategory.name}</option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -506,6 +612,43 @@ export default function AddProductPage() {
                 placeholder="1200"
               />
               {errors.originalPrice && <p className="mt-1 text-xs text-red-600">{errors.originalPrice}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Offer Price (৳)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.offerPrice}
+                onChange={(e) => handleInputChange('offerPrice', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm ${
+                  errors.offerPrice ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
+                }`}
+                placeholder="600"
+              />
+              {errors.offerPrice && <p className="mt-1 text-xs text-red-600">{errors.offerPrice}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Offer Percentage (%)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={formData.offerPercentage}
+                onChange={(e) => handleInputChange('offerPercentage', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm ${
+                  errors.offerPercentage ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
+                }`}
+                placeholder="50"
+              />
+              {errors.offerPercentage && <p className="mt-1 text-xs text-red-600">{errors.offerPercentage}</p>}
             </div>
 
             <div>

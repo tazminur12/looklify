@@ -17,22 +17,23 @@
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 ```
+
+**Note**: The new SDK approach no longer requires `CLOUDINARY_UPLOAD_PRESET` as it uses authenticated uploads.
 
 ### 2. "Upload failed" Error
 
 **Possible Causes**:
 - Cloudinary credentials are incorrect
-- Upload preset is not set to "Unsigned"
 - File size is too large (>5MB)
 - File type is not an image
+- Network connectivity issues
 
 **Solutions**:
 1. Verify Cloudinary credentials in your dashboard
-2. Check upload preset settings in Cloudinary
-3. Try with a smaller image file
-4. Make sure you're selecting an image file
+2. Try with a smaller image file
+3. Make sure you're selecting an image file
+4. Check your internet connection
 
 ### 3. File Not Uploading
 
@@ -58,7 +59,8 @@ CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 1. **Check Environment Variables**:
    ```bash
    echo $CLOUDINARY_CLOUD_NAME
-   echo $CLOUDINARY_UPLOAD_PRESET
+   echo $CLOUDINARY_API_KEY
+   echo $CLOUDINARY_API_SECRET
    ```
 
 2. **Test API Directly**:

@@ -13,27 +13,6 @@ const ProductSchema = new mongoose.Schema({
     trim: true,
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
-  category: {
-    type: String,
-    required: [true, 'Product category is required'],
-    enum: [
-      'Skin Care',
-      'Hair Care', 
-      'Lip Care',
-      'Eye Care',
-      'Body Care',
-      'Facial Care',
-      'Teeth Care',
-      'Health & Beauty',
-      'Makeup',
-      'Tools'
-    ]
-  },
-  subcategory: {
-    type: String,
-    trim: true,
-    maxlength: [100, 'Subcategory cannot exceed 100 characters']
-  },
   price: {
     type: Number,
     required: [true, 'Product price is required'],
@@ -42,6 +21,15 @@ const ProductSchema = new mongoose.Schema({
   originalPrice: {
     type: Number,
     min: [0, 'Original price cannot be negative']
+  },
+  offerPrice: {
+    type: Number,
+    min: [0, 'Offer price cannot be negative']
+  },
+  offerPercentage: {
+    type: Number,
+    min: [0, 'Offer percentage cannot be negative'],
+    max: [100, 'Offer percentage cannot exceed 100']
   },
   sku: {
     type: String,
@@ -107,9 +95,18 @@ const ProductSchema = new mongoose.Schema({
     }
   },
   brand: {
-    type: String,
-    trim: true,
-    maxlength: [100, 'Brand name cannot exceed 100 characters']
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Brand',
+    required: [true, 'Brand is required']
+  },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: [true, 'Category is required']
+  },
+  subcategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category'
   },
   origin: {
     type: String,
@@ -278,8 +275,11 @@ ProductSchema.virtual('stockStatus').get(function() {
 
 // Indexes for better performance
 ProductSchema.index({ name: 'text', description: 'text', tags: 'text' });
+ProductSchema.index({ brand: 1, category: 1, status: 1 });
 ProductSchema.index({ category: 1, status: 1 });
+ProductSchema.index({ subcategory: 1, status: 1 });
 ProductSchema.index({ price: 1 });
+ProductSchema.index({ offerPrice: 1 });
 ProductSchema.index({ rating: 1 });
 ProductSchema.index({ createdAt: -1 });
 ProductSchema.index({ isFeatured: 1, status: 1 });
@@ -287,10 +287,23 @@ ProductSchema.index({ isBestSeller: 1, status: 1 });
 
 // Pre-save middleware to calculate discount percentage
 ProductSchema.pre('save', function(next) {
+  // Calculate discount from original price
   if (this.originalPrice && this.originalPrice > this.price) {
     this.discountPercentage = Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100);
     this.isOnSale = true;
   }
+  
+  // Calculate discount from offer price
+  if (this.offerPrice && this.offerPrice < this.price) {
+    this.discountPercentage = Math.round(((this.price - this.offerPrice) / this.price) * 100);
+    this.isOnSale = true;
+  }
+  
+  // Use offer percentage if provided
+  if (this.offerPercentage && this.offerPercentage > 0) {
+    this.isOnSale = true;
+  }
+  
   next();
 });
 

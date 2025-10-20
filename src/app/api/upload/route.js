@@ -1,21 +1,17 @@
 import { NextResponse } from 'next/server';
+import { uploadToCloudinary, uploadFromBuffer } from '@/lib/cloudinary';
 
 export async function POST(request) {
   try {
     console.log('Upload API called');
     
-    // Check if Cloudinary is configured
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_UPLOAD_PRESET) {
-      console.error('Cloudinary not configured');
-      return NextResponse.json({ 
-        error: 'Image upload service not configured. Please contact administrator.' 
-      }, { status: 500 });
-    }
-
     const formData = await request.formData();
     const file = formData.get('file');
+    const folder = formData.get('folder') || 'looklify-images';
+    const type = formData.get('type') || 'image';
     
     console.log('File received:', file ? file.name : 'No file');
+    console.log('Folder:', folder, 'Type:', type);
     
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -31,49 +27,56 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Only image files are allowed' }, { status: 400 });
     }
 
-    // Create FormData for Cloudinary
-    const cloudinaryFormData = new FormData();
-    cloudinaryFormData.append('file', file);
-    cloudinaryFormData.append('upload_preset', process.env.CLOUDINARY_UPLOAD_PRESET);
+    console.log('Converting file to buffer...');
+
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
     console.log('Uploading to Cloudinary...');
 
-    // Upload to Cloudinary
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
-      {
-        method: 'POST',
-        body: cloudinaryFormData,
-      }
-    );
+    // Upload to Cloudinary using buffer
+    const result = await uploadToCloudinary(buffer, {
+      folder: folder,
+      resource_type: type,
+      transformation: [
+        { quality: 'auto' },
+        { fetch_format: 'auto' }
+      ]
+    });
 
-    console.log('Cloudinary response status:', response.status);
+    console.log('Cloudinary upload result:', result);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Cloudinary error:', errorText);
-      return NextResponse.json({ 
-        error: 'Failed to upload to image service' 
-      }, { status: 500 });
-    }
-
-    const data = await response.json();
-    console.log('Cloudinary response:', data);
-
-    if (data.secure_url) {
+    if (result.secure_url) {
       return NextResponse.json({
         success: true,
-        url: data.secure_url,
-        publicId: data.public_id,
+        url: result.secure_url,
+        publicId: result.public_id,
+        data: {
+          url: result.secure_url,
+          publicId: result.public_id,
+          width: result.width,
+          height: result.height,
+          format: result.format,
+          bytes: result.bytes
+        }
       });
     } else {
-      console.error('No secure_url in response:', data);
+      console.error('No secure_url in result:', result);
       return NextResponse.json({ 
         error: 'Upload failed - no URL returned from image service' 
       }, { status: 500 });
     }
   } catch (error) {
     console.error('Upload error:', error);
+    
+    // Check if it's a Cloudinary error
+    if (error.http_code === 404) {
+      return NextResponse.json({ 
+        error: 'Cloudinary folder not found. Please check your Cloudinary configuration.' 
+      }, { status: 500 });
+    }
+    
     return NextResponse.json({ 
       error: 'Upload failed: ' + error.message 
     }, { status: 500 });
