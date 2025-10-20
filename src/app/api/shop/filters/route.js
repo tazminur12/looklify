@@ -22,7 +22,17 @@ export async function GET(request) {
       status: 'active',
       parent: null // Only main categories
     })
-      .select('_id name slug icon')
+      .select('_id name slug icon image isFeatured')
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
+
+    // Fetch featured categories
+    const featuredCategories = await Category.find({ 
+      status: 'active',
+      parent: null,
+      isFeatured: true
+    })
+      .select('_id name slug icon image')
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
@@ -71,6 +81,7 @@ export async function GET(request) {
       data: {
         brands,
         categories,
+        featuredCategories,
         subcategories: subcategoriesByParent,
         skinTypes,
         skinConcerns
