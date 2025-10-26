@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/authOptions';
 import dbConnect from '@/lib/db';
 import Category from '@/models/Category';
 
@@ -91,23 +91,40 @@ export async function POST(request) {
     if (!name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 });
     }
-    if (!brand) {
-      return NextResponse.json({ error: 'brand is required' }, { status: 400 });
+
+    // Generate slug if not provided
+    let categorySlug = slug?.trim();
+    if (!categorySlug) {
+      categorySlug = name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
     }
 
-    const doc = new Category({
+    // Build category data object
+    const categoryData = {
       name,
-      slug,
+      slug: categorySlug,
       description,
       icon,
       image,
-      brand,
       parent: parent || null,
       sortOrder: sortOrder ?? 0,
       status: status || 'active',
       isFeatured: !!isFeatured,
       createdBy: session.user.id
-    });
+    };
+
+    // Only add brand if provided (optional)
+    if (brand) {
+      categoryData.brand = brand;
+    }
+
+    console.log('Creating category with data:', categoryData);
+
+    const doc = new Category(categoryData);
 
     // ensure unique slug
     const existing = await Category.findOne({ slug: doc.slug });
@@ -125,8 +142,10 @@ export async function POST(request) {
     return NextResponse.json({ success: true, data: created, message: 'Category created successfully' }, { status: 201 });
   } catch (error) {
     console.error('Error creating category:', error);
+    console.error('Error details:', JSON.stringify(error, null, 2));
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
+      console.error('Validation errors:', validationErrors);
       return NextResponse.json({ error: 'Validation failed', details: validationErrors }, { status: 400 });
     }
     return NextResponse.json({ error: 'Failed to create category', details: error.message }, { status: 500 });

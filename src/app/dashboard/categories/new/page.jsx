@@ -3,126 +3,94 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import Swal from 'sweetalert2';
 
 export default function NewCategoryPage() {
   const router = useRouter();
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [brands, setBrands] = useState([]);
-  const [parents, setParents] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [brands, setBrands] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [imagePreview, setImagePreview] = useState(null);
   const [dragOver, setDragOver] = useState(false);
-  const [form, setForm] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    icon: '',
-    image: { url: '', publicId: '', alt: '' },
-    brand: '',
-    parent: '',
-    sortOrder: 0,
-    status: 'active',
-    isFeatured: false,
-  });
-  const [errors, setErrors] = useState({});
 
-  const loadData = async () => {
-    try {
-      const [brandsRes, parentsRes] = await Promise.all([
-        fetch('/api/brands?limit=1000'),
-        fetch('/api/categories?parent=root&limit=1000')
-      ]);
-      const brandsJson = await brandsRes.json();
-      const parentsJson = await parentsRes.json();
-      if (brandsJson.success) setBrands(brandsJson.data.brands);
-      if (parentsJson.success) setParents(parentsJson.data.categories);
-    } catch (err) {
-      setError('Failed to load data. Please refresh the page.');
-    }
-  };
+  // Watch description for character count
+  const description = watch('description') || '';
+  const categoryName = watch('categoryName') || '';
+  const parentCategory = watch('parentCategory') || '';
 
-  useEffect(() => { loadData(); }, []);
+  // Auto-generate slug from category name
+  useEffect(() => {
+    if (categoryName) {
+      const currentSlug = watch('slug');
+      if (!currentSlug || currentSlug === '') {
+        const slug = categoryName
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-');
+        setValue('slug', slug);
+      }
+    }
+  }, [categoryName, setValue, watch]);
 
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!form.name.trim()) {
-      newErrors.name = 'Category name is required';
-    } else if (form.name.length > 120) {
-      newErrors.name = 'Category name cannot exceed 120 characters';
-    }
-    
-    if (!form.brand) {
-      newErrors.brand = 'Please select a brand';
-    }
-    
-    if (form.description && form.description.length > 400) {
-      newErrors.description = 'Description cannot exceed 400 characters';
-    }
-    
-    if (form.slug && !/^[a-z0-9-]+$/.test(form.slug)) {
-      newErrors.slug = 'Slug can only contain lowercase letters, numbers, and hyphens';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Load brands and categories
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [brandsRes, categoriesRes] = await Promise.all([
+          fetch('/api/brands?limit=1000&status=active'),
+          fetch('/api/categories?limit=1000&status=active')
+        ]);
+        const brandsData = await brandsRes.json();
+        const categoriesData = await categoriesRes.json();
+        if (brandsData.success) setBrands(brandsData.data.brands || []);
+        if (categoriesData.success) setCategories(categoriesData.data.categories || []);
+      } catch (err) {
+        console.error('Failed to load data:', err);
+      }
+    };
+    loadData();
+  }, []);
 
-  const generateSlug = (name) => {
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-  };
+  // Filter top-level categories for parent selection
+  const topLevelCategories = categories.filter(c => !c.parent);
 
-  const handleImageUpload = async (file, type = 'image') => {
+  // Handle image upload
+  const handleImageUpload = async (file) => {
     if (!file) return;
     
-    // Validate file type
     if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file');
+      Swal.fire({ icon: 'error', title: 'Invalid File', text: 'Please select an image file' });
       return;
     }
     
-    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB');
+      Swal.fire({ icon: 'error', title: 'File Too Large', text: 'Image must be less than 5MB' });
       return;
     }
     
     setUploading(true);
-    setError(null);
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('folder', 'looklify/categories');
-      formData.append('type', type);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
       
-      const json = await res.json();
-      if (json.success) {
-        setForm(prev => ({
-          ...prev,
-          image: {
-            url: json.data.url,
-            publicId: json.data.publicId,
-            alt: prev.image.alt || form.name || 'Category image'
-          }
-        }));
-        setSuccess('Image uploaded successfully');
-        setTimeout(() => setSuccess(null), 3000);
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      
+      if (data.success) {
+        setImagePreview(data.data.url);
+        setValue('imageUrl', data.data.url);
+        Swal.fire({ icon: 'success', title: 'Uploaded!', text: 'Image uploaded successfully', timer: 2000, showConfirmButton: false });
       } else {
-        setError(json.error || 'Failed to upload image');
+        Swal.fire({ icon: 'error', title: 'Upload Failed', text: data.error || 'Failed to upload image' });
       }
-    } catch (e) {
-      setError('Network error during upload');
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Upload Error', text: 'Network error during upload' });
     } finally {
       setUploading(false);
     }
@@ -142,382 +110,362 @@ export default function NewCategoryPage() {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files[0];
-    if (file) {
-      handleImageUpload(file, 'image');
-    }
+    if (file) handleImageUpload(file);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
+  // Form submission
+  const onSubmit = async (data) => {
     setLoading(true);
-    setError(null);
-    setSuccess(null);
     
+    // Show loading alert
+    Swal.fire({
+      title: 'Creating Category...',
+      text: 'Please wait while we create your category',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading()
+    });
+
     try {
-      const payload = {
-        name: form.name.trim(),
-        slug: form.slug || generateSlug(form.name),
-        description: form.description.trim(),
-        icon: form.icon.trim(),
-        image: form.image.url ? form.image : null,
-        brand: form.brand,
-        parent: form.parent || null,
-        sortOrder: Number(form.sortOrder) || 0,
-        status: form.status,
-        isFeatured: !!form.isFeatured,
-      };
-      
-      const res = await fetch('/api/categories', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(payload) 
-      });
-      
-      const json = await res.json();
-      if (json.success) {
-        setSuccess('Category created successfully!');
-        setTimeout(() => {
-          router.push('/dashboard/categories');
-        }, 1500);
-      } else {
-        setError(json.error || 'Failed to create category');
+      // Generate slug from category name if not provided
+      let categorySlug = data.slug?.trim();
+      if (!categorySlug) {
+        categorySlug = data.categoryName
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-');
       }
-    } catch (e) {
-      setError('Network error. Please try again.');
+
+      const payload = {
+        name: data.categoryName.trim(),
+        slug: categorySlug,
+        description: data.description?.trim() || '',
+        brand: data.brand || null,
+        parent: parentCategory || null,
+        sortOrder: parseInt(data.sortOrder) || 0,
+        status: data.status || 'active',
+        image: imagePreview ? {
+          url: imagePreview,
+          alt: data.categoryName || 'Category image'
+        } : null,
+        isFeatured: data.isFeatured === 'true',
+        metaTitle: data.metaTitle?.trim() || '',
+        metaDescription: data.metaDescription?.trim() || ''
+      };
+
+      console.log('Payload being sent:', payload);
+
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      console.log('API Response:', result);
+      
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Category Created!',
+          text: `${data.categoryName} has been added successfully`,
+          confirmButtonText: 'View Categories',
+          showCancelButton: true,
+          cancelButtonText: 'Create Another'
+        }).then((swalResult) => {
+          if (swalResult.isConfirmed) {
+            router.push('/dashboard/categories');
+          } else if (swalResult.dismiss === Swal.DismissReason.cancel) {
+            window.location.reload();
+          }
+        });
+      } else {
+        // Show detailed error message
+        const errorMessage = result.details 
+          ? Array.isArray(result.details) 
+            ? result.details.join(', ') 
+            : result.details
+          : result.error || 'Failed to create category';
+        
+        Swal.fire({ 
+          icon: 'error', 
+          title: 'Creation Failed', 
+          text: errorMessage,
+          html: `<p>${errorMessage}</p>`
+        });
+      }
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Network Error', text: 'Please try again' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              <Link href="/dashboard/categories" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create Category</h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">Add a new category or subcategory to organize your products</p>
-              </div>
+              </Link>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Add Category</h1>
             </div>
-            <Link 
-              href="/dashboard/categories" 
-              className="flex items-center space-x-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+            <button
+              type="button"
+              onClick={handleSubmit(onSubmit)}
+              disabled={loading || uploading}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span className="text-sm font-medium">Back to Categories</span>
-            </Link>
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Save Category</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Alert Messages */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-sm text-green-800 dark:text-green-200">{success}</p>
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Form Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Basic Info Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Basic Information
+                Basic Info
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Essential details about your category</p>
             </div>
-            
-            <div className="p-8 space-y-6">
-              {/* Brand Selection */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Brand <span className="text-red-500">*</span>
-                </label>
-                <select 
-                  value={form.brand} 
-                  onChange={(e) => setForm({ ...form, brand: e.target.value })} 
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                    errors.brand ? 'border-red-300 bg-red-50' : 'border-gray-300 dark:border-gray-600'
-                  } dark:bg-gray-700 dark:text-gray-100`}
-                >
-                  <option value="">Select a brand</option>
-                  {brands.map(brand => (
-                    <option key={brand._id} value={brand._id}>{brand.name}</option>
-                  ))}
-                </select>
-                {errors.brand && <p className="text-red-500 text-sm mt-1">{errors.brand}</p>}
+            <div className="p-6 space-y-6">
+              {/* Brand */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Brand
+                  </label>
+                  <select
+                    {...register('brand')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">Select a brand (optional)</option>
+                    {brands.map(brand => (
+                      <option key={brand._id} value={brand._id}>{brand.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Status <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    {...register('status', { required: 'Status is required' })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                  {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>}
+                </div>
               </div>
 
-              {/* Name and Slug */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Category Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Category Name <span className="text-red-500">*</span>
                   </label>
-                  <input 
-                    value={form.name} 
-                    onChange={(e) => {
-                      setForm({ ...form, name: e.target.value });
-                      if (!form.slug) {
-                        setForm(prev => ({ ...prev, slug: generateSlug(e.target.value) }));
-                      }
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                      errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300 dark:border-gray-600'
-                    } dark:bg-gray-700 dark:text-gray-100`}
+                  <input
+                    type="text"
+                    {...register('categoryName', { 
+                      required: 'Category name is required',
+                      maxLength: { value: 120, message: 'Category name cannot exceed 120 characters' }
+                    })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                     placeholder="e.g. Skin Care, Electronics"
                   />
-                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                  {errors.categoryName && <p className="mt-1 text-sm text-red-600">{errors.categoryName.message}</p>}
                 </div>
-                
+
+                {/* URL Slug */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     URL Slug
                   </label>
-                  <input 
-                    value={form.slug} 
-                    onChange={(e) => setForm({ ...form, slug: e.target.value })} 
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                      errors.slug ? 'border-red-300 bg-red-50' : 'border-gray-300 dark:border-gray-600'
-                    } dark:bg-gray-700 dark:text-gray-100`}
-                    placeholder="skin-care, electronics"
+                  <input
+                    type="text"
+                    {...register('slug', {
+                      pattern: { value: /^[a-z0-9-]+$/, message: 'Slug can only contain lowercase letters, numbers, and hyphens' }
+                    })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="auto-generated from name"
                   />
-                  {errors.slug && <p className="text-red-500 text-sm mt-1">{errors.slug}</p>}
-                  <p className="text-xs text-gray-500 mt-1">Auto-generated from name if left empty</p>
+                  <p className="mt-1 text-xs text-gray-500">Auto-generated from category name</p>
+                  {errors.slug && <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p>}
                 </div>
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
                 </label>
-                <textarea 
-                  value={form.description} 
-                  onChange={(e) => setForm({ ...form, description: e.target.value })} 
-                  rows={4} 
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors resize-none ${
-                    errors.description ? 'border-red-300 bg-red-50' : 'border-gray-300 dark:border-gray-600'
-                  } dark:bg-gray-700 dark:text-gray-100`}
+                <textarea
+                  {...register('description', {
+                    maxLength: { value: 400, message: 'Description cannot exceed 400 characters' }
+                  })}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white resize-none"
                   placeholder="Brief description of this category..."
                 />
-                {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
-                <p className="text-xs text-gray-500 mt-1">{form.description.length}/400 characters</p>
+                <div className="mt-1 flex justify-between">
+                  <span className="text-xs text-gray-500">Max 400 characters</span>
+                  <span className={`text-xs ${description.length > 400 ? 'text-red-600' : 'text-gray-500'}`}>
+                    {description.length}/400
+                  </span>
+                </div>
+                {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
               </div>
             </div>
           </div>
 
-          {/* Category Hierarchy Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Hierarchy & Organization Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                Category Hierarchy
+                Hierarchy & Organization
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Set up parent-child relationships and organization</p>
             </div>
-            
-            <div className="p-8 space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Parent Category */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Parent Category
                   </label>
-                  <select 
-                    value={form.parent} 
-                    onChange={(e) => setForm({ ...form, parent: e.target.value })} 
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors dark:bg-gray-700 dark:text-gray-100"
-                    disabled={!form.brand}
+                  <select
+                    {...register('parentCategory')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">None (Top-level category)</option>
-                    {parents.map(p => (
-                      <option key={p._id} value={p._id}>
-                        {p.name} {p.brand && `(${brands.find(b => b._id === p.brand)?.name || 'Unknown Brand'})`}
-                      </option>
+                    {topLevelCategories.map(cat => (
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Leave empty to create a main category</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {parentCategory ? 'Creating subcategory' : 'Creating top-level category'}
+                  </p>
                 </div>
-                
+
+                {/* Sort Order */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Sort Order
                   </label>
-                  <input 
-                    type="number" 
-                    value={form.sortOrder} 
-                    onChange={(e) => setForm({ ...form, sortOrder: e.target.value })} 
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors dark:bg-gray-700 dark:text-gray-100"
-                    placeholder="0"
+                  <input
+                    type="number"
+                    {...register('sortOrder')}
+                    defaultValue={0}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Lower numbers appear first</p>
+                  <p className="mt-1 text-xs text-gray-500">Lower numbers appear first (default: 0)</p>
                 </div>
               </div>
-
-              {/* Category Preview */}
-              {form.brand && (
-                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Category Preview</h4>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <span className="text-gray-500">Brand:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {brands.find(b => b._id === form.brand)?.name || 'Select brand'}
-                    </span>
-                    {form.parent && (
-                      <>
-                        <span className="text-gray-400">→</span>
-                        <span className="text-gray-500">Parent:</span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {parents.find(p => p._id === form.parent)?.name}
-                        </span>
-                      </>
-                    )}
-                    {form.name && (
-                      <>
-                        <span className="text-gray-400">→</span>
-                        <span className="font-semibold text-purple-600">{form.name}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Visual Elements Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-800 dark:to-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Visual Elements Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 Visual Elements
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Icons and images for better presentation</p>
             </div>
-            
-            <div className="p-8 space-y-6">
-              {/* Icon */}
+            <div className="p-6">
+              {/* Category Icon/Image */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Category Icon
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Category Icon / Image
                 </label>
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center text-2xl">
-                    {form.icon || '📦'}
-                  </div>
-                  <input 
-                    value={form.icon} 
-                    onChange={(e) => setForm({ ...form, icon: e.target.value })} 
-                    className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors dark:bg-gray-700 dark:text-gray-100"
-                    placeholder="💄 or ri-makeup-line"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Use emoji or icon class name</p>
-              </div>
-
-              {/* Image Upload */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Category Image
-                </label>
-                <div 
-                  className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                <div
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                     dragOver 
-                      ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/20' 
+                      ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20' 
                       : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                 >
-                  {form.image.url ? (
+                  {imagePreview ? (
                     <div className="space-y-4">
-                      <div className="relative inline-block">
-                        <img 
-                          src={form.image.url} 
-                          alt={form.image.alt} 
-                          className="w-32 h-32 object-cover rounded-xl shadow-lg" 
-                        />
+                      <img src={imagePreview} alt="Preview" className="mx-auto max-w-xs h-48 object-cover rounded-lg" />
+                      <div className="flex items-center justify-center space-x-2">
                         <button
                           type="button"
-                          onClick={() => setForm(prev => ({ ...prev, image: { url: '', publicId: '', alt: '' } }))}
-                          className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors shadow-lg"
+                          onClick={() => {
+                            setImagePreview(null);
+                            setValue('imageUrl', '');
+                          }}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
                         >
-                          ×
+                          Remove Image
                         </button>
                       </div>
-                      <p className="text-sm text-green-600 dark:text-green-400">✓ Image uploaded successfully</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="w-16 h-16 mx-auto bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center text-3xl">
-                        {uploading ? (
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                        ) : (
-                          '📷'
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-lg font-medium text-gray-900 dark:text-white">
-                          {uploading ? 'Uploading...' : 'Drop image here or click to upload'}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">PNG, JPG, WEBP up to 5MB</p>
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) handleImageUpload(file, 'image');
-                        }}
-                        className="hidden"
-                        id="image-upload"
-                        disabled={uploading}
-                      />
-                      <label
-                        htmlFor="image-upload"
-                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all cursor-pointer shadow-lg hover:shadow-xl disabled:opacity-50"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      {uploading ? (
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto" />
+                      ) : (
+                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        Choose File
-                      </label>
+                      )}
+                      <div>
+                        <label htmlFor="image-upload" className="cursor-pointer">
+                          <span className="mt-2 block text-sm font-medium text-gray-900 dark:text-white">
+                            {uploading ? 'Uploading...' : 'Click to upload'}
+                          </span>
+                          <span className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            PNG, JPG, WEBP up to 5MB
+                          </span>
+                        </label>
+                        <input
+                          id="image-upload"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e.target.files[0])}
+                          className="hidden"
+                          disabled={uploading}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -525,81 +473,47 @@ export default function NewCategoryPage() {
             </div>
           </div>
 
-          {/* Settings Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-orange-50 to-red-50 dark:from-gray-800 dark:to-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          {/* SEO Settings Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Settings
+                SEO Settings
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Configure category behavior and visibility</p>
             </div>
-            
-            <div className="p-8 space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Status
-                  </label>
-                  <select 
-                    value={form.status} 
-                    onChange={(e) => setForm({ ...form, status: e.target.value })} 
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors dark:bg-gray-700 dark:text-gray-100"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-                
-                <div className="flex items-center justify-center">
-                  <label className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                    <input 
-                      type="checkbox" 
-                      checked={form.isFeatured} 
-                      onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} 
-                      className="w-5 h-5 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2" 
-                    />
-                    <div>
-                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Featured Category</span>
-                      <p className="text-xs text-gray-500">Show prominently on homepage</p>
-                    </div>
-                  </label>
-                </div>
+            <div className="p-6 space-y-6">
+              {/* Meta Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Meta Title
+                </label>
+                <input
+                  type="text"
+                  {...register('metaTitle')}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="SEO title for search engines"
+                />
+              </div>
+
+              {/* Meta Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Meta Description
+                </label>
+                <textarea
+                  {...register('metaDescription')}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white resize-none"
+                  placeholder="SEO description for search engines"
+                />
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6">
-            <Link 
-              href="/dashboard/categories" 
-              className="px-8 py-3.5 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors text-center"
-            >
-              Cancel
-            </Link>
-            <button 
-              type="submit" 
-              disabled={loading || uploading} 
-              className="px-8 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Creating Category...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span>Create Category</span>
-                </>
-              )}
-            </button>
-          </div>
+          {/* Hidden field for image URL */}
+          <input type="hidden" {...register('imageUrl')} />
         </form>
       </div>
     </div>

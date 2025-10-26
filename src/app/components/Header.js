@@ -31,6 +31,7 @@ export default function Header() {
         if (data.success) {
           // Set main categories
           if (data.data.categories) {
+            console.log('Header - Categories loaded:', data.data.categories.map(c => ({ name: c.name, slug: c.slug })));
             setCategories(data.data.categories);
           }
           

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/authOptions';
 import dbConnect from '@/lib/db';
 import Product from '@/models/Product';
 import mongoose from 'mongoose';
@@ -98,6 +98,17 @@ export async function PUT(request, { params }) {
       }
       
       body.sku = body.sku.toUpperCase();
+    }
+
+    // Handle pricing structure for update
+    if (body.regularPrice) {
+      // If we have a salePrice, use it as the display price (for backward compatibility)
+      if (body.salePrice) {
+        body.price = body.salePrice;
+      } else if (!body.price && !existingProduct.price) {
+        // If only regularPrice, use it as price for backward compatibility
+        body.price = body.regularPrice;
+      }
     }
 
     // Add updatedBy field

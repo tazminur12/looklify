@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
-export default function AddProductPage() {
+export default function EditProductPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const params = useParams();
+  const productId = params?.id;
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -30,10 +32,6 @@ export default function AddProductPage() {
     salePrice: '',
     discountPercentage: '',
     taxPercentage: '',
-    shippingCharges: {
-      insideDhaka: '',
-      outsideDhaka: ''
-    },
     discountStartDate: '',
     discountEndDate: '',
     sku: '',
@@ -138,6 +136,86 @@ export default function AddProductPage() {
 
     fetchSubcategories();
   }, [formData.brand, formData.category]);
+
+  // Fetch product data for editing
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!productId) return;
+      
+      try {
+        setLoadingData(true);
+        const response = await fetch(`/api/products/${productId}`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            const product = result.data;
+            
+            // Populate form with existing product data
+            setFormData({
+              name: product.name || '',
+              bengaliName: product.bengaliName || '',
+              description: product.description || '',
+              bengaliDescription: product.bengaliDescription || '',
+              category: typeof product.category === 'object' ? product.category._id : product.category || '',
+              subcategory: typeof product.subcategory === 'object' ? product.subcategory._id : product.subcategory || '',
+              costPrice: product.costPrice || '',
+              regularPrice: product.regularPrice || product.price || '',
+              salePrice: product.salePrice || '',
+              discountPercentage: product.discountPercentage || '',
+              taxPercentage: product.taxPercentage || '',
+              discountStartDate: product.discountStartDate ? product.discountStartDate.split('T')[0] : '',
+              discountEndDate: product.discountEndDate ? product.discountEndDate.split('T')[0] : '',
+              sku: product.sku || '',
+              productCode: product.productCode || '',
+              stock: product.stock || '',
+              lowStockThreshold: product.lowStockThreshold || '20',
+              status: product.status || 'active',
+              brand: typeof product.brand === 'object' ? product.brand._id : product.brand || '',
+              origin: product.origin || '',
+              skinType: product.skinType || [],
+              skinConcern: product.skinConcern || [],
+              soldCount: product.soldCount || '0',
+              watchersCount: product.watchersCount || '0',
+              weight: product.weight || { value: '', unit: 'g' },
+              dimensions: product.dimensions || { length: '', width: '', height: '', unit: 'cm' },
+              features: product.features && product.features.length > 0 ? product.features : [''],
+              ingredients: product.ingredients && product.ingredients.length > 0 ? product.ingredients : [''],
+              tags: product.tags && product.tags.length > 0 ? product.tags : [''],
+              images: product.images && product.images.length > 0 ? product.images : [{ url: '', alt: '', isPrimary: true }],
+              isFeatured: product.isFeatured || false,
+              isBestSeller: product.isBestSeller || false,
+              isNewArrival: product.isNewArrival || false,
+              inventory: product.inventory || {
+                trackInventory: true,
+                allowBackorder: false,
+                minOrderQuantity: '1',
+                maxOrderQuantity: ''
+              },
+              seo: product.seo || {
+                metaTitle: '',
+                metaDescription: '',
+                keywords: ['']
+              }
+            });
+          }
+        } else {
+          toast.error('Failed to load product');
+          router.push('/dashboard/products');
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        toast.error('Error loading product');
+        router.push('/dashboard/products');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    if (session && productId) {
+      fetchProduct();
+    }
+  }, [session, productId, router]);
 
   // Image upload function
   const handleImageUpload = async (file, index) => {
@@ -384,10 +462,6 @@ export default function AddProductPage() {
         salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
         discountPercentage: formData.discountPercentage ? parseFloat(formData.discountPercentage) : undefined,
         taxPercentage: formData.taxPercentage ? parseFloat(formData.taxPercentage) : undefined,
-        shippingCharges: {
-          insideDhaka: formData.shippingCharges.insideDhaka ? parseFloat(formData.shippingCharges.insideDhaka) : 0,
-          outsideDhaka: formData.shippingCharges.outsideDhaka ? parseFloat(formData.shippingCharges.outsideDhaka) : 0
-        },
         discountStartDate: formData.discountStartDate || undefined,
         discountEndDate: formData.discountEndDate || undefined,
         stock: parseInt(formData.stock),
@@ -425,8 +499,8 @@ export default function AddProductPage() {
         images: formData.images.filter(img => img.url.trim())
       };
 
-      const response = await fetch('/api/products', {
-        method: 'POST',
+      const response = await fetch(`/api/products/${productId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -436,7 +510,7 @@ export default function AddProductPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('Product created successfully!');
+        toast.success('Product updated successfully!');
         router.push('/dashboard/products');
       } else {
         if (result.details && Array.isArray(result.details)) {
@@ -452,12 +526,12 @@ export default function AddProductPage() {
           setErrors(serverErrors);
           toast.error('Please fix the validation errors');
         } else {
-          setErrors({ submit: result.error || 'Failed to create product' });
-          toast.error(result.error || 'Failed to create product');
+          setErrors({ submit: result.error || 'Failed to update product' });
+          toast.error(result.error || 'Failed to update product');
         }
       }
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('Error updating product:', error);
       setErrors({ submit: 'Network error. Please try again.' });
       toast.error('Network error. Please try again.');
     } finally {
@@ -485,9 +559,9 @@ export default function AddProductPage() {
       {/* Header */}
       <div className="flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4 border border-purple-200 dark:border-gray-600">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Add New Product</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Edit Product</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Create a new product for your store
+            Update product information
           </p>
         </div>
         <Link
@@ -796,52 +870,8 @@ export default function AddProductPage() {
                 }`}
                 placeholder="15"
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Tax percentage applied to the product (leave empty for no tax)</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Tax percentage applied to the product</p>
               {errors.taxPercentage && <p className="mt-1 text-xs text-red-600">{errors.taxPercentage}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Shipping Charge - Inside Dhaka (৳)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.shippingCharges.insideDhaka}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  shippingCharges: {
-                    ...prev.shippingCharges,
-                    insideDhaka: e.target.value
-                  }
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
-                placeholder="50"
-              />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shipping charge for orders inside Dhaka</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Shipping Charge - Outside Dhaka (৳)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.shippingCharges.outsideDhaka}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  shippingCharges: {
-                    ...prev.shippingCharges,
-                    outsideDhaka: e.target.value
-                  }
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
-                placeholder="100"
-              />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shipping charge for orders outside Dhaka</p>
             </div>
 
             <div>
@@ -1459,7 +1489,7 @@ export default function AddProductPage() {
             className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-            {loading ? 'Creating Product...' : 'Create Product'}
+            {loading ? 'Updating Product...' : 'Update Product'}
           </button>
         </div>
       </form>

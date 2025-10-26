@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 export default function ProductsPage() {
   const { data: session, status } = useSession();
@@ -108,28 +109,107 @@ export default function ProductsPage() {
     return 'text-green-600';
   };
 
+  // Calculate discount percentage for display
+  const calculateDiscount = (product) => {
+    // New pricing structure
+    if (product.regularPrice && product.salePrice) {
+      return Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);
+    }
+    // Legacy pricing
+    if (product.originalPrice && product.price) {
+      return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+    }
+    return 0;
+  };
+
+  // Get display price
+  const getDisplayPrice = (product) => {
+    return product.salePrice || product.price;
+  };
+
+  // Get regular price
+  const getRegularPrice = (product) => {
+    return product.regularPrice || product.originalPrice;
+  };
+
   const handleEditProduct = (product) => {
     router.push(`/dashboard/products/edit/${product._id}`);
   };
 
   const handleDeleteProduct = async (productId) => {
-    if (confirm('Are you sure you want to delete this product?')) {
+    const product = products.find(p => p._id === productId);
+    
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: product ? `Do you want to delete "${product.name}"?` : 'Do you want to delete this product?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      background: '#ffffff',
+      color: '#1f2937',
+      customClass: {
+        popup: 'rounded-lg shadow-xl',
+        confirmButton: 'px-4 py-2 rounded-lg font-medium transition-colors',
+        cancelButton: 'px-4 py-2 rounded-lg font-medium transition-colors'
+      }
+    });
+
+    if (result.isConfirmed) {
       try {
         const response = await fetch(`/api/products/${productId}`, {
           method: 'DELETE'
         });
         
-        const result = await response.json();
+        const deleteResult = await response.json();
         
-        if (result.success) {
+        if (deleteResult.success) {
+          await Swal.fire({
+            title: 'Deleted!',
+            text: 'Product has been deleted successfully.',
+            icon: 'success',
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            background: '#ffffff',
+            color: '#1f2937',
+            customClass: {
+              popup: 'rounded-lg shadow-xl'
+            }
+          });
           // Refresh the products list
           fetchProducts(pagination.currentPage, searchTerm, selectedCategory, sortBy, sortOrder);
         } else {
-          alert(result.error || 'Failed to delete product');
+          Swal.fire({
+            title: 'Error!',
+            text: deleteResult.error || 'Failed to delete product',
+            icon: 'error',
+            confirmButtonColor: '#dc2626',
+            background: '#ffffff',
+            color: '#1f2937',
+            customClass: {
+              popup: 'rounded-lg shadow-xl',
+              confirmButton: 'px-4 py-2 rounded-lg font-medium'
+            }
+          });
         }
       } catch (error) {
         console.error('Error deleting product:', error);
-        alert('Network error. Please try again.');
+        Swal.fire({
+          title: 'Error!',
+          text: 'Network error. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#dc2626',
+          background: '#ffffff',
+          color: '#1f2937',
+          customClass: {
+            popup: 'rounded-lg shadow-xl',
+            confirmButton: 'px-4 py-2 rounded-lg font-medium'
+          }
+        });
       }
     }
   };
@@ -321,15 +401,18 @@ export default function ProductsPage() {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={product}
-              onEdit={handleEditProduct}
-              onDelete={handleDeleteProduct}
-              onToggleStatus={handleToggleStatus}
-              getStatusColor={getStatusColor}
-              getStockColor={getStockColor}
-            />
+                              <ProductCard
+                    key={product._id}
+                    product={product}
+                    onEdit={handleEditProduct}
+                    onDelete={handleDeleteProduct}
+                    onToggleStatus={handleToggleStatus}
+                    getStatusColor={getStatusColor}
+                    getStockColor={getStockColor}
+                    calculateDiscount={calculateDiscount}
+                    getDisplayPrice={getDisplayPrice}
+                    getRegularPrice={getRegularPrice}
+                  />
           ))}
         </div>
       ) : (
@@ -371,6 +454,9 @@ export default function ProductsPage() {
                     onToggleStatus={handleToggleStatus}
                     getStatusColor={getStatusColor}
                     getStockColor={getStockColor}
+                    calculateDiscount={calculateDiscount}
+                    getDisplayPrice={getDisplayPrice}
+                    getRegularPrice={getRegularPrice}
                   />
                 ))}
               </tbody>
@@ -405,7 +491,7 @@ export default function ProductsPage() {
 }
 
 // Product Card Component
-function ProductCard({ product, onEdit, onDelete, onToggleStatus, getStatusColor, getStockColor }) {
+function ProductCard({ product, onEdit, onDelete, onToggleStatus, getStatusColor, getStockColor, calculateDiscount, getDisplayPrice, getRegularPrice }) {
   const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
   const imageUrl = primaryImage?.url || '/slider/1.webp';
   
@@ -423,9 +509,22 @@ function ProductCard({ product, onEdit, onDelete, onToggleStatus, getStatusColor
           </span>
         </div>
         <div className="absolute top-2 left-2">
-          {product.originalPrice && product.originalPrice > product.price && (
+          {calculateDiscount && calculateDiscount(product) > 0 && (
             <span className="bg-red-500 text-white px-2 py-1 text-xs font-medium rounded">
-              -{Math.round((1 - product.price / product.originalPrice) * 100)}%
+              -{calculateDiscount(product)}%
+            </span>
+          )}
+          {!calculateDiscount && ((product.regularPrice && product.salePrice) || (product.originalPrice && product.price)) && (
+            <span className="bg-red-500 text-white px-2 py-1 text-xs font-medium rounded">
+              -{(() => {
+                if (product.regularPrice && product.salePrice) {
+                  return Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);
+                }
+                if (product.originalPrice && product.price) {
+                  return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+                }
+                return 0;
+              })()}%
             </span>
           )}
         </div>
@@ -436,17 +535,19 @@ function ProductCard({ product, onEdit, onDelete, onToggleStatus, getStatusColor
           {product.name}
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-          {product.category} • SKU: {product.sku}
+          {typeof product.category === 'string' ? product.category : product.category?.name || 'Unknown Category'} • SKU: {product.sku}
         </p>
         
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
-              ${product.price}
+              BDT {getDisplayPrice && getDisplayPrice(product) || (product.salePrice || product.price)}
             </span>
-            {product.originalPrice && product.originalPrice > product.price && (
+            {(getRegularPrice && getRegularPrice(product) || (product.regularPrice || product.originalPrice)) && 
+             (getRegularPrice && getRegularPrice(product) || (product.regularPrice || product.originalPrice)) > 
+             (getDisplayPrice && getDisplayPrice(product) || (product.salePrice || product.price)) && (
               <span className="text-sm text-gray-500 line-through">
-                ${product.originalPrice}
+                BDT {getRegularPrice && getRegularPrice(product) || (product.regularPrice || product.originalPrice)}
               </span>
             )}
           </div>
@@ -494,7 +595,7 @@ function ProductCard({ product, onEdit, onDelete, onToggleStatus, getStatusColor
 }
 
 // Product Row Component for Table View
-function ProductRow({ product, onEdit, onDelete, onToggleStatus, getStatusColor, getStockColor }) {
+function ProductRow({ product, onEdit, onDelete, onToggleStatus, getStatusColor, getStockColor, calculateDiscount, getDisplayPrice, getRegularPrice }) {
   const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
   const imageUrl = primaryImage?.url || '/slider/1.webp';
   
@@ -519,15 +620,15 @@ function ProductRow({ product, onEdit, onDelete, onToggleStatus, getStatusColor,
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900 dark:text-gray-100">
-          {product.category}
+          {typeof product.category === 'string' ? product.category : product.category?.name || 'Unknown Category'}
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900 dark:text-gray-100">
-          ${product.price}
-          {product.originalPrice && product.originalPrice > product.price && (
+          BDT {getDisplayPrice(product)}
+          {getRegularPrice(product) && getRegularPrice(product) > getDisplayPrice(product) && (
             <span className="ml-1 text-xs text-gray-500 line-through">
-              ${product.originalPrice}
+              BDT {getRegularPrice(product)}
             </span>
           )}
         </div>

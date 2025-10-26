@@ -18,6 +18,45 @@ const ProductSchema = new mongoose.Schema({
     required: [true, 'Product price is required'],
     min: [0, 'Price cannot be negative']
   },
+  // New pricing structure fields
+  regularPrice: {
+    type: Number,
+    min: [0, 'Regular price cannot be negative']
+  },
+  costPrice: {
+    type: Number,
+    min: [0, 'Cost price cannot be negative']
+  },
+  salePrice: {
+    type: Number,
+    min: [0, 'Sale price cannot be negative']
+  },
+  taxPercentage: {
+    type: Number,
+    min: [0, 'Tax percentage cannot be negative'],
+    max: [100, 'Tax percentage cannot exceed 100'],
+    default: null
+  },
+  // Shipping charges based on location
+  shippingCharges: {
+    insideDhaka: {
+      type: Number,
+      min: [0, 'Inside Dhaka shipping cannot be negative'],
+      default: 0
+    },
+    outsideDhaka: {
+      type: Number,
+      min: [0, 'Outside Dhaka shipping cannot be negative'],
+      default: 0
+    }
+  },
+  discountStartDate: {
+    type: Date
+  },
+  discountEndDate: {
+    type: Date
+  },
+  // Legacy pricing fields (keeping for backward compatibility)
   originalPrice: {
     type: Number,
     min: [0, 'Original price cannot be negative']
@@ -287,6 +326,26 @@ ProductSchema.index({ isBestSeller: 1, status: 1 });
 
 // Pre-save middleware to calculate discount percentage
 ProductSchema.pre('save', function(next) {
+  // Handle new pricing structure
+  if (this.regularPrice && this.salePrice && this.salePrice < this.regularPrice) {
+    this.discountPercentage = Math.round(((this.regularPrice - this.salePrice) / this.regularPrice) * 100);
+    this.isOnSale = true;
+    // Set price to sale price for display (backward compatibility)
+    if (!this.price) {
+      this.price = this.salePrice;
+    }
+  } else if (this.regularPrice && !this.salePrice) {
+    // If only regular price is set, use it as the main price for backward compatibility
+    if (!this.price) {
+      this.price = this.regularPrice;
+    }
+    // Don't overwrite if price is explicitly set
+  } else if (!this.price && this.salePrice) {
+    // If only salePrice is set, use it as price for backward compatibility
+    this.price = this.salePrice;
+  }
+  
+  // Legacy pricing calculations (keeping for backward compatibility)
   // Calculate discount from original price
   if (this.originalPrice && this.originalPrice > this.price) {
     this.discountPercentage = Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100);

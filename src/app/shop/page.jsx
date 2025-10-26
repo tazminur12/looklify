@@ -126,9 +126,26 @@ function ShopContent() {
   };
 
   const calculateDiscountPercentage = (product) => {
-    if (product.originalPrice && product.price) {
+    // If discountPercentage is explicitly set, use it
+    if (product.discountPercentage && product.discountPercentage > 0) {
+      return product.discountPercentage;
+    }
+    
+    // New pricing structure
+    if (product.regularPrice && product.salePrice && product.regularPrice > product.salePrice) {
+      return Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);
+    }
+    
+    // Legacy pricing
+    if (product.originalPrice && product.price && product.originalPrice > product.price) {
       return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
     }
+    
+    // Check if there's a price difference
+    if (product.regularPrice && product.price && product.regularPrice > product.price) {
+      return Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100);
+    }
+    
     return 0;
   };
 
@@ -445,14 +462,29 @@ function ShopContent() {
 
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-1">
-                            <span className="text-base font-bold text-gray-900">
-                              ৳{product.price}
-                            </span>
-                            {product.originalPrice && product.originalPrice > product.price && (
-                              <span className="text-xs text-gray-500 line-through">
-                                ৳{product.originalPrice}
-                              </span>
-                            )}
+                            {(() => {
+                              // Determine the correct sale price and regular price
+                              const salePrice = product.salePrice;
+                              const regularPrice = product.regularPrice || product.originalPrice;
+                              const legacyPrice = product.price;
+                              
+                              // If we have salePrice and regularPrice, salePrice is the display price
+                              // Otherwise use the legacy price
+                              const displayPrice = (salePrice && regularPrice) ? salePrice : (salePrice || legacyPrice);
+                              
+                              return (
+                                <>
+                                  <span className="text-base font-bold text-gray-900">
+                                    ৳{displayPrice}
+                                  </span>
+                                  {regularPrice && regularPrice > displayPrice && (
+                                    <span className="text-xs text-gray-500 line-through">
+                                      ৳{regularPrice}
+                                    </span>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                           <div className="flex items-center space-x-1">
                             <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">

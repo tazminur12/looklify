@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const stats = [
     { 
       name: 'Total Revenue', 
-      value: '$45,231.89', 
+      value: 'BDT 45,231.89', 
       change: '+20.1%', 
       positive: true,
       icon: (
@@ -82,19 +82,19 @@ export default function DashboardPage() {
   ];
 
   const recentOrders = [
-    { id: '#ORD-7841', customer: 'Sarah Johnson', amount: '$324.00', status: 'Completed', date: '2024-01-15' },
-    { id: '#ORD-7840', customer: 'Mike Chen', amount: '$156.50', status: 'Processing', date: '2024-01-15' },
-    { id: '#ORD-7839', customer: 'Emma Wilson', amount: '$89.99', status: 'Completed', date: '2024-01-14' },
-    { id: '#ORD-7838', customer: 'Alex Rodriguez', amount: '$245.75', status: 'Shipped', date: '2024-01-14' },
-    { id: '#ORD-7837', customer: 'Jessica Brown', amount: '$432.25', status: 'Pending', date: '2024-01-13' },
+    { id: '#ORD-7841', customer: 'Sarah Johnson', amount: 'BDT 324.00', status: 'Completed', date: '2024-01-15' },
+    { id: '#ORD-7840', customer: 'Mike Chen', amount: 'BDT 156.50', status: 'Processing', date: '2024-01-15' },
+    { id: '#ORD-7839', customer: 'Emma Wilson', amount: 'BDT 89.99', status: 'Completed', date: '2024-01-14' },
+    { id: '#ORD-7838', customer: 'Alex Rodriguez', amount: 'BDT 245.75', status: 'Shipped', date: '2024-01-14' },
+    { id: '#ORD-7837', customer: 'Jessica Brown', amount: 'BDT 432.25', status: 'Pending', date: '2024-01-13' },
   ];
 
   const topProducts = [
-    { name: 'Wireless Headphones', sales: 234, revenue: '$12,847', growth: '+12%' },
-    { name: 'Smart Watch Pro', sales: 189, revenue: '$9,450', growth: '+23%' },
-    { name: 'Laptop Backpack', sales: 156, revenue: '$3,120', growth: '+8%' },
-    { name: 'Phone Case', sales: 432, revenue: '$2,160', growth: '+15%' },
-    { name: 'USB-C Cable', sales: 321, revenue: '$1,605', growth: '+5%' },
+    { name: 'Wireless Headphones', sales: 234, revenue: 'BDT 12,847', growth: '+12%' },
+    { name: 'Smart Watch Pro', sales: 189, revenue: 'BDT 9,450', growth: '+23%' },
+    { name: 'Laptop Backpack', sales: 156, revenue: 'BDT 3,120', growth: '+8%' },
+    { name: 'Phone Case', sales: 432, revenue: 'BDT 2,160', growth: '+15%' },
+    { name: 'USB-C Cable', sales: 321, revenue: 'BDT 1,605', growth: '+5%' },
   ];
 
   const getStatusColor = (status) => {
@@ -265,7 +265,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-sm font-medium">Avg. Order Value</p>
-              <p className="text-2xl font-bold mt-1">$142.50</p>
+              <p className="text-2xl font-bold mt-1">BDT 142.50</p>
               <p className="text-blue-100 text-sm mt-2">+5% from last month</p>
             </div>
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
