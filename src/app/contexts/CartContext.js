@@ -94,6 +94,7 @@ export function CartProvider({ children }) {
           image: imageUrl,
           brand: product.brand?.name,
           category: product.category?.name,
+          sku: product.sku || '',
           quantity: 1,
           maxQuantity: product.inventory?.maxOrderQuantity || 999,
           taxPercentage: product.taxPercentage || null,

@@ -180,12 +180,12 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      window.location.href = '/login?redirect=/cart';
+      window.location.href = '/login?redirect=/checkout';
       return;
     }
     
-    // TODO: Implement checkout functionality
-    alert('Checkout functionality will be implemented soon!');
+    // Redirect to checkout page
+    window.location.href = '/checkout';
   };
 
   if (loading) {

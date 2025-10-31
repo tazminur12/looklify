@@ -175,28 +175,12 @@ function ShopContent() {
   };
 
   const handleBuyNow = (productId) => {
-    Swal.fire({
-      title: 'Buy Now',
-      text: 'This feature will redirect you to checkout',
-      icon: 'info',
-      showCancelButton: true,
-      confirmButtonColor: '#7c3aed',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Proceed to Checkout',
-      cancelButtonText: 'Cancel',
-      background: '#f8fafc',
-      color: '#1f2937'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Add to cart and redirect to checkout
-        const product = products.find(p => p._id === productId);
-        if (product) {
-          addToCart(product);
-        }
-        // You can add checkout redirect logic here
-        console.log('Proceeding to checkout for product:', productId);
-      }
-    });
+    const product = products.find(p => p._id === productId);
+    if (product) {
+      addToCart(product);
+      // Redirect to checkout
+      window.location.href = '/checkout';
+    }
   };
 
   if (loading && products.length === 0) {

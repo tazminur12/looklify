@@ -50,7 +50,7 @@ export default withAuth(
     }
 
     // Protected routes that require authentication
-    if (pathname.startsWith('/profile') || pathname.startsWith('/orders')) {
+    if (pathname.startsWith('/profile') || pathname.startsWith('/orders') || pathname.startsWith('/my-orders')) {
       if (!token) {
         return NextResponse.redirect(new URL('/login', req.url));
       }
@@ -80,6 +80,7 @@ export const config = {
     "/support/:path*",
     "/profile/:path*", 
     "/orders/:path*",
+    "/my-orders/:path*",
     "/dashboard/:path*"
   ]
 };

@@ -230,7 +230,7 @@ export default function Header() {
                         Profile
                       </Link>
                       <Link
-                        href="/orders"
+                        href="/my-orders"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                         onClick={() => setIsProfileMenuOpen(false)}
                       >
@@ -439,7 +439,7 @@ export default function Header() {
                     Profile
                   </Link>
                   <Link
-                    href="/orders"
+                    href="/my-orders"
                     className="block w-full px-4 py-3.5 text-gray-700 hover:bg-purple-50 hover:text-purple-600 text-center rounded-xl font-semibold transition-all duration-200"
                     onClick={() => setIsMenuOpen(false)}
                   >

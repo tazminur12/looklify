@@ -193,7 +193,11 @@ export default function DynamicShopPage() {
         alert(`${product.name} added to cart!`);
       }}
       handleBuyNow={() => {
-        console.log('Buying now:', { productId: product._id, quantity });
+        if (product) {
+          addToCart(product);
+          // Redirect to checkout
+          window.location.href = '/checkout';
+        }
       }}
     />;
   }
