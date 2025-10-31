@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '../../contexts/CartContext';
@@ -60,6 +61,8 @@ export default function DynamicShopPage() {
 
         if (result.success) {
           setProduct(result.data);
+          // Reset image index when product changes
+          setActiveImageIndex(0);
           // Fetch related products
           const relatedResponse = await fetch(`/api/products?category=${result.data.category}&limit=4`);
           const relatedResult = await relatedResponse.json();
@@ -169,6 +172,7 @@ export default function DynamicShopPage() {
   if (isProductId) {
     return <ProductDetailsView 
       product={product} 
+      productId={params.id}
       loading={loading} 
       error={error} 
       quantity={quantity} 
@@ -208,8 +212,314 @@ export default function DynamicShopPage() {
   />;
 }
 
+// Reviews Section Component
+function ReviewsSection({ productId, session }) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    rating: 0,
+    comment: ''
+  });
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [productId]);
+
+  const fetchReviews = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/products/${productId}/reviews`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setReviews(result.data.reviews);
+        setAverageRating(result.data.averageRating);
+        setTotalReviews(result.data.totalReviews);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    
+    if (!session) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Please login to submit a review',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Login',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#7c3aed'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = '/login';
+        }
+      });
+      return;
+    }
+
+    if (reviewForm.rating === 0) {
+      Swal.fire({
+        title: 'Rating Required',
+        text: 'Please select a rating',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#7c3aed'
+      });
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const response = await fetch(`/api/products/${productId}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          rating: reviewForm.rating,
+          comment: reviewForm.comment
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        Swal.fire({
+          title: 'Review Submitted!',
+          text: 'Thank you for your review!',
+          icon: 'success',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+        setReviewForm({ rating: 0, comment: '' });
+        setShowForm(false);
+        fetchReviews();
+      } else {
+        Swal.fire({
+          title: 'Error',
+          text: result.error || 'Failed to submit review',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to submit review',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div>
+      {/* Reviews Header */}
+      <div className="mb-6">
+        <h4 className="font-semibold text-gray-900 mb-4 text-base">Customer Reviews</h4>
+        
+        {/* Average Rating Summary */}
+        <div className="flex items-center space-x-4 mb-4">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-gray-900">{averageRating.toFixed(1)}</div>
+            <div className="flex items-center mt-1">
+              {[...Array(5)].map((_, i) => (
+                <span
+                  key={i}
+                  className={`text-lg ${i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                >
+                  ⭐
+                </span>
+              ))}
+            </div>
+            <div className="text-xs text-gray-600 mt-1">{totalReviews} reviews</div>
+          </div>
+        </div>
+
+        {/* Write Review Button */}
+        {session && !showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-4 py-2 text-sm bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+          >
+            Write a Review
+          </button>
+        )}
+
+        {/* Review Form */}
+        {showForm && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <h5 className="font-medium text-gray-900">Write Your Review</h5>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleSubmitReview}>
+              {/* Rating Stars */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Rate this product
+                </label>
+                <div className="flex items-center space-x-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewForm({...reviewForm, rating: star})}
+                      className={`text-2xl ${reviewForm.rating >= star ? 'text-yellow-400' : 'text-gray-300'} hover:scale-110 transition-transform`}
+                    >
+                      ⭐
+                    </button>
+                  ))}
+                  {reviewForm.rating > 0 && (
+                    <span className="ml-2 text-xs text-gray-600">
+                      {reviewForm.rating} out of 5
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Review Comment */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Your Review
+                </label>
+                <textarea
+                  value={reviewForm.comment}
+                  onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})}
+                  rows="4"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Share your experience with this product..."
+                  required
+                />
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full px-4 py-2 text-sm bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              >
+                {submitting ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+
+      {/* Reviews List */}
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="h-8 w-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-3 text-sm text-gray-600">Loading reviews...</p>
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            ⭐
+          </div>
+          <p className="text-gray-500 text-sm">No reviews yet</p>
+          <p className="text-xs text-gray-400 mt-1">Be the first to review and help others</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {reviews.map((review) => (
+            <div key={review._id} className="pb-6 border-b border-gray-200 last:border-b-0">
+              <div className="flex items-start space-x-3">
+                {/* User Avatar */}
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                  {review.user?.name?.charAt(0) || review.user?.email?.charAt(0) || 'U'}
+                </div>
+                
+                {/* Review Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h5 className="font-medium text-gray-900 text-sm">
+                      {review.user?.name || 'Anonymous'}
+                    </h5>
+                    <span className="text-xs text-gray-500">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  
+                  {/* Rating Stars */}
+                  <div className="flex items-center mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <span
+                        key={i}
+                        className={`text-xs ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                      >
+                        ⭐
+                      </span>
+                    ))}
+                  </div>
+                  
+                  {/* Review Comment */}
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    {review.comment}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Product Details Component
-function ProductDetailsView({ product, loading, error, quantity, setQuantity, activeImageIndex, setActiveImageIndex, activeTab, setActiveTab, relatedProducts, handleQuantityChange, handleAddToCart, handleBuyNow }) {
+function ProductDetailsView({ product, productId, loading, error, quantity, setQuantity, activeImageIndex, setActiveImageIndex, activeTab, setActiveTab, relatedProducts, handleQuantityChange, handleAddToCart, handleBuyNow }) {
+  const { data: session } = useSession();
+  const [dynamicWatchersCount, setDynamicWatchersCount] = useState(95);
+
+  // Update watchers count dynamically within 90-100 range
+  useEffect(() => {
+    // Initialize with a random value between 90-100
+    setDynamicWatchersCount(Math.floor(Math.random() * 11) + 90);
+
+    const interval = setInterval(() => {
+      setDynamicWatchersCount((prevCount) => {
+        // Randomly decide to increase or decrease (50% chance each)
+        const shouldIncrease = Math.random() < 0.5;
+        
+        // Random change amount between 1-3
+        const changeAmount = Math.floor(Math.random() * 3) + 1;
+        
+        let newCount;
+        if (shouldIncrease) {
+          // Increase, but don't go above 100
+          newCount = Math.min(100, prevCount + changeAmount);
+        } else {
+          // Decrease, but don't go below 90
+          newCount = Math.max(90, prevCount - changeAmount);
+        }
+        
+        return newCount;
+      });
+    }, Math.floor(Math.random() * 2000) + 3000); // Random interval between 3-5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   const calculateDiscountPercentage = () => {
     // If discountPercentage is explicitly set, use it
     if (product?.discountPercentage && product.discountPercentage > 0) {
@@ -266,7 +576,8 @@ function ProductDetailsView({ product, loading, error, quantity, setQuantity, ac
   }
 
   const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
-  const imageUrl = primaryImage?.url || '/slider/1.webp';
+  const activeImage = product.images?.[activeImageIndex] || primaryImage;
+  const imageUrl = activeImage?.url || '/slider/1.webp';
   
   // Determine correct pricing
   const salePrice = product.salePrice;
@@ -296,7 +607,7 @@ function ProductDetailsView({ product, loading, error, quantity, setQuantity, ac
               <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
                 <Image
                   src={imageUrl}
-                  alt={primaryImage?.alt || product.name}
+                  alt={activeImage?.alt || product.name}
                   width={500}
                   height={500}
                   className="w-full h-full object-cover"
@@ -342,6 +653,17 @@ function ProductDetailsView({ product, loading, error, quantity, setQuantity, ac
               <h1 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
                 {product.name}
               </h1>
+              
+              {/* Watching Now Indicator */}
+              <div className="mb-3 px-3 py-2 bg-gray-100 rounded-lg flex items-center space-x-2">
+                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span className="text-sm text-gray-900 font-medium">
+                  {dynamicWatchersCount} people watching this right now
+                </span>
+              </div>
               
               {/* Rating - Compact */}
               <div className="flex items-center space-x-1.5 mb-3">
@@ -462,6 +784,15 @@ function ProductDetailsView({ product, loading, error, quantity, setQuantity, ac
                   Buy Now
                 </button>
               </div>
+
+              {/* Caption - Display below buttons */}
+              {product.description && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                    {product.description}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Related Products - Compact */}
@@ -532,15 +863,13 @@ function ProductDetailsView({ product, loading, error, quantity, setQuantity, ac
           <div className="p-4">
             {activeTab === 'description' && (
               <div className="space-y-3">
-                {product.bengaliDescription && (
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1.5 text-sm">Bengali Description:</h4>
-                    <p className="text-gray-700 whitespace-pre-line text-xs leading-relaxed">{product.bengaliDescription}</p>
-                  </div>
-                )}
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1.5 text-sm">English Description:</h4>
-                  <p className="text-gray-700 whitespace-pre-line text-xs leading-relaxed">{product.description}</p>
+                  <h4 className="font-semibold text-gray-900 mb-1.5 text-sm">Description:</h4>
+                  {product.bengaliDescription ? (
+                    <p className="text-gray-700 whitespace-pre-line text-xs leading-relaxed">{product.bengaliDescription}</p>
+                  ) : (
+                    <p className="text-gray-500 text-xs italic">No Bengali description available</p>
+                  )}
                 </div>
               </div>
             )}
@@ -576,16 +905,7 @@ function ProductDetailsView({ product, loading, error, quantity, setQuantity, ac
             )}
 
             {activeTab === 'reviews' && (
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-3 text-sm">Reviews:</h4>
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    ⭐
-                  </div>
-                  <p className="text-gray-500 text-sm">No reviews yet</p>
-                  <p className="text-xs text-gray-400 mt-1">Be the first to review and help others</p>
-                </div>
-              </div>
+              <ReviewsSection productId={productId} session={session} />
             )}
           </div>
         </div>

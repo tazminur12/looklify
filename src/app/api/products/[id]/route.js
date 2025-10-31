@@ -29,6 +29,9 @@ export async function GET(request, { params }) {
     const product = await Product.findById(id)
       .populate('createdBy', 'name email')
       .populate('updatedBy', 'name email')
+      .populate('brand', 'name')
+      .populate('category', 'name')
+      .populate('subcategory', 'name')
       .lean();
 
     if (!product) {
@@ -122,6 +125,9 @@ export async function PUT(request, { params }) {
     )
       .populate('createdBy', 'name email')
       .populate('updatedBy', 'name email')
+      .populate('brand', 'name')
+      .populate('category', 'name')
+      .populate('subcategory', 'name')
       .lean();
 
     return NextResponse.json({

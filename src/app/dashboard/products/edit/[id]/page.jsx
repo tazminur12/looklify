@@ -368,7 +368,7 @@ export default function EditProductPage() {
 
     // Required fields validation
     if (!formData.name.trim()) newErrors.name = 'Product name is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.description.trim()) newErrors.description = 'Caption is required';
     if (!formData.regularPrice || formData.regularPrice <= 0) newErrors.regularPrice = 'Valid regular price is required';
     if (!formData.sku.trim()) newErrors.sku = 'SKU is required';
     if (!formData.productCode.trim()) newErrors.productCode = 'Product code is required';
@@ -700,7 +700,7 @@ export default function EditProductPage() {
 
             <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Description (English) *
+                Caption *
               </label>
               <textarea
                 value={formData.description}
@@ -709,7 +709,7 @@ export default function EditProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm ${
                   errors.description ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
                 }`}
-                placeholder="Enter detailed product description"
+                placeholder="Enter product caption"
               />
               {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description}</p>}
             </div>

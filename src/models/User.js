@@ -72,6 +72,11 @@ const UserSchema = new Schema({
       },
     },
   },
+  wishlist: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Product',
+    default: [],
+  }],
 }, {
   timestamps: true,
 });

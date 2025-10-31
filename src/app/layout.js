@@ -1,19 +1,15 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Roboto_Slab } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import AuthSessionProvider from "./providers/SessionProvider";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
+import { WishlistProvider } from "./contexts/WishlistContext";
 import LayoutWrapper from "./components/LayoutWrapper";
 import { Toaster } from "react-hot-toast";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const robotoSlab = Roboto_Slab({
+  variable: "--font-roboto-slab",
   subsets: ["latin"],
 });
 
@@ -44,40 +40,42 @@ export default function RootLayout({ children }) {
         </Script>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 transition-colors duration-300`}
+        className={`${robotoSlab.variable} antialiased bg-white text-gray-900 transition-colors duration-300`}
       >
         <AuthSessionProvider>
           <AuthProvider>
             <CartProvider>
-              <div className="min-h-screen flex flex-col bg-white transition-colors duration-300">
-                <LayoutWrapper>
-                  {children}
-                </LayoutWrapper>
-                <Toaster
-                  position="top-right"
-                  toastOptions={{
-                    duration: 4000,
-                    style: {
-                      background: '#363636',
-                      color: '#fff',
-                    },
-                    success: {
-                      duration: 3000,
-                      iconTheme: {
-                        primary: '#10B981',
-                        secondary: '#fff',
-                      },
-                    },
-                    error: {
+              <WishlistProvider>
+                <div className="min-h-screen flex flex-col bg-white transition-colors duration-300">
+                  <LayoutWrapper>
+                    {children}
+                  </LayoutWrapper>
+                  <Toaster
+                    position="top-right"
+                    toastOptions={{
                       duration: 4000,
-                      iconTheme: {
-                        primary: '#EF4444',
-                        secondary: '#fff',
+                      style: {
+                        background: '#363636',
+                        color: '#fff',
                       },
-                    },
-                  }}
-                />
-              </div>
+                      success: {
+                        duration: 3000,
+                        iconTheme: {
+                          primary: '#10B981',
+                          secondary: '#fff',
+                        },
+                      },
+                      error: {
+                        duration: 4000,
+                        iconTheme: {
+                          primary: '#EF4444',
+                          secondary: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </WishlistProvider>
             </CartProvider>
           </AuthProvider>
         </AuthSessionProvider>

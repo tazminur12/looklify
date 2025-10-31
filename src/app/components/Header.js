@@ -5,72 +5,55 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { useCart } from '../contexts/CartContext';
+import { useWishlist } from '../contexts/WishlistContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [subcategories, setSubcategories] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loadingSubcategories, setLoadingSubcategories] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState(new Set());
+  
+  // Fixed categories (not from backend)
+  const categories = [
+    { name: 'Skin Care', slug: 'skin-care' },
+    { name: 'Hair Care', slug: 'hair-care' },
+    { name: 'Lip Care', slug: 'lip-care' },
+    { name: 'Eye Care', slug: 'eye-care' },
+    { name: 'Body Care', slug: 'body-care' },
+    { name: 'Facial Care', slug: 'facial-care' },
+    { name: 'Teeth Care', slug: 'teeth-care' },
+    { name: 'Health & Beauty', slug: 'health-beauty' }
+  ];
   const { data: session, status } = useSession();
   const { getCartCount } = useCart();
+  const { getWishlistCount } = useWishlist();
   const profileMenuRef = useRef(null);
 
-  // Fetch categories and subcategories from backend
+  // Fetch subcategories from backend for search dropdown only
   useEffect(() => {
-    const fetchCategoriesAndSubcategories = async () => {
+    const fetchSubcategories = async () => {
       try {
         setLoadingSubcategories(true);
-        setLoadingCategories(true);
         const response = await fetch('/api/shop/filters');
         const data = await response.json();
         
         if (data.success) {
-          // Set main categories
-          if (data.data.categories) {
-            console.log('Header - Categories loaded:', data.data.categories.map(c => ({ name: c.name, slug: c.slug })));
-            setCategories(data.data.categories);
-          }
-          
-          // Flatten all subcategories from all parent categories
+          // Only fetch subcategories for search dropdown
           if (data.data.subcategories) {
             const allSubcategories = Object.values(data.data.subcategories).flat();
             setSubcategories(allSubcategories);
           }
         }
       } catch (error) {
-        console.error('Error fetching categories and subcategories:', error);
-        // Fallback to hardcoded data if API fails
-        setCategories([
-          { name: 'Skin Care', slug: 'skin-care' },
-          { name: 'Hair Care', slug: 'hair-care' },
-          { name: 'Lip Care', slug: 'lip-care' },
-          { name: 'Eye Care', slug: 'eye-care' },
-          { name: 'Body Care', slug: 'body-care' },
-          { name: 'Facial Care', slug: 'facial-care' },
-          { name: 'Teeth Care', slug: 'teeth-care' },
-          { name: 'Health & Beauty', slug: 'health-beauty' }
-        ]);
-        setSubcategories([
-          { name: 'Skin Care', slug: 'skin-care' },
-          { name: 'Hair Care', slug: 'hair-care' },
-          { name: 'Lip Care', slug: 'lip-care' },
-          { name: 'Eye Care', slug: 'eye-care' },
-          { name: 'Body Care', slug: 'body-care' },
-          { name: 'Facial Care', slug: 'facial-care' },
-          { name: 'Teeth Care', slug: 'teeth-care' },
-          { name: 'Health & Beauty', slug: 'health-beauty' }
-        ]);
+        console.error('Error fetching subcategories:', error);
       } finally {
         setLoadingSubcategories(false);
-        setLoadingCategories(false);
       }
     };
 
-    fetchCategoriesAndSubcategories();
+    fetchSubcategories();
   }, []);
 
   // Close profile menu when clicking outside
@@ -87,28 +70,24 @@ export default function Header() {
     };
   }, []);
 
-  // Static navigation items
-  const staticNavigationItems = [
+  // Fixed navigation items (not from backend)
+  const navigationItems = [
     { name: 'Home', href: '/' },
     { name: 'Shop', href: '/shop' },
-    { name: 'Combo Deals', href: '/shop/combo-deals' },
+    { name: 'Skin Care', href: '/shop/skin-care' },
+    { name: 'Hair Care', href: '/shop/hair-care' },
+    { name: 'Lip Care', href: '/shop/lip-care' },
+    { name: 'Eye Care', href: '/shop/eye-care' },
+    { name: 'Body Care', href: '/shop/body-care' },
+    { name: 'Facial Care', href: '/shop/facial-care' },
+    { name: 'Teeth Care', href: '/shop/teeth-care' },
+    { name: 'Health & Beauty', href: '/shop/health-beauty' },
+    { name: 'Comboo', href: '/shop/combo-deals' },
     { name: 'Flash Sale', href: '/shop/flash-sale' },
   ];
 
-  // Dynamic navigation items from backend
-  const dynamicNavigationItems = categories.map(category => ({
-    name: category.name,
-    href: `/shop/${category.slug}`
-  }));
-
-  // Combine static and dynamic items
-  const navigationItems = [...staticNavigationItems, ...dynamicNavigationItems];
-
-  // Mobile-optimized navigation items (only Home and Shop)
-  const mobileNavigationItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Shop', href: '/shop' }
-  ];
+  // Mobile navigation items - exclude Home, show all other items
+  const mobileNavigationItems = navigationItems.filter(item => item.name !== 'Home');
 
   // Group subcategories by parent category
   const subcategoriesByParent = subcategories.reduce((acc, subcategory) => {
@@ -180,8 +159,23 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Right Section - Cart, Profile, Login/Signup */}
+          {/* Right Section - Cart, Wishlist, Profile, Login/Signup */}
           <div className="flex items-center space-x-4 lg:space-x-6">
+            {/* Wishlist Section */}
+            {session && (
+              <Link href="/wishlist" className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-all duration-200 group p-2 rounded-lg hover:bg-purple-50">
+                <div className="relative">
+                  <svg className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  {getWishlistCount() > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold text-[10px]">{getWishlistCount()}</span>
+                  )}
+                </div>
+                <span className="hidden sm:block text-sm font-semibold">Wishlist</span>
+              </Link>
+            )}
+            
             {/* Cart Section */}
             <Link href="/cart" className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-all duration-200 group p-2 rounded-lg hover:bg-purple-50">
               <div className="relative">
@@ -356,82 +350,68 @@ export default function Header() {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-purple-100 shadow-xl max-h-[calc(100vh-200px)] overflow-y-auto">
-          <div className="px-4 py-6 space-y-3">
-            {/* Mobile Navigation Items - Only Home and Shop */}
-            {mobileNavigationItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="block px-4 py-3.5 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl font-semibold transition-all duration-200 text-base hover:shadow-sm"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
+          <div className="px-4 py-6 space-y-1">
+            {/* Home Link */}
+            <Link
+              href="/"
+              className="block px-4 py-3.5 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-bold transition-all duration-200 text-base"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Home
+            </Link>
             
-            {/* Divider */}
-            <div className="border-t border-purple-100 my-6"></div>
-            
-            {/* Categories Section with Expandable Subcategories */}
-            <div className="space-y-3">
-              <h3 className="px-4 text-sm font-bold text-gray-500 uppercase tracking-wider">
-                {loadingCategories ? 'Loading Categories...' : 'Categories'}
-              </h3>
-              {loadingCategories ? (
-                <div className="px-4 py-2 text-gray-500 text-sm">Loading...</div>
-              ) : (
-                categories.map((category) => {
-                  const isExpanded = expandedCategories.has(category.name);
-                  const categorySubcategories = subcategoriesByParent[category.name] || [];
+            {/* Fixed Navigation Items - All items from navigationItems except Home */}
+            {mobileNavigationItems.map((item) => {
+              const isCategory = categories.some(cat => cat.name === item.name);
+              const isExpanded = expandedCategories.has(item.name);
+              const categorySubcategories = isCategory ? (subcategoriesByParent[item.name] || []) : [];
+              
+              return (
+                <div key={item.name} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Link
+                      href={item.href}
+                      className="flex-1 px-4 py-3 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-semibold transition-all duration-200 text-base"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                    {categorySubcategories.length > 0 && (
+                      <button
+                        onClick={() => toggleCategory(item.name)}
+                        className="px-3 py-3 text-gray-400 hover:text-purple-600 transition-colors duration-200"
+                        aria-label="Toggle submenu"
+                      >
+                        <svg 
+                          className={`w-5 h-5 transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                   
-                  return (
-                    <div key={category._id || category.slug} className="space-y-1">
-                      {/* Category Header - Clickable to expand/collapse */}
-                      <div className="flex items-center justify-between">
+                  {/* Subcategories - Show when expanded */}
+                  {isExpanded && categorySubcategories.length > 0 && (
+                    <div className="ml-4 space-y-1 border-l-2 border-purple-100 pl-4">
+                      {categorySubcategories.map((subcategory) => (
                         <Link
-                          href={`/shop/${category.slug}`}
-                          className="flex-1 px-4 py-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-all duration-200 text-sm hover:shadow-sm"
+                          key={subcategory._id || subcategory.slug}
+                          href={`/shop/${subcategory.slug}`}
+                          className="block px-4 py-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-all duration-200 text-sm"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          {category.name}
+                          {subcategory.name}
                         </Link>
-                        {categorySubcategories.length > 0 && (
-                          <button
-                            onClick={() => toggleCategory(category.name)}
-                            className="px-2 py-2.5 text-gray-400 hover:text-purple-600 transition-colors duration-200"
-                          >
-                            <svg 
-                              className={`w-4 h-4 transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                      
-                      {/* Subcategories - Show when expanded */}
-                      {isExpanded && categorySubcategories.length > 0 && (
-                        <div className="ml-4 space-y-1">
-                          {categorySubcategories.map((subcategory) => (
-                            <Link
-                              key={subcategory._id || subcategory.slug}
-                              href={`/shop/${subcategory.slug}`}
-                              className="block px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-normal transition-all duration-200 text-sm hover:shadow-sm"
-                              onClick={() => setIsMenuOpen(false)}
-                            >
-                              {subcategory.name}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
+                      ))}
                     </div>
-                  );
-                })
-              )}
-            </div>
+                  )}
+                </div>
+              );
+            })}
             
             {/* User Actions */}
             <div className="border-t border-purple-100 my-6 pt-6">

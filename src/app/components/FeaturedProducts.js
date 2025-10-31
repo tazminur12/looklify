@@ -3,22 +3,35 @@
 import { useState, useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
+import { useWishlist } from '../contexts/WishlistContext';
 
 // Custom Image Component with better error handling
 function ProductImage({ src, alt, className, onError }) {
   const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setImgSrc(src);
     setHasError(false);
-  }, [src]);
-
-  const handleError = () => {
-    console.error('Image failed to load:', imgSrc);
-    setHasError(true);
-    if (onError) onError();
-  };
+    setIsLoading(true);
+    
+    // Preload image to check if it exists
+    if (src && src !== '/slider/1.webp') {
+      const img = new window.Image();
+      img.onload = () => setIsLoading(false);
+      img.onerror = () => {
+        console.error('Image failed to load:', src);
+        setHasError(true);
+        setIsLoading(false);
+        if (onError) onError();
+      };
+      img.src = src;
+    } else {
+      setHasError(true);
+      setIsLoading(false);
+    }
+  }, [src, onError]);
 
   if (hasError || !imgSrc || imgSrc === '/slider/1.webp') {
     return (
@@ -29,21 +42,30 @@ function ProductImage({ src, alt, className, onError }) {
   }
 
   return (
-    <Image
-      src={imgSrc}
-      alt={alt}
-      fill
-      className={className}
-      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-      onError={handleError}
-      unoptimized={imgSrc.includes('cloudinary')} // Cloudinary handles optimization
-    />
+    <>
+      {/* Background that prevents black screen */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+      {isLoading && (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse z-10" />
+      )}
+      <Image
+        src={imgSrc}
+        alt={alt}
+        fill
+        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300 relative z-20`}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        onLoadingComplete={() => setIsLoading(false)}
+        unoptimized={imgSrc.includes('cloudinary')}
+        style={{ objectFit: 'cover' }}
+      />
+    </>
   );
 }
 
 export default function FeaturedProducts() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -160,11 +182,11 @@ export default function FeaturedProducts() {
                 className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative"
               >
                 {/* Product Image */}
-                <div className="relative w-full h-48 overflow-hidden">
+                <div className="relative w-full h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                   <ProductImage
                     src={imageUrl}
                     alt={primaryImage?.alt || product.name}
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="group-hover:scale-105 transition-transform duration-300"
                   />
                   
                   {/* Featured Badge */}
@@ -182,6 +204,27 @@ export default function FeaturedProducts() {
                       </span>
                     </div>
                   )}
+                  
+                  {/* Wishlist Button */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (isInWishlist(product._id)) {
+                        removeFromWishlist(product._id);
+                      } else {
+                        addToWishlist(product);
+                      }
+                    }}
+                    className={`absolute top-3 left-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md transition-colors ${
+                      isInWishlist(product._id) 
+                        ? 'text-red-500 bg-red-50' 
+                        : 'hover:bg-red-50 hover:text-red-500'
+                    }`}
+                  >
+                    <svg className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
                   
                   {/* Quick View Overlay */}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">

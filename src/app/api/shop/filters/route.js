@@ -26,8 +26,6 @@ export async function GET(request) {
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
-    // Debug log
-    console.log('Fetched categories:', categories.map(c => ({ name: c.name, slug: c.slug, isFeatured: c.isFeatured })));
 
     // Fetch featured categories
     const featuredCategories = await Category.find({ 
@@ -38,9 +36,6 @@ export async function GET(request) {
       .select('_id name slug icon image')
       .sort({ sortOrder: 1, name: 1 })
       .lean();
-
-    // Debug log
-    console.log('Fetched featured categories:', featuredCategories.map(c => ({ name: c.name, slug: c.slug })));
 
     // Fetch subcategories based on selected brand or all brands
     let subcategories = [];
