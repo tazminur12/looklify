@@ -246,7 +246,6 @@ PromoCodeSchema.virtual('discountDisplay').get(function() {
 });
 
 // Indexes for better performance
-PromoCodeSchema.index({ code: 1 });
 PromoCodeSchema.index({ status: 1, validFrom: 1, validUntil: 1 });
 PromoCodeSchema.index({ type: 1, status: 1 });
 PromoCodeSchema.index({ createdAt: -1 });
