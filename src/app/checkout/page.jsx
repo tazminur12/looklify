@@ -43,13 +43,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!authLoading) {
-      // Redirect to login if not authenticated
-      if (!isAuthenticated) {
-        router.push('/login?redirect=/checkout');
-        return;
-      }
-
-      // Load user data if authenticated
+      // Prefill user data if authenticated; allow guests to continue
       if (user) {
         setFormData({
           fullName: user.name || '',
@@ -432,7 +426,7 @@ export default function CheckoutPage() {
         }).then((result) => {
           if (result.isConfirmed) {
             clearCart();
-            router.push('/dashboard/orders');
+            router.push('/my-orders');
           } else {
             clearCart();
             router.push('/');

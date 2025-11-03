@@ -399,7 +399,7 @@ export default function ProductsPage() {
 
       {/* Products Display */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredProducts.map((product) => (
                               <ProductCard
                     key={product._id}
@@ -501,21 +501,21 @@ function ProductCard({ product, onEdit, onDelete, onToggleStatus, getStatusColor
         <img
           src={imageUrl}
           alt={primaryImage?.alt || product.name}
-          className="w-full h-48 object-cover"
+          className="w-full h-32 lg:h-48 object-cover"
         />
-        <div className="absolute top-2 right-2">
-          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(product.status)}`}>
+        <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+          <span className={`px-1.5 py-0.5 lg:px-2 lg:py-1 text-[10px] lg:text-xs font-medium rounded-full ${getStatusColor(product.status)}`}>
             {product.status.replace('_', ' ')}
           </span>
         </div>
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-1 left-1 lg:top-2 lg:left-2">
           {calculateDiscount && calculateDiscount(product) > 0 && (
-            <span className="bg-red-500 text-white px-2 py-1 text-xs font-medium rounded">
+            <span className="bg-red-500 text-white px-1.5 py-0.5 lg:px-2 lg:py-1 text-[10px] lg:text-xs font-medium rounded">
               -{calculateDiscount(product)}%
             </span>
           )}
           {!calculateDiscount && ((product.regularPrice && product.salePrice) || (product.originalPrice && product.price)) && (
-            <span className="bg-red-500 text-white px-2 py-1 text-xs font-medium rounded">
+            <span className="bg-red-500 text-white px-1.5 py-0.5 lg:px-2 lg:py-1 text-[10px] lg:text-xs font-medium rounded">
               -{(() => {
                 if (product.regularPrice && product.salePrice) {
                   return Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);
@@ -530,61 +530,64 @@ function ProductCard({ product, onEdit, onDelete, onToggleStatus, getStatusColor
         </div>
       </div>
       
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 truncate">
+      <div className="p-2 lg:p-4">
+        <h3 className="font-semibold text-xs lg:text-base text-gray-900 dark:text-gray-100 mb-1 truncate">
           {product.name}
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-          {typeof product.category === 'string' ? product.category : product.category?.name || 'Unknown Category'} • SKU: {product.sku}
+        <p className="text-[10px] lg:text-sm text-gray-500 dark:text-gray-400 mb-1 lg:mb-2 line-clamp-2">
+          {typeof product.category === 'string' ? product.category : product.category?.name || 'Unknown Category'}
+        </p>
+        <p className="text-[9px] lg:text-xs text-gray-400 mb-1 lg:mb-2">
+          SKU: {product.sku}
         </p>
         
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+        <div className="flex items-center justify-between mb-1 lg:mb-2">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-0.5 lg:gap-2">
+            <span className="text-sm lg:text-lg font-bold text-gray-900 dark:text-gray-100">
               BDT {getDisplayPrice && getDisplayPrice(product) || (product.salePrice || product.price)}
             </span>
             {(getRegularPrice && getRegularPrice(product) || (product.regularPrice || product.originalPrice)) && 
              (getRegularPrice && getRegularPrice(product) || (product.regularPrice || product.originalPrice)) > 
              (getDisplayPrice && getDisplayPrice(product) || (product.salePrice || product.price)) && (
-              <span className="text-sm text-gray-500 line-through">
+              <span className="text-[10px] lg:text-sm text-gray-500 line-through">
                 BDT {getRegularPrice && getRegularPrice(product) || (product.regularPrice || product.originalPrice)}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-yellow-400">⭐</span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {product.rating?.average || 0} ({product.rating?.count || 0})
+          <div className="flex items-center gap-0.5 lg:gap-1">
+            <span className="text-yellow-400 text-xs lg:text-base">⭐</span>
+            <span className="text-[10px] lg:text-sm text-gray-600 dark:text-gray-400">
+              {product.rating?.average || 0}
             </span>
           </div>
         </div>
         
-        <div className="flex items-center justify-between mb-3">
-          <span className={`text-sm font-medium ${getStockColor(product.stock)}`}>
+        <div className="flex items-center justify-between mb-2 lg:mb-3">
+          <span className={`text-[10px] lg:text-sm font-medium ${getStockColor(product.stock)}`}>
             Stock: {product.stock}
           </span>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-1 lg:gap-2">
           <button
             onClick={() => onEdit(product)}
-            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700"
+            className="flex-1 px-1.5 py-1 lg:px-3 lg:py-2 text-[10px] lg:text-sm border border-gray-300 rounded hover:bg-gray-50 text-gray-700"
           >
             Edit
           </button>
           <button
             onClick={() => onToggleStatus(product._id)}
-            className={`flex-1 px-3 py-2 text-sm rounded-lg ${
+            className={`flex-1 px-1.5 py-1 lg:px-3 lg:py-2 text-[10px] lg:text-sm rounded ${
               product.status === 'active'
                 ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
                 : 'bg-green-100 text-green-700 hover:bg-green-200'
             }`}
           >
-            {product.status === 'active' ? 'Deactivate' : 'Activate'}
+            {product.status === 'active' ? 'OFF' : 'ON'}
           </button>
           <button
             onClick={() => onDelete(product._id)}
-            className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+            className="px-1.5 py-1 lg:px-3 lg:py-2 text-[10px] lg:text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
           >
             🗑️
           </button>

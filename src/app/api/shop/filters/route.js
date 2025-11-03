@@ -47,7 +47,7 @@ export async function GET(request) {
         brand: brandId
       })
         .select('_id name slug parent')
-        .populate('parent', 'name slug')
+        .populate('parent', '_id name slug')
         .sort({ sortOrder: 1, name: 1 })
         .lean();
     } else {
@@ -57,7 +57,7 @@ export async function GET(request) {
         parent: { $ne: null }
       })
         .select('_id name slug parent brand')
-        .populate('parent', 'name slug')
+        .populate('parent', '_id name slug')
         .populate('brand', 'name slug')
         .sort({ sortOrder: 1, name: 1 })
         .lean();

@@ -8,15 +8,9 @@ import mongoose from 'mongoose';
 // GET /api/products/[id] - Get a single product by ID
 export async function GET(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -66,7 +60,7 @@ export async function PUT(request, { params }) {
 
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // Validate ObjectId
@@ -165,7 +159,7 @@ export async function DELETE(request, { params }) {
 
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {

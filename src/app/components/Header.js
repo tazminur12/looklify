@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -116,17 +115,14 @@ export default function Header() {
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2">
         <div className="flex items-center justify-between">
-          {/* Logo Section - Image only */}
+          {/* Logo Section - Text only */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <div className="relative">
-                <Image
-                  src="/logo/Looklify logo.jpg"
-                  alt="Looklify Logo"
-                  width={80}
-                  height={80}
-                  className="w-20 h-20 duration-200"
-                />
+            <Link href="/" className="flex items-center group">
+              <div className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
+                Looklify
+              </div>
+              <div className="ml-2 px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] sm:text-xs font-bold rounded-full shadow-md group-hover:shadow-lg transition-all duration-300">
+                ZONE
               </div>
             </Link>
           </div>

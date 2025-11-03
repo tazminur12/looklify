@@ -14,6 +14,11 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [editStatus, setEditStatus] = useState('');
+  const [editPaymentStatus, setEditPaymentStatus] = useState('');
+  const [editTracking, setEditTracking] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [saving, setSaving] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -28,6 +33,20 @@ export default function OrdersPage() {
       router.push('/login');
     }
   }, [status, session, filter]);
+
+  useEffect(() => {
+    if (selectedOrder) {
+      setEditStatus(selectedOrder.status || 'pending');
+      setEditPaymentStatus(selectedOrder.payment?.status || 'pending');
+      setEditTracking(selectedOrder.trackingNumber || '');
+      setEditNotes(selectedOrder.notes || '');
+    } else {
+      setEditStatus('');
+      setEditPaymentStatus('');
+      setEditTracking('');
+      setEditNotes('');
+    }
+  }, [selectedOrder]);
 
   const fetchOrders = async () => {
     try {
@@ -296,6 +315,99 @@ export default function OrdersPage() {
                   </p>
                 </div>
                 {getStatusBadge(selectedOrder.status)}
+              </div>
+
+              {/* Update Controls */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Order Status</label>
+                    <select
+                      value={editStatus}
+                      onChange={(e) => setEditStatus(e.target.value)}
+                      className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
+                    >
+                      {['pending','confirmed','processing','shipped','delivered','cancelled','returned'].map(s => (
+                        <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Payment Status</label>
+                    <select
+                      value={editPaymentStatus}
+                      onChange={(e) => setEditPaymentStatus(e.target.value)}
+                      className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
+                    >
+                      {['pending','processing','completed','failed','refunded'].map(s => (
+                        <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Tracking Number</label>
+                    <input
+                      value={editTracking}
+                      onChange={(e) => setEditTracking(e.target.value)}
+                      className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
+                      placeholder="e.g., SUNDAR-12345"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-1">Notes</label>
+                    <textarea
+                      value={editNotes}
+                      onChange={(e) => setEditNotes(e.target.value)}
+                      rows={3}
+                      className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
+                      placeholder="Internal notes"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setSelectedOrder(null)}
+                    className="px-4 py-2 rounded-lg border"
+                    disabled={saving}
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        setSaving(true);
+                        const res = await fetch(`/api/orders/${selectedOrder._id}`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            status: editStatus,
+                            paymentStatus: editPaymentStatus,
+                            trackingNumber: editTracking,
+                            notes: editNotes
+                          })
+                        });
+                        const result = await res.json();
+                        if (!res.ok || !result.success) {
+                          throw new Error(result.error || 'Failed to update order');
+                        }
+                        toast.success('Order updated');
+                        // Update selected order and list
+                        setSelectedOrder(result.data);
+                        // Optimistically update in-place list item
+                        setOrders(prev => prev.map(o => o._id === result.data._id ? result.data : o));
+                      } catch (err) {
+                        console.error(err);
+                        toast.error(err.message || 'Update failed');
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-lg text-white ${saving ? 'bg-gray-400' : 'bg-purple-600 hover:bg-purple-700'}`}
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
               </div>
 
               {/* Items */}

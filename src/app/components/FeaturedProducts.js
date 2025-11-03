@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { useWishlist } from '../contexts/WishlistContext';
+import { useCart } from '../contexts/CartContext';
+import { useRouter } from 'next/navigation';
 
 // Custom Image Component with better error handling
 function ProductImage({ src, alt, className, onError }) {
@@ -66,6 +68,8 @@ export default function FeaturedProducts() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCart } = useCart();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -164,7 +168,7 @@ export default function FeaturedProducts() {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {featuredProducts.map((product) => {
             const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
             const imageUrl = primaryImage?.url || '/slider/1.webp';
@@ -182,138 +186,88 @@ export default function FeaturedProducts() {
                 className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative"
               >
                 {/* Product Image */}
-                <div className="relative w-full h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="relative w-full h-40 sm:h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                   <ProductImage
                     src={imageUrl}
                     alt={primaryImage?.alt || product.name}
                     className="group-hover:scale-105 transition-transform duration-300"
                   />
-                  
-                  {/* Featured Badge */}
-                  <div className="absolute top-3 left-3">
-                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-1 text-xs font-semibold rounded-full shadow-lg">
-                      ⭐ Featured
-                    </span>
-                  </div>
-                  
-                  {/* Discount Badge */}
+                  {/* Discount Badge - small pill top-right */}
                   {discount > 0 && (
-                    <div className="absolute top-3 right-3">
-                      <span className="bg-red-500 text-white px-2 py-1 text-xs font-semibold rounded-full shadow-lg">
-                        -{discount}%
+                    <div className="absolute top-2 right-2 z-30">
+                      <span className="px-2 py-1 text-[11px] font-semibold bg-red-600 text-white rounded-full shadow">
+                        {discount}% OFF
                       </span>
                     </div>
                   )}
-                  
-                  {/* Wishlist Button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (isInWishlist(product._id)) {
-                        removeFromWishlist(product._id);
-                      } else {
-                        addToWishlist(product);
-                      }
-                    }}
-                    className={`absolute top-3 left-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md transition-colors ${
-                      isInWishlist(product._id) 
-                        ? 'text-red-500 bg-red-50' 
-                        : 'hover:bg-red-50 hover:text-red-500'
-                    }`}
-                  >
-                    <svg className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
-                  
-                  {/* Quick View Overlay */}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="bg-white text-gray-900 px-4 py-2 rounded-lg font-semibold text-sm">
-                        Quick View
-                      </span>
-                    </div>
-                  </div>
                 </div>
                 
                 {/* Product Info */}
-                <div className="p-4">
-                  {/* Brand */}
-                  {product.brand && (
-                    <p className="text-xs text-gray-500 mb-1 font-medium">
-                      {typeof product.brand === 'string' ? product.brand : product.brand.name}
-                    </p>
-                  )}
-                  
+                <div className="p-3 sm:p-4">
                   {/* Product Name */}
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors">
+                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors text-sm sm:text-base min-h-[36px]">
                     {product.name}
                   </h3>
                   
-                  {/* Category */}
-                  <p className="text-sm text-gray-500 mb-3">
-                    {typeof product.category === 'string' ? product.category : product.category?.name || 'Beauty'}
-                  </p>
-                  
-                  {/* Rating */}
-                  <div className="flex items-center gap-1 mb-3">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className={`text-sm ${
-                            i < Math.floor(product.rating?.average || 0)
-                              ? 'text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                        >
-                          ⭐
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-xs text-gray-500 ml-1">
-                      ({product.rating?.count || 0})
-                    </span>
-                  </div>
-                  
                   {/* Price */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-purple-600">
+                      <span className="text-base sm:text-lg font-bold text-gray-900">
                         {formatPrice(displayPrice)}
                       </span>
                       {regularPrice && regularPrice > displayPrice && (
-                        <span className="text-sm text-gray-500 line-through">
+                        <span className="text-xs sm:text-sm text-gray-500 line-through">
                           {formatPrice(regularPrice)}
                         </span>
                       )}
                     </div>
-                    
-                    {/* Stock Status */}
-                    <div className="text-right">
-                      {product.stock > 0 ? (
-                        <span className="text-xs text-green-600 font-medium">
-                          In Stock
-                        </span>
-                      ) : (
-                        <span className="text-xs text-red-600 font-medium">
-                          Out of Stock
-                        </span>
-                      )}
-                    </div>
+                    {/* Wishlist Button on right like screenshot */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (isInWishlist(product._id)) {
+                          removeFromWishlist(product._id);
+                        } else {
+                          addToWishlist(product);
+                        }
+                      }}
+                      aria-label="wishlist"
+                      className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${
+                        isInWishlist(product._id)
+                          ? 'text-red-500 border-red-200 bg-red-50'
+                          : 'text-gray-500 border-gray-200 hover:text-red-500 hover:border-red-300'
+                      }`}
+                    >
+                      <svg className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
                   </div>
                   
-                  {/* Add to Cart Button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // Add to cart functionality can be implemented here
-                      console.log('Add to cart:', product._id);
-                    }}
-                    className="w-full mt-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 font-semibold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0"
-                  >
-                    Add to Cart
-                  </button>
+                  {/* Bottom action bar - pill buttons */}
+                  <div className="mt-2">
+                    <div className="flex gap-3 text-sm sm:text-base">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCart(product);
+                        }}
+                        className="flex-1 py-2.5 sm:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors"
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCart(product);
+                          router.push('/checkout');
+                        }}
+                        className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                      >
+                        Buy Now
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </Link>
             );

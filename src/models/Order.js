@@ -12,7 +12,8 @@ const OrderSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
+    required: false,
+    default: null,
     index: true
   },
   items: [{
@@ -199,32 +200,15 @@ const OrderSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Generate unique Order ID before saving
-OrderSchema.pre('save', async function(next) {
+// Fallback: Generate unique Order ID before validation if not provided
+// (orderId should normally be generated in the route handler)
+OrderSchema.pre('validate', function(next) {
   if (!this.orderId) {
-    // Format: ORD-YYYYMMDD-XXXXX (e.g., ORD-20250112-ABC12)
+    // Simple fallback generation - synchronous to avoid issues in pre-validate
     const date = new Date();
     const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-    const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
-    const randomNum = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-    
-    let uniqueOrderId = `ORD-${dateStr}-${randomStr}${randomNum}`;
-    
-    // Ensure uniqueness
-    let counter = 0;
-    while (await mongoose.model('Order').findOne({ orderId: uniqueOrderId })) {
-      const newRandomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
-      const newRandomNum = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-      uniqueOrderId = `ORD-${dateStr}-${newRandomStr}${newRandomNum}`;
-      counter++;
-      if (counter > 10) {
-        // Fallback to timestamp-based ID
-        uniqueOrderId = `ORD-${dateStr}-${Date.now().toString().slice(-6)}`;
-        break;
-      }
-    }
-    
-    this.orderId = uniqueOrderId;
+    const timestamp = Date.now().toString().slice(-8);
+    this.orderId = `ORD-${dateStr}-${timestamp}`;
   }
   next();
 });

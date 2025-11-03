@@ -111,31 +111,26 @@ export default function EditProductPage() {
     }
   }, [session]);
 
-  // Fetch subcategories when brand changes
+  // Fetch subcategories when category or brand changes (fetch all, filter by category)
   useEffect(() => {
     const fetchSubcategories = async () => {
-      if (formData.brand) {
-        try {
-          const response = await fetch(`/api/shop/filters?brand=${formData.brand}`);
-          if (response.ok) {
-            const data = await response.json();
-            // Get all subcategories and filter by selected category
-            const allSubcategories = Object.values(data.data.subcategories || {}).flat();
-            const filteredSubcategories = formData.category 
-              ? allSubcategories.filter(sub => sub && sub.parent && sub.parent._id === formData.category)
-              : allSubcategories;
-            setSubcategories(filteredSubcategories);
-          }
-        } catch (error) {
-          console.error('Error fetching subcategories:', error);
+      try {
+        const response = await fetch(`/api/shop/filters`);
+        if (response.ok) {
+          const data = await response.json();
+          const allSubcategories = Object.values(data.data.subcategories || {}).flat();
+          const filteredSubcategories = formData.category
+            ? allSubcategories.filter(sub => sub && sub.parent && (sub.parent._id === formData.category || sub.parent === formData.category))
+            : allSubcategories;
+          setSubcategories(filteredSubcategories);
         }
-      } else {
-        setSubcategories([]);
+      } catch (error) {
+        console.error('Error fetching subcategories:', error);
       }
     };
 
     fetchSubcategories();
-  }, [formData.brand, formData.category]);
+  }, [formData.category, formData.brand]);
 
   // Fetch product data for editing
   useEffect(() => {
@@ -157,8 +152,8 @@ export default function EditProductPage() {
               bengaliName: product.bengaliName || '',
               description: product.description || '',
               bengaliDescription: product.bengaliDescription || '',
-              category: typeof product.category === 'object' ? product.category._id : product.category || '',
-              subcategory: typeof product.subcategory === 'object' ? product.subcategory._id : product.subcategory || '',
+              category: product.category && typeof product.category === 'object' ? product.category._id : (product.category || ''),
+              subcategory: product.subcategory && typeof product.subcategory === 'object' ? product.subcategory._id : (product.subcategory || ''),
               costPrice: product.costPrice || '',
               regularPrice: product.regularPrice || product.price || '',
               salePrice: product.salePrice || '',
@@ -171,7 +166,7 @@ export default function EditProductPage() {
               stock: product.stock || '',
               lowStockThreshold: product.lowStockThreshold || '20',
               status: product.status || 'active',
-              brand: typeof product.brand === 'object' ? product.brand._id : product.brand || '',
+              brand: product.brand && typeof product.brand === 'object' ? product.brand._id : (product.brand || ''),
               origin: product.origin || '',
               skinType: product.skinType || [],
               skinConcern: product.skinConcern || [],
@@ -674,7 +669,7 @@ export default function EditProductPage() {
                 value={formData.subcategory}
                 onChange={(e) => handleInputChange('subcategory', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
-                disabled={!formData.brand || !formData.category}
+                disabled={!formData.category}
               >
                 <option value="">Select Subcategory</option>
                 {subcategories.map(subcategory => (

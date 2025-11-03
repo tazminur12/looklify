@@ -56,7 +56,7 @@ function CheckoutSuccessContent() {
           allowOutsideClick: false
         }).then((result) => {
           if (result.isConfirmed) {
-            router.push('/dashboard/orders');
+            router.push('/my-orders');
           } else {
             router.push('/');
           }

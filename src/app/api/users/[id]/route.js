@@ -16,7 +16,7 @@ export async function GET(request, { params }) {
 
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
 
     // Users can only access their own profile, unless they're admin
     const currentUser = await User.findById(session.user.id);
@@ -60,7 +60,7 @@ export async function PUT(request, { params }) {
 
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // Users can only update their own profile, unless they're admin

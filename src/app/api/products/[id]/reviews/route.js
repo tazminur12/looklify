@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
   try {
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -100,7 +100,7 @@ export async function POST(request, { params }) {
 
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // Validate ObjectId

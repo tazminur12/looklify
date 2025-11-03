@@ -16,6 +16,10 @@ module.exports = {
         sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-geist-mono)', 'monospace'],
       },
+      fontSize: {
+        'xs-custom': ['0.625rem', { lineHeight: '0.875rem' }],
+        'sm-custom': ['0.688rem', { lineHeight: '1rem' }],
+      },
       animation: {
         'gradient-shift': 'gradient-shift 3s ease infinite',
       },

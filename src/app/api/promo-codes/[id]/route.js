@@ -21,7 +21,7 @@ export async function GET(request, { params }) {
 
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
 
     const promoCode = await PromoCode.findById(id)
       .populate('applicableProducts', 'name sku price')
@@ -70,7 +70,7 @@ export async function PUT(request, { params }) {
 
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     const promoCode = await PromoCode.findById(id);
@@ -206,7 +206,7 @@ export async function DELETE(request, { params }) {
 
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
 
     const promoCode = await PromoCode.findById(id);
     if (!promoCode) {

@@ -206,24 +206,24 @@ function ShopContent() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg p-4 sticky top-8">
-              <h2 className="text-base font-semibold text-gray-900 mb-3">Filter Options</h2>
+            <div className="bg-white rounded-lg p-3 sm:p-4 sticky top-8">
+              <h2 className="text-sm sm:text-base font-semibold text-gray-900 mb-3">Filter Options</h2>
               
               {/* Search */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Search</label>
+              <div className="mb-3 sm:mb-4">
+                <label className="block text-[11px] sm:text-xs font-medium text-gray-700 mb-1">Search</label>
                 <input
                   type="text"
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Search products..."
                 />
               </div>
 
               {/* Brand Filter */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Brand</label>
+              <div className="mb-3 sm:mb-4">
+                <label className="block text-[11px] sm:text-xs font-medium text-gray-700 mb-1">Brand</label>
                 <select
                   value={filters.brand}
                   onChange={(e) => {
@@ -231,7 +231,7 @@ function ShopContent() {
                     // Reset subcategory when brand changes
                     handleFilterChange('subcategory', '');
                   }}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   disabled={filtersLoading}
                 >
                   <option value="">All Brands</option>
@@ -245,8 +245,8 @@ function ShopContent() {
               </div>
 
               {/* Category Filter */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
+              <div className="mb-3 sm:mb-4">
+                <label className="block text-[11px] sm:text-xs font-medium text-gray-700 mb-1">Category</label>
                 <select
                   value={filters.category}
                   onChange={(e) => {
@@ -254,7 +254,7 @@ function ShopContent() {
                     // Reset subcategory when category changes
                     handleFilterChange('subcategory', '');
                   }}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   disabled={filtersLoading}
                 >
                   <option value="">All Categories</option>
@@ -268,12 +268,12 @@ function ShopContent() {
               </div>
 
               {/* Subcategory Filter */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Sub Category</label>
+              <div className="mb-3 sm:mb-4">
+                <label className="block text-[11px] sm:text-xs font-medium text-gray-700 mb-1">Sub Category</label>
                 <select
                   value={filters.subcategory}
                   onChange={(e) => handleFilterChange('subcategory', e.target.value)}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   disabled={filtersLoading}
                 >
                   <option value="">All Sub Categories</option>
@@ -291,12 +291,12 @@ function ShopContent() {
               </div>
 
               {/* Skin Type Filter */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Skin Type</label>
+              <div className="mb-3 sm:mb-4">
+                <label className="block text-[11px] sm:text-xs font-medium text-gray-700 mb-1">Skin Type</label>
                 <select
                   value={filters.skinType}
                   onChange={(e) => handleFilterChange('skinType', e.target.value)}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   disabled={filtersLoading}
                 >
                   <option value="">All Types</option>
@@ -310,12 +310,12 @@ function ShopContent() {
               </div>
 
               {/* Skin Concern Filter */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Skin Concern</label>
+              <div className="mb-3 sm:mb-4">
+                <label className="block text-[11px] sm:text-xs font-medium text-gray-700 mb-1">Skin Concern</label>
                 <select
                   value={filters.skinConcern}
                   onChange={(e) => handleFilterChange('skinConcern', e.target.value)}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   disabled={filtersLoading}
                 >
                   <option value="">All Concerns</option>
@@ -405,7 +405,7 @@ function ShopContent() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {products.map((product) => {
                   const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
                   const imageUrl = primaryImage?.url || '/slider/1.webp';
@@ -420,94 +420,82 @@ function ShopContent() {
                             alt={primaryImage?.alt || product.name}
                             width={400}
                             height={400}
-                            className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-40 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </Link>
-                        
-                        {/* Discount Badge */}
+
+                        {/* Discount Badge - small pill top-right */}
                         {discountPercentage > 0 && (
-                          <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1.5 rounded-md text-sm font-semibold shadow-lg">
-                            {discountPercentage}% OFF
+                          <div className="absolute top-2 right-2">
+                            <span className="px-2 py-1 text-[11px] font-semibold bg-red-600 text-white rounded-full shadow">
+                              {discountPercentage}% OFF
+                            </span>
                           </div>
                         )}
-
-                        {/* Wishlist Button */}
-                        <button 
-                          onClick={() => {
-                            if (isInWishlist(product._id)) {
-                              removeFromWishlist(product._id);
-                            } else {
-                              addToWishlist(product);
-                            }
-                          }}
-                          className={`absolute top-3 left-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md transition-colors ${
-                            isInWishlist(product._id) 
-                              ? 'text-red-500 bg-red-50' 
-                              : 'hover:bg-red-50 hover:text-red-500'
-                          }`}
-                        >
-                          <svg className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                        </button>
                       </div>
 
-                      <div className="p-4">
-                        <h3 className="font-medium text-gray-900 mb-3 text-base line-clamp-2 leading-tight">
+                      <div className="p-3 sm:p-4">
+                        <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base line-clamp-2 leading-tight min-h-[36px]">
                           <Link href={`/shop/${product._id}`} className="hover:text-purple-600 transition-colors">
                             {product.name}
                           </Link>
                         </h3>
 
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2">
                             {(() => {
-                              // Determine the correct sale price and regular price
                               const salePrice = product.salePrice;
                               const regularPrice = product.regularPrice || product.originalPrice;
                               const legacyPrice = product.price;
-                              
-                              // If we have salePrice and regularPrice, salePrice is the display price
-                              // Otherwise use the legacy price
                               const displayPrice = (salePrice && regularPrice) ? salePrice : (salePrice || legacyPrice);
-                              
                               return (
                                 <>
-                                  <span className="text-lg font-bold text-gray-900">
-                                    ৳{displayPrice}
-                                  </span>
+                                  <span className="text-base sm:text-lg font-bold text-gray-900">৳{displayPrice}</span>
                                   {regularPrice && regularPrice > displayPrice && (
-                                    <span className="text-sm text-gray-500 line-through">
-                                      ৳{regularPrice}
-                                    </span>
+                                    <span className="text-xs sm:text-sm text-gray-500 line-through">৳{regularPrice}</span>
                                   )}
                                 </>
                               );
                             })()}
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          {/* Wishlist button on right */}
+                          <button 
+                            onClick={() => {
+                              if (isInWishlist(product._id)) {
+                                removeFromWishlist(product._id);
+                              } else {
+                                addToWishlist(product);
+                              }
+                            }}
+                            aria-label="wishlist"
+                            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${
+                              isInWishlist(product._id)
+                                ? 'text-red-500 border-red-200 bg-red-50'
+                                : 'text-gray-500 border-gray-200 hover:text-red-500 hover:border-red-300'
+                            }`}
+                          >
+                            <svg className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
-                            <span className="text-sm text-gray-600">
-                              {product.rating?.average || 0}
-                            </span>
-                          </div>
+                          </button>
                         </div>
 
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleAddToCart(product)}
-                            className="flex-1 px-3 py-2 text-sm border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50 transition-colors font-medium"
-                          >
-                            Add to Cart
-                          </button>
-                          <button
-                            onClick={() => handleBuyNow(product._id)}
-                            className="flex-1 px-3 py-2 text-sm bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all font-medium"
-                          >
-                            Buy Now
-                          </button>
+                        {/* Bottom action bar - pill buttons */}
+                        <div className="mt-2">
+                          <div className="flex gap-3 text-sm sm:text-base">
+                            <button
+                              onClick={() => handleAddToCart(product)}
+                              className="flex-1 py-2.5 sm:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors"
+                            >
+                              Add to Cart
+                            </button>
+                            <button
+                              onClick={() => handleBuyNow(product._id)}
+                              className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                            >
+                              Buy Now
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

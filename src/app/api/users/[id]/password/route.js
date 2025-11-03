@@ -16,7 +16,7 @@ export async function PUT(request, { params }) {
 
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
     const { currentPassword, newPassword } = await request.json();
 
     // Validate input

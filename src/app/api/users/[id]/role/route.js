@@ -21,7 +21,7 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { role } = await request.json();
 
     // Validate role

@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 
 export default function CartPage() {
   const { user, isAuthenticated } = useAuth();
-  const [cartItems, setCartItems] = useState([]);
+  const { cartItems, updateQuantity, removeFromCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [removing, setRemoving] = useState(null);
@@ -17,39 +18,16 @@ export default function CartPage() {
   const [promoCodeError, setPromoCodeError] = useState('');
   const [promoCodeLoading, setPromoCodeLoading] = useState(false);
 
+  // When cartItems from context changes, stop local loading state
   useEffect(() => {
-    loadCartItems();
-  }, []);
-
-  const loadCartItems = () => {
-    // Load cart items from localStorage
-    const savedCart = localStorage.getItem('looklify-cart');
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Error parsing cart data:', error);
-        setCartItems([]);
-      }
-    }
     setLoading(false);
-  };
-
-  const updateCartItems = (newCartItems) => {
-    setCartItems(newCartItems);
-    localStorage.setItem('looklify-cart', JSON.stringify(newCartItems));
-  };
+  }, [cartItems]);
 
   const handleQuantityChange = (productId, newQuantity) => {
     if (newQuantity < 1) return;
     
     setUpdating(true);
-    const updatedItems = cartItems.map(item => 
-      item.productId === productId 
-        ? { ...item, quantity: newQuantity }
-        : item
-    );
-    updateCartItems(updatedItems);
+    updateQuantity(productId, newQuantity);
     setUpdating(false);
   };
 
@@ -57,8 +35,7 @@ export default function CartPage() {
     setRemoving(productId);
     // Add a small delay for better UX
     await new Promise(resolve => setTimeout(resolve, 300));
-    const updatedItems = cartItems.filter(item => item.productId !== productId);
-    updateCartItems(updatedItems);
+    removeFromCart(productId);
     setRemoving(null);
   };
 
@@ -105,13 +82,21 @@ export default function CartPage() {
 
   const calculatePromoDiscount = () => {
     if (!appliedPromoCode) return 0;
-    
+
     const subtotal = calculateSubtotal();
-    const discountResult = appliedPromoCode.calculateDiscount(subtotal);
-    
-    if (!discountResult.valid) return 0;
-    
-    return discountResult.discountAmount;
+    let discount = 0;
+
+    if (appliedPromoCode.type === 'percentage') {
+      discount = (subtotal * (appliedPromoCode.value || 0)) / 100;
+    } else if (appliedPromoCode.type === 'fixed_amount') {
+      discount = appliedPromoCode.value || 0;
+    } else if (appliedPromoCode.type === 'free_shipping') {
+      discount = 0;
+    }
+
+    // Ensure discount does not exceed subtotal and round to 2 decimals
+    discount = Math.min(discount, subtotal);
+    return Math.round(discount * 100) / 100;
   };
 
   const calculateTotal = () => {
@@ -179,12 +164,7 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
-    if (!isAuthenticated) {
-      window.location.href = '/login?redirect=/checkout';
-      return;
-    }
-    
-    // Redirect to checkout page
+    // Guest checkout supported; go straight to checkout
     window.location.href = '/checkout';
   };
 
@@ -252,11 +232,11 @@ export default function CartPage() {
                     }`}
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="grid grid-cols-[88px_1fr] sm:grid-cols-[128px_1fr] gap-4 items-start">
                       {/* Product Image */}
                       <div className="flex-shrink-0">
                         <Link href={`/shop/${item.productId}`}>
-                          <div className="w-32 h-32 bg-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                          <div className="w-22 h-22 sm:w-32 sm:h-32 bg-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
                             {item.image ? (
                               <Image
                                 src={item.image}
@@ -278,35 +258,35 @@ export default function CartPage() {
                       <div className="flex-1 min-w-0">
                         <Link
                           href={`/shop/${item.productId}`}
-                          className="text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors block"
+                          className="text-base sm:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors block"
                         >
                           {item.name}
                         </Link>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-xs sm:text-sm text-gray-600 mt-1">
                           {item.brand && `${item.brand} • `}
                           {item.category}
                         </p>
                         
                         {/* Price and Quantity */}
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="flex items-center gap-3">
+                        <div className="mt-3 grid grid-cols-1 sm:flex sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-0">
                             {/* Quantity Controls */}
-                            <label className="text-sm font-medium text-gray-700">Quantity:</label>
+                            <label className="text-xs sm:text-sm font-medium text-gray-700">Qty:</label>
                             <div className="flex items-center border-2 border-gray-300 rounded-xl overflow-hidden">
                               <button
                                 onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
                                 disabled={updating}
-                                className="px-4 py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 disabled:opacity-50 transition-colors font-semibold"
+                                className="px-3 py-1.5 sm:px-4 sm:py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 disabled:opacity-50 transition-colors font-semibold"
                               >
                                 −
                               </button>
-                              <span className="px-6 py-2 text-center min-w-[3.5rem] border-x-2 border-gray-300 font-semibold text-gray-900">
+                              <span className="px-4 sm:px-6 py-1.5 sm:py-2 text-center min-w-[2.5rem] sm:min-w-[3.5rem] border-x-2 border-gray-300 font-semibold text-gray-900">
                                 {item.quantity}
                               </span>
                               <button
                                 onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
                                 disabled={updating}
-                                className="px-4 py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 disabled:opacity-50 transition-colors font-semibold"
+                                className="px-3 py-1.5 sm:px-4 sm:py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 disabled:opacity-50 transition-colors font-semibold"
                               >
                                 +
                               </button>
@@ -314,14 +294,14 @@ export default function CartPage() {
                           </div>
 
                           {/* Price and Remove */}
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
                             <div className="text-right">
-                              <p className="text-xl font-bold text-purple-600">
+                              <p className="text-lg sm:text-xl font-bold text-purple-600">
                                 ৳{(item.price * item.quantity).toLocaleString()}
                               </p>
                               {item.originalPrice && item.originalPrice > item.price && (
                                 <div className="flex items-center gap-1">
-                                  <p className="text-sm text-gray-500 line-through">
+                                  <p className="text-xs sm:text-sm text-gray-500 line-through">
                                     ৳{(item.originalPrice * item.quantity).toLocaleString()}
                                   </p>
                                   <span className="text-xs font-semibold text-red-600">
@@ -330,7 +310,7 @@ export default function CartPage() {
                                 </div>
                               )}
                               {!item.originalPrice && (
-                                <p className="text-xs text-gray-500">Per item: ৳{item.price?.toLocaleString()}</p>
+                                <p className="text-[11px] sm:text-xs text-gray-500">Per item: ৳{item.price?.toLocaleString()}</p>
                               )}
                             </div>
                             <button
