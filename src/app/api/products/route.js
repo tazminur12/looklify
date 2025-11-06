@@ -279,7 +279,7 @@ export async function POST(request) {
     }
 
     // Validate required fields
-    const requiredFields = ['name', 'description', 'category', 'sku', 'productCode', 'brand'];
+    const requiredFields = ['name', 'description', 'category', 'sku', 'productCode'];
     for (const field of requiredFields) {
       if (!cleanedBody[field]) {
         return NextResponse.json(

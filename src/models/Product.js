@@ -135,8 +135,7 @@ const ProductSchema = new mongoose.Schema({
   },
   brand: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Brand',
-    required: [true, 'Brand is required']
+    ref: 'Brand'
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,

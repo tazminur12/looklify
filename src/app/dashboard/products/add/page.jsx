@@ -113,30 +113,34 @@ export default function AddProductPage() {
     }
   }, [session]);
 
-  // Fetch subcategories when brand changes
+  // Fetch subcategories when brand or category changes
   useEffect(() => {
     const fetchSubcategories = async () => {
-      if (formData.brand) {
-        try {
-          const response = await fetch(`/api/shop/filters?brand=${formData.brand}`);
-          if (response.ok) {
-            const data = await response.json();
-            // Get all subcategories and filter by selected category
-            const allSubcategories = Object.values(data.data.subcategories || {}).flat();
-            const filteredSubcategories = formData.category 
-              ? allSubcategories.filter(sub => sub && sub.parent && sub.parent._id === formData.category)
-              : allSubcategories;
-            setSubcategories(filteredSubcategories);
-          }
-        } catch (error) {
-          console.error('Error fetching subcategories:', error);
+      try {
+        const url = formData.brand 
+          ? `/api/shop/filters?brand=${formData.brand}`
+          : '/api/shop/filters';
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          // Get all subcategories and filter by selected category
+          const allSubcategories = Object.values(data.data.subcategories || {}).flat();
+          const filteredSubcategories = formData.category 
+            ? allSubcategories.filter(sub => sub && sub.parent && sub.parent._id === formData.category)
+            : allSubcategories;
+          setSubcategories(filteredSubcategories);
         }
-      } else {
+      } catch (error) {
+        console.error('Error fetching subcategories:', error);
         setSubcategories([]);
       }
     };
 
-    fetchSubcategories();
+    if (formData.category) {
+      fetchSubcategories();
+    } else {
+      setSubcategories([]);
+    }
   }, [formData.brand, formData.category]);
 
   // Image upload function
@@ -295,7 +299,6 @@ export default function AddProductPage() {
     if (!formData.sku.trim()) newErrors.sku = 'SKU is required';
     if (!formData.productCode.trim()) newErrors.productCode = 'Product code is required';
     if (formData.stock === '' || formData.stock < 0) newErrors.stock = 'Valid stock quantity is required';
-    if (!formData.brand) newErrors.brand = 'Brand is required';
     if (!formData.category) newErrors.category = 'Category is required';
 
     // SKU format validation (alphanumeric with dashes/underscores)
@@ -552,7 +555,7 @@ export default function AddProductPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Brand *
+                Brand
               </label>
               <select
                 value={formData.brand}
@@ -600,7 +603,7 @@ export default function AddProductPage() {
                 value={formData.subcategory}
                 onChange={(e) => handleInputChange('subcategory', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
-                disabled={!formData.brand || !formData.category}
+                disabled={!formData.category}
               >
                 <option value="">Select Subcategory</option>
                 {subcategories.map(subcategory => (
