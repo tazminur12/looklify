@@ -428,6 +428,7 @@ export default function CategoriesPage() {
                             key={child._id}
                             category={child}
                             onOpen={() => router.push(`/dashboard/categories/edit/${child._id}`)}
+                            onDelete={() => handleDelete(child._id)}
                           />
                         ))}
                       </div>
@@ -505,23 +506,44 @@ function CategoryListItem({ category, isSubcategory = false, onEdit, onDelete, o
 }
 
 // Compact tile for subcategories inside accordion
-function SubcategoryTile({ category, onOpen }) {
+function SubcategoryTile({ category, onOpen, onDelete }) {
+  const handleDeleteClick = (e) => {
+    e.stopPropagation(); // Prevent opening the tile when clicking delete
+    if (confirm(`Are you sure you want to delete the subcategory "${category.name}"?`)) {
+      onDelete();
+    }
+  };
+
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="w-full text-left bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg sm:rounded-xl px-4 sm:px-5 py-3 sm:py-4 hover:border-purple-300 dark:hover:border-purple-600 hover:shadow transition-colors"
-    >
-      <div className="flex items-start space-x-2 sm:space-x-3">
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-sm sm:text-base flex-shrink-0">
-          {category.icon || '📦'}
+    <div className="relative group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg sm:rounded-xl hover:border-purple-300 dark:hover:border-purple-600 hover:shadow transition-colors">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="w-full text-left px-4 sm:px-5 py-3 sm:py-4 pr-10"
+      >
+        <div className="flex items-start space-x-2 sm:space-x-3">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-sm sm:text-base flex-shrink-0">
+            {category.icon || '📦'}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100 truncate">{category.name}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">/{category.slug}</p>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100 truncate">{category.name}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">/{category.slug}</p>
-        </div>
-      </div>
-    </button>
+      </button>
+      
+      {/* Delete Button */}
+      <button
+        type="button"
+        onClick={handleDeleteClick}
+        className="absolute top-2 right-2 p-1.5 sm:p-2 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors opacity-0 group-hover:opacity-100"
+        title="Delete subcategory"
+      >
+        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </button>
+    </div>
   );
 }
 

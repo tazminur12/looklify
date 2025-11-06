@@ -5,7 +5,6 @@ import FeaturedBrands from "./components/FeaturedBrands";
 import FeaturedProducts from "./components/FeaturedProducts";
 import FeaturedBlogs from "./components/FeaturedBlogs";
 import StatsSection from "./components/StatsSection";
-import CTASection from "./components/CTASection";
 
 export default function Home() {
 

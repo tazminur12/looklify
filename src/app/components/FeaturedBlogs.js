@@ -44,15 +44,15 @@ export default function FeaturedBlogs() {
               <div className="h-1 w-32 bg-purple-600 mt-2 rounded-full"></div>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
             {[...Array(4)].map((_, index) => (
               <div key={index} className="bg-white rounded-xl border border-gray-200 animate-pulse overflow-hidden">
-                <div className="w-full h-48 bg-gray-200"></div>
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-6 bg-gray-200 rounded w-full"></div>
-                  <div className="h-4 bg-gray-200 rounded w-full"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                <div className="w-full h-32 sm:h-40 lg:h-48 bg-gray-200"></div>
+                <div className="p-2 sm:p-3 lg:p-4 space-y-2 sm:space-y-3">
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 sm:h-6 bg-gray-200 rounded w-full"></div>
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded w-2/3"></div>
                 </div>
               </div>
             ))}
@@ -79,18 +79,19 @@ export default function FeaturedBlogs() {
   return (
     <section className="py-12 sm:py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header with "Beautylogy Blog Articles" and "View All" link */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-10 gap-4">
-          <div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-              <span className="font-bold">Beautylogy</span>{' '}
-              <span className="font-bold text-purple-600">Blog Articles</span>
-            </h2>
-            <div className="h-1 w-24 sm:w-32 bg-purple-600 mt-2 rounded-full"></div>
-          </div>
+        {/* Header - centered like FeaturedProducts */}
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 relative">
+            <span className="font-bold">Beautylogy</span>{' '}
+            <span className="font-bold text-purple-600">Blog Articles</span>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+          </h2>
+          <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-4 mb-6">
+            Discover beauty tips, skincare routines, and expert advice
+          </p>
           <Link
             href="/blog"
-            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium transition-colors group text-sm sm:text-base"
+            className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium transition-colors group text-sm sm:text-base"
           >
             <span>View All</span>
             <svg 
@@ -104,8 +105,8 @@ export default function FeaturedBlogs() {
           </Link>
         </div>
 
-        {/* Blog Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {/* Blog Cards Grid - matching FeaturedProducts layout */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
           {featuredBlogs.map((blog) => (
             <Link
               key={blog._id}
@@ -113,7 +114,7 @@ export default function FeaturedBlogs() {
               className="group bg-white rounded-xl border border-gray-200 hover:border-purple-300 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
             >
               {/* Featured Image */}
-              <div className="relative w-full h-48 overflow-hidden">
+              <div className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden">
                 {blog.featuredImage?.url ? (
                   <Image
                     src={blog.featuredImage.url}
@@ -132,37 +133,37 @@ export default function FeaturedBlogs() {
                 )}
                 
                 {/* Overlay Text */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                  <p className="text-white text-sm font-medium line-clamp-2">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-3 lg:p-4">
+                  <p className="text-white text-[10px] sm:text-xs lg:text-sm font-medium line-clamp-2">
                     {blog.title}
                   </p>
                 </div>
               </div>
 
               {/* Content */}
-              <div className="p-4 flex-1 flex flex-col">
+              <div className="p-2 sm:p-3 lg:p-4 flex-1 flex flex-col">
                 {/* Date */}
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1 sm:mb-2">
                   {formatDate(blog.publishDate)}
                 </div>
 
                 {/* Title */}
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors">
+                <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors min-h-[32px] sm:min-h-[40px]">
                   {blog.title}
                 </h3>
 
                 {/* Excerpt */}
                 {blog.excerpt && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-3 flex-1">
+                  <p className="text-[10px] sm:text-xs lg:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 sm:line-clamp-3 mb-2 sm:mb-3 flex-1">
                     {blog.excerpt}
                   </p>
                 )}
 
                 {/* Tags */}
                 {blog.tags && blog.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-auto">
+                  <div className="flex flex-wrap gap-1 sm:gap-2 mt-auto">
                     {blog.tags.slice(0, 2).map((tag, idx) => (
-                      <span key={idx} className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+                      <span key={idx} className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 bg-purple-100 text-purple-700 rounded-full">
                         #{tag}
                       </span>
                     ))}
@@ -170,9 +171,9 @@ export default function FeaturedBlogs() {
                 )}
 
                 {/* Read More Arrow */}
-                <div className="flex items-center gap-2 mt-3 text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-sm font-medium">Read More</span>
-                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center gap-1 sm:gap-2 mt-2 sm:mt-3 text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[10px] sm:text-xs lg:text-sm font-medium">Read More</span>
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
