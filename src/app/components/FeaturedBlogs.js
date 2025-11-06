@@ -12,7 +12,23 @@ export default function FeaturedBlogs() {
     const fetchFeaturedBlogs = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/blogs/public?featured=true&limit=4');
+        // First try to get featured blogs
+        let response = await fetch('/api/blogs/public?featured=true&limit=4');
+        
+        if (response.ok) {
+          const data = await response.json();
+          const blogs = data.data?.blogs || [];
+          
+          // If we have featured blogs, use them
+          if (blogs.length > 0) {
+            setFeaturedBlogs(blogs);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // If no featured blogs, get any published blogs
+        response = await fetch('/api/blogs/public?limit=4');
         
         if (response.ok) {
           const data = await response.json();
