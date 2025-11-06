@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 
 export default function ImageSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -285,14 +284,6 @@ export default function ImageSlider() {
                   <p className="text-sm sm:text-base lg:text-lg mb-6 drop-shadow-md opacity-90">
                     {slider.description}
                   </p>
-                )}
-                {slider.buttonLink && (
-                  <Link
-                    href={slider.buttonLink}
-                    className="inline-block bg-white/20 backdrop-blur-sm border border-white/30 text-white px-6 py-3 rounded-lg hover:bg-white/30 transition-all duration-300 font-medium text-sm sm:text-base"
-                  >
-                    {slider.buttonText || 'Shop Now'}
-                  </Link>
                 )}
               </div>
             </div>

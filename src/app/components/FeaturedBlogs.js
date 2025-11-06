@@ -98,7 +98,7 @@ export default function FeaturedBlogs() {
         {/* Header - centered like FeaturedProducts */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 relative">
-            <span className="font-bold">Beautylogy</span>{' '}
+            <span className="font-bold">Looklify</span>{' '}
             <span className="font-bold text-purple-600">Blog Articles</span>
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
           </h2>

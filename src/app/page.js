@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Image Background */}
-      <section className="relative h-[50vh] sm:h-[60vh] lg:h-[70vh] w-full">
+      <section className="relative h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] xl:h-[500px] w-full">
         <ImageSlider />
       </section>
 
