@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '../../contexts/CartContext';
+import { useWishlist } from '../../contexts/WishlistContext';
 import Swal from 'sweetalert2';
 
 // Helper function to check if a string is a MongoDB ObjectId (24 hex characters)
@@ -35,6 +36,7 @@ export default function DynamicShopPage() {
   });
   const [filters, setFilters] = useState({
     search: '',
+    category: '',
     brand: '',
     subcategory: '',
     skinType: '',
@@ -102,8 +104,14 @@ export default function DynamicShopPage() {
             setError('Category not found');
           }
           
-          // Set filter options
-          setFilterOptions(result.data);
+          // Set filter options - ensure brands array exists
+          setFilterOptions({
+            brands: result.data.brands || [],
+            categories: result.data.categories || [],
+            subcategories: result.data.subcategories || {},
+            skinTypes: result.data.skinTypes || [],
+            skinConcerns: result.data.skinConcerns || []
+          });
         } else {
           setError('Failed to fetch category');
         }
@@ -133,8 +141,12 @@ export default function DynamicShopPage() {
         });
 
         // Add filters if set
-        if (filters.brand) params.append('brand', filters.brand);
         if (filters.search) params.append('search', filters.search);
+        if (filters.category) params.append('category', filters.category);
+        if (filters.brand) params.append('brand', filters.brand);
+        if (filters.subcategory) params.append('subcategory', filters.subcategory);
+        if (filters.skinType) params.append('skinType', filters.skinType);
+        if (filters.skinConcern) params.append('skinConcern', filters.skinConcern);
 
         const response = await fetch(`/api/products?${params}`);
         const result = await response.json();
@@ -161,6 +173,7 @@ export default function DynamicShopPage() {
   const resetFilters = () => {
     setFilters({
       search: '',
+      category: '',
       brand: '',
       subcategory: '',
       skinType: '',
@@ -920,8 +933,28 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
 
 // Category View Component - Same design as shop page
 function CategoryView({ category, products, loading, error, addToCart, filters, setFilters, filterOptions, resetFilters }) {
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  
   const handleFilterChange = (key, value) => {
-    setFilters({...filters, [key]: value});
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  // Get filtered subcategories based on selected category and brand
+  const getFilteredSubcategories = () => {
+    let filtered = filterOptions.subcategories;
+    
+    // If a specific category is selected, only show subcategories for that category
+    if (filters.category) {
+      const selectedCategory = filterOptions.categories.find(cat => cat._id === filters.category);
+      if (selectedCategory) {
+        filtered = { [selectedCategory.name]: filterOptions.subcategories[selectedCategory.name] || [] };
+      }
+    }
+    
+    return filtered;
   };
 
   const handleAddToCartProduct = (product) => {
@@ -1033,8 +1066,28 @@ function CategoryView({ category, products, loading, error, addToCart, filters, 
                   className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
                   <option value="">All Brands</option>
-                  {filterOptions.brands.map(brand => (
-                    <option key={brand._id} value={brand._id}>{brand.name}</option>
+                  {filterOptions.brands && filterOptions.brands.length > 0 ? (
+                    filterOptions.brands.map(brand => (
+                      <option key={brand._id} value={brand._id}>{brand.name}</option>
+                    ))
+                  ) : null}
+                </select>
+              </div>
+
+              {/* Category Filter */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  value={filters.category}
+                  onChange={(e) => {
+                    handleFilterChange('category', e.target.value);
+                    handleFilterChange('subcategory', '');
+                  }}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">All Categories</option>
+                  {filterOptions.categories.map(category => (
+                    <option key={category._id} value={category._id}>{category.name}</option>
                   ))}
                 </select>
               </div>
@@ -1048,7 +1101,7 @@ function CategoryView({ category, products, loading, error, addToCart, filters, 
                   className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
                   <option value="">All Sub Categories</option>
-                  {Object.entries(filterOptions.subcategories).map(([parentName, subs]) => (
+                  {Object.entries(getFilteredSubcategories()).map(([parentName, subs]) => (
                     <optgroup key={parentName} label={parentName}>
                       {subs.map(sub => (
                         <option key={sub._id} value={sub._id}>{sub.name}</option>
@@ -1135,7 +1188,7 @@ function CategoryView({ category, products, loading, error, addToCart, filters, 
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {products.map((product) => {
                   const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
                   const imageUrl = primaryImage?.url || '/slider/1.webp';
@@ -1171,36 +1224,31 @@ function CategoryView({ category, products, loading, error, addToCart, filters, 
                           <Image
                             src={imageUrl}
                             alt={primaryImage?.alt || product.name}
-                            width={300}
-                            height={300}
-                            className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                            width={400}
+                            height={400}
+                            className="w-full h-40 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </Link>
                         
-                        {/* Discount Badge */}
+                        {/* Discount Badge - small pill top-right */}
                         {discountPercentage > 0 && (
-                          <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-semibold shadow-lg">
-                            {discountPercentage}% OFF
+                          <div className="absolute top-2 right-2">
+                            <span className="px-2 py-1 text-[11px] font-semibold bg-red-600 text-white rounded-full shadow">
+                              {discountPercentage}% OFF
+                            </span>
                           </div>
                         )}
-
-                        {/* Wishlist Button */}
-                        <button className="absolute top-2 left-2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-red-50 hover:text-red-500 transition-colors">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                        </button>
                       </div>
 
-                      <div className="p-3">
-                        <h3 className="font-medium text-gray-900 mb-2 text-sm line-clamp-2 leading-tight">
+                      <div className="p-3 sm:p-4">
+                        <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base line-clamp-2 leading-tight min-h-[36px]">
                           <Link href={`/shop/${product._id}`} className="hover:text-purple-600 transition-colors">
                             {product.name}
                           </Link>
                         </h3>
 
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center space-x-2">
                             {(() => {
                               const salePrice = product.salePrice;
                               const regularPrice = product.regularPrice || product.originalPrice;
@@ -1209,41 +1257,52 @@ function CategoryView({ category, products, loading, error, addToCart, filters, 
                               
                               return (
                                 <>
-                                  <span className="text-base font-bold text-gray-900">
-                                    ৳{displayPrice}
-                                  </span>
+                                  <span className="text-base sm:text-lg font-bold text-gray-900">৳{displayPrice}</span>
                                   {regularPrice && regularPrice > displayPrice && (
-                                    <span className="text-xs text-gray-500 line-through">
-                                      ৳{regularPrice}
-                                    </span>
+                                    <span className="text-xs sm:text-sm text-gray-500 line-through">৳{regularPrice}</span>
                                   )}
                                 </>
                               );
                             })()}
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          {/* Wishlist button on right */}
+                          <button 
+                            onClick={() => {
+                              if (isInWishlist(product._id)) {
+                                removeFromWishlist(product._id);
+                              } else {
+                                addToWishlist(product);
+                              }
+                            }}
+                            aria-label="wishlist"
+                            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${
+                              isInWishlist(product._id)
+                                ? 'text-red-500 border-red-200 bg-red-50'
+                                : 'text-gray-500 border-gray-200 hover:text-red-500 hover:border-red-300'
+                            }`}
+                          >
+                            <svg className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
-                            <span className="text-xs text-gray-600">
-                              {product.rating?.average || 0}
-                            </span>
-                          </div>
+                          </button>
                         </div>
 
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={() => handleAddToCartProduct(product)}
-                            className="flex-1 px-2 py-1.5 text-xs border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50 transition-colors font-medium"
-                          >
-                            Add to Cart
-                          </button>
-                          <button
-                            onClick={() => handleBuyNow(product._id)}
-                            className="flex-1 px-2 py-1.5 text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all font-medium"
-                          >
-                            Buy Now
-                          </button>
+                        {/* Bottom action bar - pill buttons */}
+                        <div className="mt-2">
+                          <div className="flex gap-3 text-sm sm:text-base">
+                            <button
+                              onClick={() => handleAddToCartProduct(product)}
+                              className="flex-1 py-2.5 sm:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors"
+                            >
+                              Add to Cart
+                            </button>
+                            <button
+                              onClick={() => handleBuyNow(product._id)}
+                              className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                            >
+                              Buy Now
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

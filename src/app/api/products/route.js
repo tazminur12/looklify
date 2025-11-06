@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/authOptions';
 import dbConnect from '@/lib/db';
 import Product from '@/models/Product';
 import Category from '@/models/Category';
+import Brand from '@/models/Brand';
 
 // GET /api/products - Get all products with filtering, sorting, and pagination (PUBLIC)
 export async function GET(request) {
@@ -16,6 +17,10 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit')) || 10;
     const search = searchParams.get('search') || '';
     const category = searchParams.get('category') || '';
+    const brand = searchParams.get('brand') || '';
+    const subcategory = searchParams.get('subcategory') || '';
+    const skinType = searchParams.get('skinType') || '';
+    const skinConcern = searchParams.get('skinConcern') || '';
     const status = searchParams.get('status') || 'active'; // Default to active for public
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
@@ -85,6 +90,46 @@ export async function GET(request) {
     
     if (featured === 'true') {
       filter.isFeatured = true;
+    }
+    
+    // Brand filter
+    if (brand) {
+      // Check if brand is an ObjectId (24 hex characters) or a slug
+      if (/^[0-9a-fA-F]{24}$/.test(brand)) {
+        // It's an ObjectId, filter by brand ID
+        filter.brand = brand;
+      } else {
+        // It's a slug, we need to find the brand by slug first
+        const brandDoc = await Brand.findOne({ slug: brand, status: 'active' });
+        if (brandDoc) {
+          filter.brand = brandDoc._id;
+        }
+      }
+    }
+    
+    // Subcategory filter
+    if (subcategory) {
+      // Check if subcategory is an ObjectId (24 hex characters) or a slug
+      if (/^[0-9a-fA-F]{24}$/.test(subcategory)) {
+        // It's an ObjectId, filter by subcategory ID
+        filter.subcategory = subcategory;
+      } else {
+        // It's a slug, we need to find the subcategory by slug first
+        const subcategoryDoc = await Category.findOne({ slug: subcategory, status: 'active', parent: { $ne: null } });
+        if (subcategoryDoc) {
+          filter.subcategory = subcategoryDoc._id;
+        }
+      }
+    }
+    
+    // Skin Type filter
+    if (skinType && skinType !== 'All Types') {
+      filter.skinType = skinType;
+    }
+    
+    // Skin Concern filter
+    if (skinConcern && skinConcern !== 'All Concerns') {
+      filter.skinConcern = skinConcern;
     }
 
     // Build sort object

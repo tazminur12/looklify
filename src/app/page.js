@@ -1,6 +1,7 @@
 import ImageSlider from "./components/ImageSlider";
 import FeaturesSection from "./components/FeaturesSection";
 import FeaturedCategories from "./components/FeaturedCategories";
+import FeaturedBrands from "./components/FeaturedBrands";
 import FeaturedProducts from "./components/FeaturedProducts";
 import StatsSection from "./components/StatsSection";
 import CTASection from "./components/CTASection";
@@ -20,14 +21,17 @@ export default function Home() {
       {/* Featured Products */}
       <FeaturedProducts />
 
-      {/* Stats Section */}
-      <StatsSection />
+
+    {/* Featured Brands */}
+      <FeaturedBrands />
 
          {/* Features Section */}
          <FeaturesSection />
 
-      {/* CTA Section */}
-      <CTASection />
+      {/* Stats Section */}
+      <StatsSection />
+
+     
     </div>
   );
 }

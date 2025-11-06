@@ -121,9 +121,6 @@ export default function Header() {
               <div className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
                 Looklify
               </div>
-              <div className="ml-2 px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] sm:text-xs font-bold rounded-full shadow-md group-hover:shadow-lg transition-all duration-300">
-                ZONE
-              </div>
             </Link>
           </div>
 

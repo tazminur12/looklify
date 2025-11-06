@@ -43,16 +43,43 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
 
-    const [categories, totalCount] = await Promise.all([
-      Category.find(filter)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .populate('brand', 'name slug logo')
-        .populate('parent', 'name slug')
-        .lean(),
-      Category.countDocuments(filter)
-    ]);
+    // Fetch categories with populated relationships
+    const categoriesQuery = Category.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .populate('brand', 'name slug logo')
+      .populate('parent', 'name slug');
+    
+    // Populate children virtual field
+    const categories = await categoriesQuery.lean();
+    
+    // Manually populate children for each category since virtuals with lean() need special handling
+    const categoryIds = categories.map(c => c._id.toString());
+    const allChildren = await Category.find({ parent: { $in: categoryIds } })
+      .populate('parent', 'name slug')
+      .sort({ sortOrder: 1 })
+      .lean();
+    
+    // Group children by parent
+    const childrenByParent = {};
+    allChildren.forEach(child => {
+      const parentId = child.parent?._id?.toString() || child.parent?.toString();
+      if (parentId) {
+        if (!childrenByParent[parentId]) {
+          childrenByParent[parentId] = [];
+        }
+        childrenByParent[parentId].push(child);
+      }
+    });
+    
+    // Attach children to their parent categories
+    categories.forEach(category => {
+      const categoryId = category._id.toString();
+      category.children = childrenByParent[categoryId] || [];
+    });
+    
+    const totalCount = await Category.countDocuments(filter);
 
     const totalPages = Math.ceil(totalCount / limit);
 

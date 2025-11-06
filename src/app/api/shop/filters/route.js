@@ -13,9 +13,12 @@ export async function GET(request) {
 
     // Fetch all active brands
     const brands = await Brand.find({ status: 'active' })
-      .select('_id name slug logo')
+      .select('_id name slug logo isFeatured')
       .sort({ sortOrder: 1, name: 1 })
       .lean();
+
+    // Derive featured brands from brands array
+    const featuredBrands = brands.filter(brand => brand.isFeatured);
 
     // Fetch all active categories (main categories only)
     const categories = await Category.find({ 
@@ -26,16 +29,8 @@ export async function GET(request) {
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
-
-    // Fetch featured categories
-    const featuredCategories = await Category.find({ 
-      status: 'active',
-      parent: null,
-      isFeatured: true
-    })
-      .select('_id name slug icon image')
-      .sort({ sortOrder: 1, name: 1 })
-      .lean();
+    // Derive featured categories from categories array
+    const featuredCategories = categories.filter(cat => cat.isFeatured);
 
     // Fetch subcategories based on selected brand or all brands
     let subcategories = [];
@@ -81,6 +76,7 @@ export async function GET(request) {
       success: true,
       data: {
         brands,
+        featuredBrands,
         categories,
         featuredCategories,
         subcategories: subcategoriesByParent,
