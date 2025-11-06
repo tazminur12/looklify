@@ -77,24 +77,24 @@ export default function FeaturedBlogs() {
   };
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-12 sm:py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header with "Beautylogy Blog Articles" and "View All" link */}
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-10 gap-4">
           <div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
               <span className="font-bold">Beautylogy</span>{' '}
               <span className="font-bold text-purple-600">Blog Articles</span>
             </h2>
-            <div className="h-1 w-32 bg-purple-600 mt-2 rounded-full"></div>
+            <div className="h-1 w-24 sm:w-32 bg-purple-600 mt-2 rounded-full"></div>
           </div>
           <Link
             href="/blog"
-            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium transition-colors group"
+            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium transition-colors group text-sm sm:text-base"
           >
             <span>View All</span>
             <svg 
-              className="w-5 h-5 transition-transform group-hover:translate-x-1" 
+              className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -105,7 +105,7 @@ export default function FeaturedBlogs() {
         </div>
 
         {/* Blog Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {featuredBlogs.map((blog) => (
             <Link
               key={blog._id}

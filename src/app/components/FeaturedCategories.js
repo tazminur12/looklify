@@ -104,14 +104,14 @@ export default function FeaturedCategories() {
   }
 
   return (
-    <section className="py-16 bg-gradient-to-br from-gray-50 to-purple-50">
+    <section className="py-12 sm:py-16 bg-gradient-to-br from-gray-50 to-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4 relative">
+        <div className="text-center mb-8 sm:mb-10">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 relative">
             Featured Categories
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             Discover our carefully curated selection of beauty products across different categories
           </p>
         </div>
@@ -124,13 +124,18 @@ export default function FeaturedCategories() {
         >
           <div
             ref={scrollContainerRef}
-            className="flex gap-3 sm:gap-4 overflow-hidden"
+            className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-4"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitScrollbar: { display: 'none' }
+            }}
           >
             {featuredCategories.map((category) => (
               <Link
                 key={category._id || category.name}
                 href={`/shop?category=${category.slug}`}
-                className="group bg-white rounded-xl p-3 sm:p-4 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-purple-100 hover:border-purple-300 relative overflow-hidden min-w-[104px] sm:min-w-[120px]"
+                className="group bg-white rounded-xl p-3 sm:p-4 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-purple-100 hover:border-purple-300 relative overflow-hidden min-w-[104px] sm:min-w-[120px] flex-shrink-0"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative z-10">
@@ -159,6 +164,12 @@ export default function FeaturedCategories() {
           </div>
         </div>
       </div>
+      
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export default function StatsSection() {
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -16,28 +16,7 @@ export default function StatsSection() {
     partners: 50
   };
 
-  // Intersection Observer to trigger animation when section is visible
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimated) {
-            setHasAnimated(true);
-            animateCounts();
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasAnimated]);
-
-  const animateCounts = () => {
+  const animateCounts = useCallback(() => {
     // Animation duration in milliseconds
     const duration = 2000;
     const steps = 60;
@@ -81,33 +60,54 @@ export default function StatsSection() {
         return next;
       });
     }, stepDuration);
-  };
+  }, []);
+
+  // Intersection Observer to trigger animation when section is visible
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasAnimated) {
+            setHasAnimated(true);
+            animateCounts();
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasAnimated, animateCounts]);
 
   return (
-    <section ref={sectionRef} className="py-16 bg-white">
+    <section ref={sectionRef} className="py-12 sm:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
           <div>
-            <div className="text-3xl font-bold text-purple-600 mb-2">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-600 mb-2">
               {hasAnimated ? Math.floor(happyCustomers).toLocaleString() + '+' : '0'}
             </div>
-            <div className="text-gray-600">Happy Customers</div>
+            <div className="text-sm sm:text-base text-gray-600">Happy Customers</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-purple-600 mb-2">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-600 mb-2">
               {hasAnimated ? Math.floor(premiumProducts) + '+' : '0'}
             </div>
-            <div className="text-gray-600">Premium Products</div>
+            <div className="text-sm sm:text-base text-gray-600">Premium Products</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-purple-600 mb-2">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-600 mb-2">
               {hasAnimated ? Math.floor(brandPartners) + '+' : '0'}
             </div>
-            <div className="text-gray-600">Brand Partners</div>
+            <div className="text-sm sm:text-base text-gray-600">Brand Partners</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-purple-600 mb-2">24/7</div>
-            <div className="text-gray-600">Customer Support</div>
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-600 mb-2">24/7</div>
+            <div className="text-sm sm:text-base text-gray-600">Customer Support</div>
           </div>
         </div>
       </div>

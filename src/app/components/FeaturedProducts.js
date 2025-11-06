@@ -156,19 +156,19 @@ export default function FeaturedProducts() {
   }
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-12 sm:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4 relative">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 relative">
             Featured Products
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             Our handpicked selection of premium beauty products that stand out for their quality and effectiveness
           </p>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
           {featuredProducts.map((product) => {
             const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
             const imageUrl = primaryImage?.url || '/slider/1.webp';
@@ -186,7 +186,7 @@ export default function FeaturedProducts() {
                 className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative"
               >
                 {/* Product Image */}
-                <div className="relative w-full h-40 sm:h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                   <ProductImage
                     src={imageUrl}
                     alt={primaryImage?.alt || product.name}
@@ -203,20 +203,20 @@ export default function FeaturedProducts() {
                 </div>
                 
                 {/* Product Info */}
-                <div className="p-3 sm:p-4">
+                <div className="p-2 sm:p-3 lg:p-4">
                   {/* Product Name */}
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors text-sm sm:text-base min-h-[36px]">
+                  <h3 className="font-semibold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors text-xs sm:text-sm lg:text-base min-h-[32px] sm:min-h-[36px]">
                     {product.name}
                   </h3>
                   
                   {/* Price */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base sm:text-lg font-bold text-gray-900">
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                      <span className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-gray-900">
                         {formatPrice(displayPrice)}
                       </span>
                       {regularPrice && regularPrice > displayPrice && (
-                        <span className="text-xs sm:text-sm text-gray-500 line-through">
+                        <span className="text-[10px] sm:text-xs text-gray-500 line-through">
                           {formatPrice(regularPrice)}
                         </span>
                       )}
@@ -232,27 +232,27 @@ export default function FeaturedProducts() {
                         }
                       }}
                       aria-label="wishlist"
-                      className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${
+                      className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 ${
                         isInWishlist(product._id)
                           ? 'text-red-500 border-red-200 bg-red-50'
                           : 'text-gray-500 border-gray-200 hover:text-red-500 hover:border-red-300'
                       }`}
                     >
-                      <svg className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-5 lg:h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </button>
                   </div>
                   
                   {/* Bottom action bar - pill buttons */}
-                  <div className="mt-2">
-                    <div className="flex gap-3 text-sm sm:text-base">
+                  <div className="mt-1.5 sm:mt-2">
+                    <div className="flex gap-1.5 sm:gap-2 lg:gap-3">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           addToCart(product);
                         }}
-                        className="flex-1 py-2.5 sm:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors"
+                        className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors text-xs sm:text-sm lg:text-base"
                       >
                         Add to Cart
                       </button>
@@ -262,7 +262,7 @@ export default function FeaturedProducts() {
                           addToCart(product);
                           router.push('/checkout');
                         }}
-                        className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                        className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-base"
                       >
                         Buy Now
                       </button>
@@ -275,13 +275,13 @@ export default function FeaturedProducts() {
         </div>
         
         {/* View All Button */}
-        <div className="text-center mt-12">
+        <div className="text-center mt-8 sm:mt-12">
           <Link
             href="/shop?featured=true"
-            className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 font-semibold text-lg transition-all transform hover:scale-105 shadow-lg"
+            className="inline-flex items-center px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 font-semibold text-sm sm:text-base lg:text-lg transition-all transform hover:scale-105 shadow-lg"
           >
             <span>View All Featured Products</span>
-            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="ml-2 w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>
