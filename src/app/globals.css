@@ -67,3 +67,232 @@ body {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(75, 85, 99, 0.3);
 }
+
+/* Blog content typography */
+.blog-content {
+  color: #1f2937;
+  font-size: 1.05rem;
+  line-height: 1.9;
+  font-weight: 400;
+  max-width: 100%;
+}
+
+.blog-content > *:first-child {
+  margin-top: 0;
+}
+
+/* Paragraphs with justified text and proper spacing */
+.blog-content p {
+  text-align: justify;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  line-height: 1.9;
+}
+
+.blog-content p + p {
+  margin-top: 0;
+}
+
+/* Headings with proper hierarchy */
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4,
+.blog-content h5,
+.blog-content h6 {
+  color: #111827;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+  clear: both;
+}
+
+.blog-content h1 {
+  font-size: 2rem;
+}
+
+.blog-content h2 {
+  font-size: 1.75rem;
+}
+
+.blog-content h3 {
+  font-size: 1.5rem;
+}
+
+.blog-content h4 {
+  font-size: 1.25rem;
+}
+
+.blog-content h5 {
+  font-size: 1.1rem;
+}
+
+.blog-content h6 {
+  font-size: 1rem;
+}
+
+/* Strong/Bold text */
+.blog-content strong,
+.blog-content b {
+  color: #4c1d95;
+  font-weight: 700;
+}
+
+/* Links */
+.blog-content a {
+  color: #7c3aed;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: rgba(124, 58, 237, 0.35);
+}
+
+.blog-content a:hover {
+  text-decoration-color: rgba(124, 58, 237, 0.75);
+}
+
+/* Lists with proper spacing */
+.blog-content ul,
+.blog-content ol {
+  margin-bottom: 2rem;
+  margin-top: 1.5rem;
+  padding-left: 2rem;
+}
+
+.blog-content ul {
+  list-style: disc;
+}
+
+.blog-content ol {
+  list-style: decimal;
+}
+
+/* List items with generous spacing */
+.blog-content ol > li {
+  margin-bottom: 1.5rem;
+  padding-left: 0.5rem;
+  line-height: 1.9;
+}
+
+.blog-content ul > li {
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+  line-height: 1.9;
+}
+
+/* Bold text within list items (for numbered headings) */
+.blog-content li > strong,
+.blog-content li > b {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: #111827;
+}
+
+/* Paragraphs within list items */
+.blog-content li > p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Div and section elements */
+.blog-content div {
+  margin-bottom: 1.5rem;
+}
+
+.blog-content div:last-child {
+  margin-bottom: 0;
+}
+
+.blog-content > div {
+  margin-bottom: 2rem;
+}
+
+.blog-content > div:last-child {
+  margin-bottom: 0;
+}
+
+.blog-content section {
+  margin-bottom: 2.5rem;
+  margin-top: 2rem;
+}
+
+/* Other elements */
+.blog-content blockquote,
+.blog-content table,
+.blog-content pre {
+  margin-bottom: 2rem;
+  margin-top: 1.5rem;
+}
+
+.blog-content blockquote {
+  border-left: 4px solid #8b5cf6;
+  background: rgba(139, 92, 246, 0.08);
+  padding: 1.5rem;
+  font-style: italic;
+  color: #374151;
+  border-radius: 1rem;
+}
+
+.blog-content img,
+.blog-content video,
+.blog-content iframe {
+  width: 100%;
+  border-radius: 1.25rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 20px 45px -20px rgba(139, 92, 246, 0.35);
+}
+
+.blog-content table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px -15px rgba(139, 92, 246, 0.25);
+}
+
+.blog-content table th,
+.blog-content table td {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  text-align: left;
+}
+
+.blog-content table th {
+  background: rgba(139, 92, 246, 0.1);
+  font-weight: 600;
+}
+
+.blog-content hr {
+  margin: 3rem 0;
+  border: none;
+  border-top: 1px dashed rgba(124, 58, 237, 0.25);
+}
+
+.blog-content code {
+  background: rgba(124, 58, 237, 0.08);
+  color: #6d28d9;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.95rem;
+}
+
+/* Rich text editor */
+.rich-text-editor .rte-toolbar button {
+  min-width: 2.75rem;
+}
+
+.rich-text-editor .rte-editable:empty::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  position: absolute;
+  pointer-events: none;
+}
+
+.rich-text-editor .rte-editable {
+  position: relative;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
+import RichTextEditor from '@/app/components/RichTextEditor';
 
 export default function EditBlogPage() {
   const router = useRouter();
@@ -38,6 +39,9 @@ export default function EditBlogPage() {
   const [tagInput, setTagInput] = useState('');
   const [categoryInput, setCategoryInput] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
+
+  const stripHtml = (html) =>
+    html ? html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').trim() : '';
 
   useEffect(() => {
     // Fetch users for author dropdown
@@ -240,7 +244,7 @@ export default function EditBlogPage() {
       return;
     }
 
-    if (!form.content.trim()) {
+    if (!stripHtml(form.content)) {
       setError('Content is required');
       setSaving(false);
       return;
@@ -410,15 +414,14 @@ export default function EditBlogPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Content <span className="text-red-500">*</span>
               </label>
-              <textarea
+              <RichTextEditor
                 value={form.content}
-                onChange={(e) => setForm(prev => ({ ...prev, content: e.target.value }))}
-                rows={15}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 font-mono text-sm"
-                placeholder="Enter blog content (HTML supported)"
-                required
+                onChange={(html) => setForm((prev) => ({ ...prev, content: html }))}
+                placeholder="Update the blog with the formatting toolbar above."
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">You can use HTML tags for formatting</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Use the editor toolbar (bold, headings, lists, alignment) just like MS Word. The content saves automatically in rich format.
+              </p>
             </div>
 
             {/* Featured Image */}
