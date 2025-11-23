@@ -12,8 +12,8 @@ export default function CategoriesPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortBy, setSortBy] = useState('sortOrder');
+  const [sortOrder, setSortOrder] = useState('asc');
   // List-only view (accordion)
   const [brands, setBrands] = useState([]);
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalCount: 0, limit: 1000 });
@@ -338,9 +338,9 @@ export default function CategoriesPage() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 min-w-[100px] sm:min-w-[120px]"
               >
-                <option value="createdAt">Sort by Date</option>
-                <option value="name">Sort by Name</option>
                 <option value="sortOrder">Sort by Order</option>
+                <option value="name">Sort by Name</option>
+                <option value="createdAt">Sort by Date</option>
               </select>
 
               <button
