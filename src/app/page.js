@@ -5,6 +5,7 @@ import FeaturedBrands from "./components/FeaturedBrands";
 import FeaturedProducts from "./components/FeaturedProducts";
 import FeaturedBlogs from "./components/FeaturedBlogs";
 import StatsSection from "./components/StatsSection";
+import PopularProductsOnOffer from "./components/PopularProductsOnOffer";
 
 export default function Home() {
 
@@ -20,6 +21,9 @@ export default function Home() {
 
       {/* Featured Products */}
       <FeaturedProducts />
+      
+      {/* Popular Products on Offer */}
+      <PopularProductsOnOffer />
       
       {/* Featured Blogs */}
       <FeaturedBlogs/>

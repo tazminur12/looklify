@@ -1,0 +1,309 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from "next/link";
+import Image from "next/image";
+import { useWishlist } from '../contexts/WishlistContext';
+import { useCart } from '../contexts/CartContext';
+import { useRouter } from 'next/navigation';
+
+// Custom Image Component with better error handling
+function ProductImage({ src, alt, className, onError }) {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setImgSrc(src);
+    setHasError(false);
+    setIsLoading(true);
+    
+    // Preload image to check if it exists
+    if (src && src !== '/slider/1.webp') {
+      const img = new window.Image();
+      img.onload = () => setIsLoading(false);
+      img.onerror = () => {
+        console.error('Image failed to load:', src);
+        setHasError(true);
+        setIsLoading(false);
+        if (onError) onError();
+      };
+      img.src = src;
+    } else {
+      setHasError(true);
+      setIsLoading(false);
+    }
+  }, [src, onError]);
+
+  if (hasError || !imgSrc || imgSrc === '/slider/1.webp') {
+    return (
+      <div className={`w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-6xl ${className}`}>
+        📦
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Background that prevents black screen */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+      {isLoading && (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse z-10" />
+      )}
+      <Image
+        src={imgSrc}
+        alt={alt}
+        fill
+        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300 relative z-20`}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        onLoadingComplete={() => setIsLoading(false)}
+        unoptimized={imgSrc.includes('cloudinary')}
+        style={{ objectFit: 'cover' }}
+      />
+    </>
+  );
+}
+
+export default function PopularProductsOnOffer() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCart } = useCart();
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchProductsOnOffer = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/products?limit=8&status=active');
+        
+        if (response.ok) {
+          const data = await response.json();
+          const allProducts = data.data?.products || [];
+          
+          // Filter products that have discounts/offers
+          const productsWithOffers = allProducts.filter(product => {
+            const hasDiscount = (product.regularPrice && product.salePrice && product.regularPrice > product.salePrice) ||
+                               (product.originalPrice && product.price && product.originalPrice > product.price);
+            return hasDiscount;
+          });
+          
+          // Sort by discount percentage (highest first) and take top 8
+          const sortedProducts = productsWithOffers
+            .map(product => {
+              let discount = 0;
+              if (product.regularPrice && product.salePrice) {
+                discount = Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);
+              } else if (product.originalPrice && product.price) {
+                discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+              }
+              return { ...product, discount };
+            })
+            .sort((a, b) => b.discount - a.discount)
+            .slice(0, 8);
+          
+          setProducts(sortedProducts);
+        } else {
+          console.error('Failed to fetch products on offer:', response.status);
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error('Error fetching products on offer:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductsOnOffer();
+  }, []);
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('en-BD', {
+      style: 'currency',
+      currency: 'BDT',
+      minimumFractionDigits: 0
+    }).format(price);
+  };
+
+  const calculateDiscount = (product) => {
+    if (product.regularPrice && product.salePrice) {
+      return Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);
+    }
+    if (product.originalPrice && product.price) {
+      return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+    }
+    return 0;
+  };
+
+  const getDisplayPrice = (product) => {
+    return product.salePrice || product.price;
+  };
+
+  const getRegularPrice = (product) => {
+    return product.regularPrice || product.originalPrice;
+  };
+
+  if (loading) {
+    return (
+      <section className="py-12 sm:py-16 bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Popular Products on Offer</h2>
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600">Don&apos;t miss out on these amazing deals!</p>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
+            {[...Array(8)].map((_, index) => (
+              <div key={index} className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
+                <div className="w-full h-48 bg-gray-200"></div>
+                <div className="p-4">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                  <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (products.length === 0) {
+    return null; // Don't show section if no products on offer
+  }
+
+  return (
+    <section className="py-12 sm:py-16 bg-gradient-to-br from-purple-50 to-pink-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 relative">
+            Popular Products on Offer
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+          </h2>
+          <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+            Don&apos;t miss out on these amazing deals! Limited time offers on our most popular products
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
+          {products.map((product) => {
+            const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+            const imageUrl = primaryImage?.url || '/slider/1.webp';
+            const discount = calculateDiscount(product);
+            const displayPrice = getDisplayPrice(product);
+            const regularPrice = getRegularPrice(product);
+            
+            return (
+              <Link
+                key={product._id}
+                href={`/shop/${product._id}`}
+                className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative"
+              >
+                {/* Product Image */}
+                <div className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                  <ProductImage
+                    src={imageUrl}
+                    alt={primaryImage?.alt || product.name}
+                    className="group-hover:scale-105 transition-transform duration-300"
+                  />
+                  {/* Discount Badge - prominent for offers */}
+                  {discount > 0 && (
+                    <div className="absolute top-2 right-2 z-30">
+                      <span className="px-2.5 py-1.5 text-xs sm:text-sm font-bold bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-full shadow-lg animate-pulse">
+                        {discount}% OFF
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Product Info */}
+                <div className="p-2 sm:p-3 lg:p-4">
+                  {/* Product Name */}
+                  <h3 className="font-semibold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors text-xs sm:text-sm lg:text-base min-h-[32px] sm:min-h-[36px]">
+                    {product.name}
+                  </h3>
+                  
+                  {/* Price */}
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                      <span className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-red-600">
+                        {formatPrice(displayPrice)}
+                      </span>
+                      {regularPrice && regularPrice > displayPrice && (
+                        <span className="text-[10px] sm:text-xs text-gray-500 line-through">
+                          {formatPrice(regularPrice)}
+                        </span>
+                      )}
+                    </div>
+                    {/* Wishlist Button */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (isInWishlist(product._id)) {
+                          removeFromWishlist(product._id);
+                        } else {
+                          addToWishlist(product);
+                        }
+                      }}
+                      aria-label="wishlist"
+                      className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 ${
+                        isInWishlist(product._id)
+                          ? 'text-red-500 border-red-200 bg-red-50'
+                          : 'text-gray-500 border-gray-200 hover:text-red-500 hover:border-red-300'
+                      }`}
+                    >
+                      <svg className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-5 lg:h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {/* Bottom action bar */}
+                  <div className="mt-1.5 sm:mt-2">
+                    <div className="flex gap-1.5 sm:gap-2 lg:gap-3">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCart(product);
+                        }}
+                        className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors text-xs sm:text-sm lg:text-base"
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCart(product);
+                          router.push('/checkout');
+                        }}
+                        className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-base"
+                      >
+                        Buy Now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+        
+        {/* View All Button */}
+        <div className="text-center mt-8 sm:mt-12">
+          <Link
+            href="/shop"
+            className="inline-flex items-center px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 font-semibold text-sm sm:text-base lg:text-lg transition-all transform hover:scale-105 shadow-lg"
+          >
+            <span>View All Offers</span>
+            <svg className="ml-2 w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
