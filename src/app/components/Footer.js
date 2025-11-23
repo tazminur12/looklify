@@ -27,7 +27,7 @@ export default function Footer() {
 
           {/* Most Popular Categories */}
           <div className="space-y-2">
-            <h3 className="text-sm sm:text-base font-bold text-white">
+            <h3 className="text-base sm:text-lg font-extrabold text-white pb-2 border-b border-indigo-700">
               Most popular Categories
             </h3>
             <ul className="space-y-1">
@@ -66,7 +66,7 @@ export default function Footer() {
 
           {/* Customer Services */}
           <div className="space-y-2">
-            <h3 className="text-sm sm:text-base font-bold text-white">
+            <h3 className="text-base sm:text-lg font-extrabold text-white pb-2 border-b border-indigo-700">
               Customer Services
             </h3>
             <ul className="space-y-1">
@@ -115,18 +115,28 @@ export default function Footer() {
 
           {/* Contact Us */}
           <div className="space-y-2">
-            <h3 className="text-sm sm:text-base font-bold text-white">
+            <h3 className="text-base sm:text-lg font-extrabold text-white pb-2 border-b border-indigo-700">
               Contact Us
             </h3>
             <div className="space-y-1 text-xs sm:text-sm text-white">
-              <p>+880 1866411426</p>
-              <p>contact@looklifybd.com</p>
+              <a 
+                href="tel:+8801866411426" 
+                className="block hover:text-purple-300 transition-colors"
+              >
+                +880 1866411426
+              </a>
+              <a 
+                href="mailto:contact@looklifybd.com" 
+                className="block hover:text-purple-300 transition-colors"
+              >
+                contact@looklifybd.com
+              </a>
             </div>
           </div>
 
           {/* Social */}
           <div className="space-y-2">
-            <h3 className="text-sm sm:text-base font-bold text-white">
+            <h3 className="text-base sm:text-lg font-extrabold text-white pb-2 border-b border-indigo-700">
               Social
             </h3>
             <div className="flex space-x-2">

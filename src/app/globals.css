@@ -21,6 +21,23 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-roboto-slab), serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure consistent rendering across different devices */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+}
+
+/* Consistent container behavior */
+.container,
+.max-w-7xl {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Custom scrollbar for dark mode */
