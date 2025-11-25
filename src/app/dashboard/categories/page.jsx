@@ -12,7 +12,7 @@ export default function CategoriesPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
-  const [sortBy, setSortBy] = useState('sortOrder');
+  const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('asc');
   // List-only view (accordion)
   const [brands, setBrands] = useState([]);

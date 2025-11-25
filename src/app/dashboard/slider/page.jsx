@@ -32,17 +32,30 @@ export default function SliderManagementPage() {
   const fetchSliderImages = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/slider?status=active&sortBy=sortOrder');
+      setError('');
+      // Fetch all slider images (not just active) for dashboard management
+      const response = await fetch('/api/slider?sortBy=sortOrder');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
-      if (data.success) {
-        setSliderImages(data.data);
+      if (data.success && data.data) {
+        const images = Array.isArray(data.data) ? data.data : [];
+        setSliderImages(images);
       } else {
-        setError('Failed to fetch slider images');
+        setSliderImages([]);
+        if (data.error) {
+          setError(data.error);
+        } else if (!data.success) {
+          setError('No slider images found');
+        }
       }
     } catch (err) {
-      console.error('Error fetching slider images:', err);
-      setError('Failed to fetch slider images');
+      setError(err.message || 'Failed to fetch slider images');
+      setSliderImages([]);
     } finally {
       setLoading(false);
     }
@@ -103,7 +116,6 @@ export default function SliderManagementPage() {
         throw new Error('Upload failed - no URL returned');
       }
     } catch (err) {
-      console.error('Error uploading image:', err);
       Swal.fire({
         icon: 'error',
         title: 'Upload Failed',
@@ -172,7 +184,6 @@ export default function SliderManagementPage() {
         throw new Error(data.error || 'Failed to add slider image');
       }
     } catch (err) {
-      console.error('Error adding slider image:', err);
       Swal.fire({
         icon: 'error',
         title: 'Failed',
@@ -184,6 +195,16 @@ export default function SliderManagementPage() {
 
   // Handle delete
   const handleDelete = async (id) => {
+    if (!id) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Invalid slider ID',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: 'You won\'t be able to revert this!',
@@ -208,11 +229,27 @@ export default function SliderManagementPage() {
         }
       });
 
-      const response = await fetch(`/api/slider/${id}`, {
+      // Ensure ID is a string
+      const sliderId = String(id).trim();
+
+      const response = await fetch(`/api/slider/${sliderId}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
-      const data = await response.json();
+      // Parse response
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        throw new Error('Invalid response from server');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || `Server error: ${response.status}`);
+      }
 
       if (data.success) {
         Swal.fire({
@@ -224,10 +261,9 @@ export default function SliderManagementPage() {
         });
         fetchSliderImages();
       } else {
-        throw new Error(data.error || 'Failed to delete slider image');
+        throw new Error(data.error || data.message || 'Failed to delete slider image');
       }
     } catch (err) {
-      console.error('Error deleting slider image:', err);
       Swal.fire({
         icon: 'error',
         title: 'Failed',
@@ -239,6 +275,16 @@ export default function SliderManagementPage() {
 
   // Handle status toggle
   const handleStatusToggle = async (id, currentStatus) => {
+    if (!id) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Invalid slider ID',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
     try {
       Swal.fire({
         title: 'Updating Status...',
@@ -248,17 +294,31 @@ export default function SliderManagementPage() {
         }
       });
 
-      const response = await fetch(`/api/slider/${id}`, {
+      // Ensure ID is a string
+      const sliderId = String(id).trim();
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+
+      const response = await fetch(`/api/slider/${sliderId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: currentStatus === 'active' ? 'inactive' : 'active'
+          status: newStatus
         }),
       });
 
-      const data = await response.json();
+      // Parse response
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        throw new Error('Invalid response from server');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || `Server error: ${response.status}`);
+      }
 
       if (data.success) {
         Swal.fire({
@@ -272,10 +332,9 @@ export default function SliderManagementPage() {
         });
         fetchSliderImages();
       } else {
-        throw new Error(data.error || 'Failed to update status');
+        throw new Error(data.error || data.message || 'Failed to update status');
       }
     } catch (err) {
-      console.error('Error updating status:', err);
       Swal.fire({
         icon: 'error',
         title: 'Failed',
@@ -546,13 +605,22 @@ export default function SliderManagementPage() {
                 >
                   <div className="flex gap-4">
                     {/* Image Preview */}
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700">
-                      <Image
-                        src={slider.image.url}
-                        alt={slider.image.alt || 'Slider Image'}
-                        fill
-                        className="object-cover"
-                      />
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700">
+                      {slider.image?.url ? (
+                        <Image
+                          src={slider.image.url}
+                          alt={slider.image.alt || slider.title || 'Slider Image'}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-600">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
 
                     {/* Details */}
@@ -579,7 +647,21 @@ export default function SliderManagementPage() {
 
                       <div className="flex items-center gap-4 mt-3">
                         <button
-                          onClick={() => handleStatusToggle(slider._id, slider.status)}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (!slider._id) {
+                              Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Slider ID is missing',
+                                confirmButtonText: 'OK'
+                              });
+                              return;
+                            }
+                            handleStatusToggle(slider._id, slider.status);
+                          }}
                           className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
                             slider.status === 'active'
                               ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 hover:bg-yellow-200 dark:hover:bg-yellow-900/40'
@@ -589,7 +671,21 @@ export default function SliderManagementPage() {
                           {slider.status === 'active' ? 'Deactivate' : 'Activate'}
                         </button>
                         <button
-                          onClick={() => handleDelete(slider._id)}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (!slider._id) {
+                              Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Slider ID is missing',
+                                confirmButtonText: 'OK'
+                              });
+                              return;
+                            }
+                            handleDelete(slider._id);
+                          }}
                           className="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors"
                         >
                           Delete

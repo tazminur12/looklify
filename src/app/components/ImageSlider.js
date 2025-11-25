@@ -255,7 +255,7 @@ export default function ImageSlider() {
           return (
             <div
               key={slider._id || index}
-              className="absolute inset-0 transition-opacity duration-300"
+              className="absolute inset-0 transition-opacity duration-300 bg-gray-900"
               style={{
                 opacity: isDragging ? opacity : (index === currentSlide ? 1 : 0),
                 zIndex: index === currentSlide ? 10 : 5
@@ -265,7 +265,7 @@ export default function ImageSlider() {
               src={slider.image.url}
               alt={slider.image.alt || slider.title || 'Slider Image'}
               fill
-              className="object-cover"
+              className="object-contain sm:object-cover"
               priority={index === 0}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
             />

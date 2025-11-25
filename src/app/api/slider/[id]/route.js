@@ -8,7 +8,9 @@ import { authOptions } from '@/lib/authOptions';
 export async function GET(request, { params }) {
   try {
     await dbConnect();
-    const { id } = params;
+    // Await params if it's a Promise (Next.js 15+)
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
 
     const sliderImage = await SliderImage.findById(id)
       .populate('createdBy', 'name email')
@@ -59,7 +61,9 @@ export async function PUT(request, { params }) {
       );
     }
 
-    const { id } = params;
+    // Await params if it's a Promise (Next.js 15+)
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     const body = await request.json();
     const { image, title, description, buttonText, buttonLink, status, sortOrder } = body;
 
@@ -122,7 +126,9 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    const { id } = params;
+    // Await params if it's a Promise (Next.js 15+)
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
 
     const sliderImage = await SliderImage.findById(id);
 

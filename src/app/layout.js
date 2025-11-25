@@ -1,11 +1,11 @@
 import { Roboto_Slab } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import AuthSessionProvider from "./providers/SessionProvider";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
 import LayoutWrapper from "./components/LayoutWrapper";
+import ChatWidget from "./components/ChatWidget";
 import { Toaster } from "react-hot-toast";
 
 const robotoSlab = Roboto_Slab({
@@ -16,28 +16,20 @@ const robotoSlab = Roboto_Slab({
 export const metadata = {
   title: "Looklify - Beauty & Skincare",
   description: "Your premium destination for beauty and skincare products",
+  icons: {
+    icon: '/favicon/face-mask.png',
+    apple: '/favicon/face-mask.png',
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon/Looklify favicon.jpg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/favicon/face-mask.png" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-        {/* Tawk.to Chat Script */}
-        <Script id="tawk-chat" strategy="afterInteractive">
-{`
-  var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-  (function(){
-    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-    s1.async=true;
-    s1.src='https://embed.tawk.to/68eddc26af8498194f4fac03/1j7gi7ui6';
-    s1.charset='UTF-8';
-    s1.setAttribute('crossorigin','*');
-    s0.parentNode.insertBefore(s1,s0);
-  })();
-`}
-        </Script>
       </head>
       <body
         className={`${robotoSlab.variable} antialiased bg-white text-gray-900 transition-colors duration-300`}
@@ -74,6 +66,7 @@ export default function RootLayout({ children }) {
                       },
                     }}
                   />
+                  <ChatWidget />
                 </div>
               </WishlistProvider>
             </CartProvider>

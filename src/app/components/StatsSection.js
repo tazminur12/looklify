@@ -11,9 +11,9 @@ export default function StatsSection() {
 
   // Target values
   const targets = {
-    customers: 10000,
-    products: 500,
-    partners: 50
+    customers: 5000,
+    products: 100,
+    partners: 25
   };
 
   const animateCounts = useCallback(() => {
