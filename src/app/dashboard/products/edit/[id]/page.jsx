@@ -67,6 +67,7 @@ export default function EditProductPage() {
       }
     ],
     isFeatured: false,
+    featuredSortOrder: '0',
     isBestSeller: false,
     isNewArrival: false,
     isOfferProduct: false,
@@ -181,6 +182,7 @@ export default function EditProductPage() {
               tags: product.tags && product.tags.length > 0 ? product.tags : [''],
               images: product.images && product.images.length > 0 ? product.images : [{ url: '', alt: '', isPrimary: true }],
               isFeatured: Boolean(product.isFeatured),
+              featuredSortOrder: product.featuredSortOrder !== undefined && product.featuredSortOrder !== null ? String(product.featuredSortOrder) : '0',
               isBestSeller: Boolean(product.isBestSeller),
               isNewArrival: Boolean(product.isNewArrival),
               isOfferProduct: Boolean(product.isOfferProduct),
@@ -496,6 +498,7 @@ export default function EditProductPage() {
         bengaliDescription: formData.bengaliDescription || undefined,
         images: formData.images.filter(img => img.url.trim()),
         isFeatured: Boolean(formData.isFeatured),
+        featuredSortOrder: formData.featuredSortOrder ? parseInt(formData.featuredSortOrder) : 0,
         isBestSeller: Boolean(formData.isBestSeller),
         isNewArrival: Boolean(formData.isNewArrival),
         isOfferProduct: Boolean(formData.isOfferProduct)
@@ -1473,6 +1476,26 @@ export default function EditProductPage() {
               />
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Track Inventory</span>
             </label>
+            {/* Featured Sort Order */}
+            <div className="col-span-2 lg:col-span-4 mt-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Featured Sort Order
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.featuredSortOrder || '0'}
+                  onChange={(e) => handleInputChange('featuredSortOrder', e.target.value || '0')}
+                  className="w-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  placeholder="0"
+                  disabled={!formData.isFeatured}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  ছোট সংখ্যা মানে Featured Products section এ আগে দেখাবে।
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

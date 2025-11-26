@@ -76,12 +76,22 @@ export default function FeaturedProducts() {
       try {
         setLoading(true);
         console.log('Fetching featured products...');
-        const response = await fetch('/api/products?featured=true&limit=8');
+        const response = await fetch('/api/products?featured=true&limit=1000');
         
         if (response.ok) {
           const data = await response.json();
           console.log('API Response:', data);
-          setFeaturedProducts(data.data?.products || []);
+          const products = data.data?.products || [];
+          // Sort by featuredSortOrder (ascending), then by createdAt (newest first)
+          const sorted = [...products].sort((a, b) => {
+            const orderA = typeof a.featuredSortOrder === 'number' ? a.featuredSortOrder : 0;
+            const orderB = typeof b.featuredSortOrder === 'number' ? b.featuredSortOrder : 0;
+            if (orderA !== orderB) return orderA - orderB;
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA;
+          });
+          setFeaturedProducts(sorted);
         } else {
           console.error('Failed to fetch featured products:', response.status, response.statusText);
           setFeaturedProducts([]);

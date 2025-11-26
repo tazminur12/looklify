@@ -225,6 +225,12 @@ const ProductSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Sort order for featured products on homepage
+  featuredSortOrder: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   isBestSeller: {
     type: Boolean,
     default: false

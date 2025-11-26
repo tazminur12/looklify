@@ -265,7 +265,7 @@ export default function ImageSlider() {
               src={slider.image.url}
               alt={slider.image.alt || slider.title || 'Slider Image'}
               fill
-              className="object-cover"
+              className="object-contain md:object-cover"
               priority={index === 0}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
             />

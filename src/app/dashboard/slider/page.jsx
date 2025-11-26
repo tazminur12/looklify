@@ -12,6 +12,7 @@ export default function SliderManagementPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [editingId, setEditingId] = useState(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -127,6 +128,47 @@ export default function SliderManagementPage() {
     }
   };
 
+  // Handle edit button click
+  const handleEdit = (slider) => {
+    if (!slider || !slider._id) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Invalid slider data',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    setEditingId(slider._id);
+    setFormData({
+      image: slider.image || { url: '', publicId: '', alt: '' },
+      title: slider.title || '',
+      description: slider.description || '',
+      buttonText: slider.buttonText || 'Shop Now',
+      buttonLink: slider.buttonLink || '/shop',
+      status: slider.status || 'active',
+      sortOrder: slider.sortOrder || 0
+    });
+
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setFormData({
+      image: { url: '', publicId: '', alt: '' },
+      title: '',
+      description: '',
+      buttonText: 'Shop Now',
+      buttonLink: '/shop',
+      status: 'active',
+      sortOrder: 0
+    });
+  };
+
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -145,15 +187,18 @@ export default function SliderManagementPage() {
 
     try {
       Swal.fire({
-        title: 'Adding Slider Image...',
+        title: editingId ? 'Updating Slider Image...' : 'Adding Slider Image...',
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
         }
       });
 
-      const response = await fetch('/api/slider', {
-        method: 'POST',
+      const url = editingId ? `/api/slider/${editingId}` : '/api/slider';
+      const method = editingId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -166,28 +211,20 @@ export default function SliderManagementPage() {
         Swal.fire({
           icon: 'success',
           title: 'Success!',
-          text: 'Slider image added successfully!',
+          text: editingId ? 'Slider image updated successfully!' : 'Slider image added successfully!',
           timer: 2000,
           showConfirmButton: false
         });
-        setFormData({
-          image: { url: '', publicId: '', alt: '' },
-          title: '',
-          description: '',
-          buttonText: 'Shop Now',
-          buttonLink: '/shop',
-          status: 'active',
-          sortOrder: 0
-        });
+        handleCancelEdit();
         fetchSliderImages();
       } else {
-        throw new Error(data.error || 'Failed to add slider image');
+        throw new Error(data.error || (editingId ? 'Failed to update slider image' : 'Failed to add slider image'));
       }
     } catch (err) {
       Swal.fire({
         icon: 'error',
         title: 'Failed',
-        text: err.message || 'Failed to add slider image. Please try again.',
+        text: err.message || (editingId ? 'Failed to update slider image. Please try again.' : 'Failed to add slider image. Please try again.'),
         confirmButtonText: 'OK'
       });
     }
@@ -391,9 +428,20 @@ export default function SliderManagementPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upload Form */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-            Add New Slider Image
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              {editingId ? 'Edit Slider Image' : 'Add New Slider Image'}
+            </h2>
+            {editingId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Image Upload */}
@@ -422,12 +470,12 @@ export default function SliderManagementPage() {
               
               {formData.image.url ? (
                 <div className="relative group">
-                  <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                  <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
                     <Image
                       src={formData.image.url}
                       alt={formData.image.alt || 'Slider Image'}
                       fill
-                      className="object-cover"
+                      className="object-contain"
                     />
                   </div>
                   <button
@@ -579,7 +627,7 @@ export default function SliderManagementPage() {
               disabled={!formData.image.url || uploading}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {uploading ? 'Uploading...' : 'Add Slider Image'}
+              {uploading ? 'Uploading...' : editingId ? 'Update Slider Image' : 'Add Slider Image'}
             </button>
           </form>
         </div>
@@ -613,7 +661,7 @@ export default function SliderManagementPage() {
                           src={slider.image.url}
                           alt={slider.image.alt || slider.title || 'Slider Image'}
                           fill
-                          className="object-cover"
+                          className="object-contain"
                           unoptimized
                         />
                       ) : (
@@ -647,7 +695,18 @@ export default function SliderManagementPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-4 mt-3">
+                      <div className="flex items-center gap-2 flex-wrap mt-3">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleEdit(slider);
+                          }}
+                          className="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors"
+                        >
+                          Edit
+                        </button>
                         <button
                           type="button"
                           onClick={(e) => {
@@ -692,7 +751,7 @@ export default function SliderManagementPage() {
                         >
                           Delete
                         </button>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
                           Order: {slider.sortOrder}
                         </span>
                       </div>
