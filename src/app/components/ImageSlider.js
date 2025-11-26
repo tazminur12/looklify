@@ -255,10 +255,14 @@ export default function ImageSlider() {
           return (
             <div
               key={slider._id || index}
-              className="absolute inset-0 transition-opacity duration-300 bg-gray-900"
+              className="absolute inset-0 transition-opacity duration-300"
               style={{
                 opacity: isDragging ? opacity : (index === currentSlide ? 1 : 0),
-                zIndex: index === currentSlide ? 10 : 5
+                zIndex: index === currentSlide ? 10 : 5,
+                backgroundImage: `url(${slider.image.url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
               }}
             >
             <Image
