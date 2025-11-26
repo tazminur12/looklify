@@ -107,14 +107,16 @@ const ProductSchema = new mongoose.Schema({
       default: false
     }
   }],
-  features: [{
+  features: {
     type: String,
-    trim: true
-  }],
-  ingredients: [{
+    trim: true,
+    default: ''
+  },
+  ingredients: {
     type: String,
-    trim: true
-  }],
+    trim: true,
+    default: ''
+  },
   weight: {
     value: Number,
     unit: {
@@ -232,6 +234,10 @@ const ProductSchema = new mongoose.Schema({
     default: false
   },
   isOnSale: {
+    type: Boolean,
+    default: false
+  },
+  isOfferProduct: {
     type: Boolean,
     default: false
   },

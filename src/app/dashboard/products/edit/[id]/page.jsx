@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import RichTextEditor from '@/app/components/RichTextEditor';
 
 export default function EditProductPage() {
   const { data: session, status } = useSession();
@@ -55,8 +56,8 @@ export default function EditProductPage() {
       height: '',
       unit: 'cm'
     },
-    features: [''],
-    ingredients: [''],
+    features: '',
+    ingredients: '',
     tags: [''],
     images: [
       {
@@ -68,6 +69,7 @@ export default function EditProductPage() {
     isFeatured: false,
     isBestSeller: false,
     isNewArrival: false,
+    isOfferProduct: false,
     inventory: {
       trackInventory: true,
       allowBackorder: false,
@@ -174,13 +176,14 @@ export default function EditProductPage() {
               watchersCount: product.watchersCount || '0',
               weight: product.weight || { value: '', unit: 'g' },
               dimensions: product.dimensions || { length: '', width: '', height: '', unit: 'cm' },
-              features: product.features && product.features.length > 0 ? product.features : [''],
-              ingredients: product.ingredients && product.ingredients.length > 0 ? product.ingredients : [''],
+              features: typeof product.features === 'string' ? product.features : (Array.isArray(product.features) ? product.features.join('<br>') : ''),
+              ingredients: typeof product.ingredients === 'string' ? product.ingredients : (Array.isArray(product.ingredients) ? product.ingredients.join('<br>') : ''),
               tags: product.tags && product.tags.length > 0 ? product.tags : [''],
               images: product.images && product.images.length > 0 ? product.images : [{ url: '', alt: '', isPrimary: true }],
-              isFeatured: product.isFeatured || false,
-              isBestSeller: product.isBestSeller || false,
-              isNewArrival: product.isNewArrival || false,
+              isFeatured: Boolean(product.isFeatured),
+              isBestSeller: Boolean(product.isBestSeller),
+              isNewArrival: Boolean(product.isNewArrival),
+              isOfferProduct: Boolean(product.isOfferProduct),
               inventory: product.inventory || {
                 trackInventory: true,
                 allowBackorder: false,
@@ -473,8 +476,8 @@ export default function EditProductPage() {
           height: formData.dimensions.height ? parseFloat(formData.dimensions.height) : undefined,
           unit: formData.dimensions.unit
         } : undefined,
-        features: formData.features.filter(f => f.trim()),
-        ingredients: formData.ingredients.filter(i => i.trim()),
+        features: formData.features || '',
+        ingredients: formData.ingredients || '',
         tags: formData.tags.filter(t => t.trim()),
         seo: {
           metaTitle: formData.seo.metaTitle || undefined,
@@ -491,7 +494,11 @@ export default function EditProductPage() {
         origin: formData.origin || undefined,
         bengaliName: formData.bengaliName || undefined,
         bengaliDescription: formData.bengaliDescription || undefined,
-        images: formData.images.filter(img => img.url.trim())
+        images: formData.images.filter(img => img.url.trim()),
+        isFeatured: Boolean(formData.isFeatured),
+        isBestSeller: Boolean(formData.isBestSeller),
+        isNewArrival: Boolean(formData.isNewArrival),
+        isOfferProduct: Boolean(formData.isOfferProduct)
       };
 
       const response = await fetch(`/api/products/${productId}`, {
@@ -1086,19 +1093,14 @@ export default function EditProductPage() {
             {/* Ingredients */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Ingredients (Comma separated or one per line)
+                Ingredients
               </label>
-              <textarea
-                rows="6"
-                value={Array.isArray(formData.ingredients) ? formData.ingredients.join('\n') : ''}
-                onChange={(e) => {
-                  const ingredients = e.target.value.split('\n').filter(i => i.trim());
-                  setFormData(prev => ({ ...prev, ingredients }));
-                }}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
-                placeholder="Enter ingredients one per line&#10;e.g.,&#10;Water&#10;Glycerin&#10;Niacinamide"
+              <RichTextEditor
+                value={typeof formData.ingredients === 'string' ? formData.ingredients : (Array.isArray(formData.ingredients) ? formData.ingredients.join('<br>') : '')}
+                onChange={(html) => setFormData(prev => ({ ...prev, ingredients: html }))}
+                placeholder="Enter product ingredients with formatting..."
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter one ingredient per line</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Use the editor toolbar to format ingredients list</p>
             </div>
 
             {/* Usage Instructions */}
@@ -1106,17 +1108,12 @@ export default function EditProductPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 How to Use (Usage Instructions)
               </label>
-              <textarea
-                rows="6"
-                value={Array.isArray(formData.features) ? formData.features.join('\n') : ''}
-                onChange={(e) => {
-                  const features = e.target.value.split('\n').filter(f => f.trim());
-                  setFormData(prev => ({ ...prev, features }));
-                }}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
-                placeholder="Enter usage instructions one per line&#10;e.g.,&#10;Apply on clean face&#10;Massage gently&#10;Use twice daily"
+              <RichTextEditor
+                value={typeof formData.features === 'string' ? formData.features : (Array.isArray(formData.features) ? formData.features.join('<br>') : '')}
+                onChange={(html) => setFormData(prev => ({ ...prev, features: html }))}
+                placeholder="Enter usage instructions with formatting..."
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter one instruction per line</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Use the editor toolbar to format usage instructions</p>
             </div>
           </div>
         </div>
@@ -1457,6 +1454,15 @@ export default function EditProductPage() {
                 className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
               />
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">New Arrival</span>
+            </label>
+            <label className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border border-gray-200 dark:border-gray-600">
+              <input
+                type="checkbox"
+                checked={formData.isOfferProduct}
+                onChange={(e) => handleInputChange('isOfferProduct', e.target.checked)}
+                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              />
+              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">🎁 Offer Product</span>
             </label>
             <label className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border border-gray-200 dark:border-gray-600">
               <input

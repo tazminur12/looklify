@@ -1,10 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import Image from 'next/image';
+import dynamic from 'next/dynamic';
+
+const LottieAnimation = dynamic(() => import('../components/LottieAnimation'), {
+  ssr: false,
+  loading: () => <div className="w-full h-full flex items-center justify-center"><div className="animate-pulse text-gray-400">Loading...</div></div>
+});
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -19,7 +24,16 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [lottieData, setLottieData] = useState(null);
   const router = useRouter();
+
+  useEffect(() => {
+    // Load Lottie animation data
+    fetch('/login/Login.json')
+      .then(res => res.json())
+      .then(data => setLottieData(data))
+      .catch(err => console.error('Error loading Lottie animation:', err));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -132,20 +146,29 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
-      {/* Signup Form */}
-      <div className="w-full flex items-center justify-center py-12 px-4 sm:px-6">
-        <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          {/* Left Side - Lottie Animation */}
+          <div className="hidden lg:flex items-center justify-center">
+            {lottieData && (
+              <div className="w-full max-w-lg">
+                <LottieAnimation
+                  animationData={lottieData}
+                  className="w-full h-full"
+                  loop={true}
+                  autoplay={true}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Right Side - Signup Form */}
+          <div className="w-full flex items-center justify-center">
+            <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
-            <Link href="/" className="flex items-center justify-center space-x-3">
-              <Image
-                src="/logo/Looklify logo.jpg"
-                alt="Looklify Logo"
-                width={50}
-                height={50}
-                className="w-10 h-10 rounded-lg"
-              />
+            <Link href="/" className="flex items-center justify-center">
               <span className="text-xl font-bold text-gray-900">LOOKLIFY</span>
             </Link>
           </div>
@@ -386,6 +409,8 @@ export default function SignupPage() {
             <Link href="/" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
               ← Back to homepage
             </Link>
+          </div>
+            </div>
           </div>
         </div>
       </div>

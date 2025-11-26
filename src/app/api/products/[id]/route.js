@@ -111,18 +111,80 @@ export async function PUT(request, { params }) {
     // Add updatedBy field
     body.updatedBy = session.user.id;
 
-    // Update product
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      { $set: body },
-      { new: true, runValidators: true }
-    )
+    // Explicitly ensure boolean flags are properly set (handle false values)
+    // This ensures that false values are saved correctly to MongoDB
+    if ('isFeatured' in body) {
+      body.isFeatured = Boolean(body.isFeatured);
+    }
+    if ('isBestSeller' in body) {
+      body.isBestSeller = Boolean(body.isBestSeller);
+    }
+    if ('isNewArrival' in body) {
+      body.isNewArrival = Boolean(body.isNewArrival);
+    }
+    if ('isOfferProduct' in body) {
+      body.isOfferProduct = Boolean(body.isOfferProduct);
+    }
+
+    // Prepare update object - start with body copy
+    const updateData = { ...body };
+    
+    // Remove special fields that shouldn't be updated
+    delete updateData._id;
+    delete updateData.__v;
+    delete updateData.createdAt;
+
+    // Explicitly ensure boolean flags are set (even if false) - do this AFTER copying body
+    // This ensures boolean values override any undefined/null values
+    if ('isFeatured' in body) {
+      updateData.isFeatured = Boolean(body.isFeatured);
+    }
+    if ('isBestSeller' in body) {
+      updateData.isBestSeller = Boolean(body.isBestSeller);
+    }
+    if ('isNewArrival' in body) {
+      updateData.isNewArrival = Boolean(body.isNewArrival);
+    }
+    if ('isOfferProduct' in body) {
+      updateData.isOfferProduct = Boolean(body.isOfferProduct);
+    }
+
+    // Use native MongoDB driver to ensure field is saved
+    const db = mongoose.connection.db;
+    const collectionName = Product.collection.name; // Get actual collection name
+    const collection = db.collection(collectionName);
+    
+    // Convert ObjectId string to ObjectId
+    const objectId = new mongoose.Types.ObjectId(id);
+    
+    // Update using native MongoDB driver
+    const updateResult = await collection.updateOne(
+      { _id: objectId },
+      { $set: updateData }
+    );
+
+    if (updateResult.matchedCount === 0) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
+    // Now fetch the updated product
+    const updatedProduct = await Product.findById(id)
       .populate('createdBy', 'name email')
       .populate('updatedBy', 'name email')
       .populate('brand', 'name')
       .populate('category', 'name')
       .populate('subcategory', 'name')
       .lean();
+
+    if (!updatedProduct) {
+      return NextResponse.json(
+        { error: 'Product not found after update' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

@@ -65,17 +65,30 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    // Update the user's role
-    userToUpdate.role = role;
-    await userToUpdate.save();
+    // Update only the role field to avoid full document validation issues
+    // If user is missing required fields like 'name', we use updateOne to bypass validation
+    await User.updateOne(
+      { _id: id },
+      { $set: { role } }
+    );
+
+    // Fetch the updated user to return
+    const updatedUser = await User.findById(id);
+
+    if (!updatedUser) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       message: 'Role updated successfully',
       user: {
-        id: userToUpdate._id,
-        name: userToUpdate.name,
-        email: userToUpdate.email,
-        role: userToUpdate.role
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role
       }
     });
   } catch (error) {

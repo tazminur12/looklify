@@ -81,11 +81,9 @@ export default function PopularProductsOnOffer() {
           const data = await response.json();
           const allProducts = data.data?.products || [];
           
-          // Filter products that have discounts/offers
+          // Filter products that have isOfferProduct flag set to true
           const productsWithOffers = allProducts.filter(product => {
-            const hasDiscount = (product.regularPrice && product.salePrice && product.regularPrice > product.salePrice) ||
-                               (product.originalPrice && product.price && product.originalPrice > product.price);
-            return hasDiscount;
+            return Boolean(product.isOfferProduct) === true;
           });
           
           // Sort by discount percentage (highest first) and take top 8

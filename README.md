@@ -126,7 +126,26 @@ looklify/
    FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
    FIREBASE_PROJECT_ID=your-project-id
    MONGODB_URI=your-mongodb-connection-string
+   
+   # Email Configuration (for password reset)
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASS=your-gmail-app-password
+   # OR use these alternative variable names:
+   # GMAIL_USER=your-email@gmail.com
+   # GMAIL_APP_PASSWORD=your-gmail-app-password
    ```
+   
+   **📧 Setting up Gmail for Password Reset Emails:**
+   
+   1. Go to your [Google Account](https://myaccount.google.com/)
+   2. Navigate to **Security** → **2-Step Verification** (enable it if not already enabled)
+   3. Scroll down to **App passwords**
+   4. Click **Select app** → Choose "Mail"
+   5. Click **Select device** → Choose "Other (Custom name)" → Enter "Looklify"
+   6. Click **Generate** to get your 16-character App Password
+   7. Copy the App Password and use it as `EMAIL_PASS` or `GMAIL_APP_PASSWORD` in your `.env.local`
+   
+   ⚠️ **Important**: Use the App Password (not your regular Gmail password) for security.
 
 4. **Run the development server**
    ```bash
