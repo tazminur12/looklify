@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import Footer from "./Footer";
+import MobileBottomNav from "./MobileBottomNav";
 
 export default function LayoutWrapper({ children }) {
   const pathname = usePathname();
@@ -17,10 +18,11 @@ export default function LayoutWrapper({ children }) {
   return (
     <>
       <Header />
-      <main className="flex-grow bg-white transition-colors duration-300">
+      <main className="flex-grow bg-white transition-colors duration-300 pb-24 lg:pb-0">
         {children}
       </main>
       <Footer />
+      <MobileBottomNav />
     </>
   );
 }

@@ -255,21 +255,17 @@ export default function ImageSlider() {
           return (
             <div
               key={slider._id || index}
-              className="absolute inset-0 transition-opacity duration-300"
+              className="absolute inset-0 transition-opacity duration-300 overflow-hidden"
               style={{
                 opacity: isDragging ? opacity : (index === currentSlide ? 1 : 0),
-                zIndex: index === currentSlide ? 10 : 5,
-                backgroundImage: `url(${slider.image.url})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat'
+                zIndex: index === currentSlide ? 10 : 5
               }}
             >
             <Image
               src={slider.image.url}
               alt={slider.image.alt || slider.title || 'Slider Image'}
               fill
-              className="object-contain md:object-cover"
+              className="object-cover object-center"
               priority={index === 0}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
             />

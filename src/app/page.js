@@ -12,8 +12,19 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Image Background */}
-      <section className="relative h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] xl:h-[500px] w-full">
-        <ImageSlider />
+      <section className="relative w-full">
+        <div 
+          className="relative w-full"
+          style={{
+            paddingBottom: '42%',
+            minHeight: '180px',
+            maxHeight: '340px'
+          }}
+        >
+          <div className="absolute inset-0">
+            <ImageSlider />
+          </div>
+        </div>
       </section>
 
       {/* Featured Categories */}

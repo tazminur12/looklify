@@ -49,7 +49,7 @@ export default function ChatWidget() {
       <button
         id="chat-widget-button"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center group"
+        className="fixed bottom-24 sm:bottom-10 right-4 sm:right-6 z-50 w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center group"
         aria-label="Open chat options"
       >
         {!isOpen ? (
@@ -89,7 +89,7 @@ export default function ChatWidget() {
       {isOpen && (
         <div
           id="chat-widget"
-          className="fixed bottom-24 right-6 z-50 w-72 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300"
+          className="fixed bottom-44 sm:bottom-24 right-4 sm:right-6 z-50 w-72 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300"
           style={{
             animation: 'slideUpFade 0.3s ease-out forwards',
           }}

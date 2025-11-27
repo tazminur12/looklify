@@ -11,7 +11,6 @@ import { useWishlist } from '../contexts/WishlistContext';
 export default function Header() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [subcategories, setSubcategories] = useState([]);
   const [loadingSubcategories, setLoadingSubcategories] = useState(false);
@@ -22,7 +21,8 @@ export default function Header() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchTimeoutRef = useRef(null);
-  const searchRef = useRef(null);
+  const desktopSearchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
   
   // Fixed categories (not from backend)
   const categories = [
@@ -71,8 +71,10 @@ export default function Header() {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setIsProfileMenuOpen(false);
       }
-      // Close search results when clicking outside
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+      // Close search results when clicking outside of either search area
+      const clickedInsideDesktopSearch = desktopSearchRef.current?.contains(event.target);
+      const clickedInsideMobileSearch = mobileSearchRef.current?.contains(event.target);
+      if (!clickedInsideDesktopSearch && !clickedInsideMobileSearch) {
         setShowSearchResults(false);
       }
     }
@@ -200,7 +202,6 @@ export default function Header() {
     
     // Close search results and mobile search
     setShowSearchResults(false);
-    setIsSearchOpen(false);
   };
 
   // Calculate discount percentage
@@ -238,7 +239,7 @@ export default function Header() {
     <header className="bg-white shadow-lg sticky top-0 z-60 border-b border-gray-100">
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 w-full">
           {/* Logo Section - Text only */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center group">
@@ -248,8 +249,144 @@ export default function Header() {
             </Link>
           </div>
 
+          {/* Mobile Search Bar - inline with header */}
+          <div className="flex flex-1 lg:hidden items-center gap-3 justify-end">
+            <div ref={mobileSearchRef} className="flex-1 max-w-[210px] sm:max-w-[250px] relative">
+              <form onSubmit={handleSearch} className="w-full">
+                <div className="flex items-stretch w-full border border-[#cbb5f7] rounded-[18px] overflow-hidden bg-white shadow-[0_2px_6px_rgba(111,59,160,0.08)]">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      if (e.target.value.trim()) {
+                        setShowSearchResults(true);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (searchTerm.trim() && searchResults.length > 0) {
+                        setShowSearchResults(true);
+                      }
+                    }}
+                    placeholder="Search"
+                    className="flex-1 px-3 py-1.5 text-sm text-[#7b809a] placeholder-[#9fa3b8] focus:outline-none font-semibold bg-[#f5f5fb]"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-[#6e33a6] text-white px-4 flex items-center justify-center"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                </div>
+              </form>
+
+              {/* Mobile Search Results */}
+              {showSearchResults && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 max-h-[60vh] overflow-y-auto z-50">
+                  {searchLoading ? (
+                    <div className="p-6 text-center">
+                      <div className="inline-block w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                      <p className="mt-2 text-xs text-gray-600">Searching...</p>
+                    </div>
+                  ) : searchResults.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <p className="text-xs text-gray-600">No products found</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {searchResults.map((product) => {
+                        const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+                        const imageUrl = primaryImage?.url || '/slider/1.webp';
+                        const displayPrice = getDisplayPrice(product);
+                        const regularPrice = getRegularPrice(product);
+                        const discount = calculateDiscount(product);
+                        const isOutOfStock = product.status === 'out_of_stock' || product.stock === 0;
+
+                        return (
+                          <Link
+                            key={product._id}
+                            href={`/shop/${product._id}`}
+                            onClick={() => {
+                              setShowSearchResults(false);
+                              setSearchTerm('');
+                            }}
+                            className="flex items-center p-3 hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            <div className="flex-shrink-0 w-16 h-16 relative bg-gray-100 rounded-lg overflow-hidden">
+                              <Image
+                                src={imageUrl}
+                                alt={primaryImage?.alt || product.name}
+                                fill
+                                className="object-cover"
+                                sizes="64px"
+                              />
+                            </div>
+                            <div className="flex-1 ml-3 min-w-0">
+                              <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
+                                {product.name}
+                              </h3>
+                              <p className="text-xs text-gray-600 mt-0.5">
+                                {typeof product.brand === 'object' ? product.brand?.name : product.brand || 'No Brand'}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                                  isOutOfStock
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-green-100 text-green-700'
+                                }`}>
+                                  {isOutOfStock ? 'Out of Stock' : 'In Stock'}
+                                </span>
+                                {discount > 0 && (
+                                  <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded font-medium">
+                                    {discount}% OFF
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <span className="text-base font-bold text-gray-900">
+                                  {formatPrice(displayPrice)}
+                                </span>
+                                {regularPrice && regularPrice > displayPrice && (
+                                  <span className="text-xs text-gray-500 line-through">
+                                    {formatPrice(regularPrice)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                      {searchResults.length > 0 && (
+                        <div className="p-2 bg-gray-50 border-t border-gray-200">
+                          <button
+                            onClick={handleSearch}
+                            className="w-full text-center text-xs font-semibold text-purple-600 hover:text-purple-700 py-2"
+                          >
+                            View All Results ({searchResults.length}+)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden p-2.5 text-[#1a1a1a] hover:text-purple-700 transition-colors duration-200"
+              aria-label="Menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+
           {/* Desktop Search Bar - Professional design */}
-          <div ref={searchRef} className="hidden lg:flex flex-1 max-w-2xl mx-6 lg:mx-8 relative">
+          <div ref={desktopSearchRef} className="hidden lg:flex flex-1 max-w-2xl mx-6 lg:mx-8 relative">
             <form onSubmit={handleSearch} className="w-full">
               <div className="flex items-center w-full shadow-sm border border-purple-200 rounded-xl overflow-hidden bg-white hover:shadow-md transition-all duration-300">
                 <select 
@@ -393,7 +530,7 @@ export default function Header() {
           </div>
 
           {/* Right Section - Cart, Wishlist, Profile, Login/Signup */}
-          <div className="flex items-center space-x-4 lg:space-x-6">
+          <div className="flex items-center space-x-4 lg:space-x-6 flex-shrink-0">
             {/* Wishlist Section */}
             {session && (
               <Link href="/wishlist" className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-all duration-200 group p-2 rounded-lg hover:bg-purple-50">
@@ -507,36 +644,18 @@ export default function Header() {
                 </div>
               )}
               
-              {/* Mobile Login Button (only show when not logged in) */}
-              {!session && (
-                <div className="sm:hidden">
-                  <Link href="/login" className="text-sm font-semibold text-gray-700 hover:text-purple-600 transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-purple-50">
-                    Login
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile search button */}
-            <button
-              onClick={() => {
-                setIsSearchOpen(!isSearchOpen);
-                setIsMenuOpen(false); // Close menu when opening search
-              }}
-              className={`lg:hidden p-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 rounded-lg ${isSearchOpen ? 'bg-purple-50 text-purple-600' : ''}`}
-              aria-label="Search"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
+            {/* Mobile Login Button (only show when not logged in) */}
+            {!session && (
+              <div className="sm:hidden">
+                <Link href="/login" className="text-sm font-semibold text-gray-700 hover:text-purple-600 transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-purple-50">
+                  Login
+                </Link>
+              </div>
+            )}
 
             {/* Mobile menu button */}
             <button
-              onClick={() => {
-                setIsMenuOpen(!isMenuOpen);
-                setIsSearchOpen(false); // Close search when opening menu
-              }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden p-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 rounded-lg"
               aria-label="Menu"
             >
@@ -545,153 +664,9 @@ export default function Header() {
               </svg>
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* Mobile Search Bar */}
-      {isSearchOpen && (
-        <div className="lg:hidden bg-white border-t border-purple-100 px-4 py-4 shadow-sm">
-          <div className="space-y-3">
-            <form onSubmit={handleSearch} className="flex items-center space-x-3">
-              <select 
-                value={selectedSubcategory}
-                onChange={(e) => setSelectedSubcategory(e.target.value)}
-                className="bg-gray-50 border border-purple-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-gray-700 focus:outline-none focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent flex-1 font-medium"
-              >
-                <option value="">All Categories</option>
-                {loadingSubcategories ? (
-                  <option value="" disabled>Loading...</option>
-                ) : (
-                  subcategories.map((subcategory) => (
-                    <option key={subcategory._id || subcategory.slug} value={subcategory.slug}>
-                      {subcategory.name}
-                    </option>
-                  ))
-                )}
-              </select>
-              <input 
-                type="text" 
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  if (e.target.value.trim()) {
-                    setShowSearchResults(true);
-                  }
-                }}
-                onFocus={() => {
-                  if (searchTerm.trim() && searchResults.length > 0) {
-                    setShowSearchResults(true);
-                  }
-                }}
-                placeholder="Search products..." 
-                className="flex-1 px-3 py-2.5 border border-purple-200 rounded-xl text-xs sm:text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-medium"
-              />
-              <button 
-                type="submit"
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-2.5 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-sm hover:shadow-md"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-            </form>
-
-            {/* Mobile Search Results Panel */}
-            {showSearchResults && (
-              <div className="bg-white rounded-xl shadow-xl border border-gray-200 max-h-[400px] overflow-y-auto">
-                {searchLoading ? (
-                  <div className="p-6 text-center">
-                    <div className="inline-block w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="mt-2 text-xs text-gray-600">Searching...</p>
-                  </div>
-                ) : searchResults.length === 0 ? (
-                  <div className="p-6 text-center">
-                    <p className="text-xs text-gray-600">No products found</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-100">
-                    {searchResults.map((product) => {
-                      const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
-                      const imageUrl = primaryImage?.url || '/slider/1.webp';
-                      const displayPrice = getDisplayPrice(product);
-                      const regularPrice = getRegularPrice(product);
-                      const discount = calculateDiscount(product);
-                      const isOutOfStock = product.status === 'out_of_stock' || product.stock === 0;
-
-                      return (
-                        <Link
-                          key={product._id}
-                          href={`/shop/${product._id}`}
-                          onClick={() => {
-                            setShowSearchResults(false);
-                            setSearchTerm('');
-                            setIsSearchOpen(false);
-                          }}
-                          className="flex items-center p-3 hover:bg-gray-50 transition-colors duration-200"
-                        >
-                          {/* Product Image */}
-                          <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 relative bg-gray-100 rounded-lg overflow-hidden">
-                            <Image
-                              src={imageUrl}
-                              alt={primaryImage?.alt || product.name}
-                              fill
-                              className="object-cover"
-                              sizes="80px"
-                            />
-                          </div>
-
-                          {/* Product Details */}
-                          <div className="flex-1 ml-3 min-w-0">
-                            <h3 className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2">
-                              {product.name}
-                            </h3>
-                            <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
-                              {typeof product.brand === 'object' ? product.brand?.name : product.brand || 'No Brand'}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1.5">
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                                isOutOfStock 
-                                  ? 'bg-red-100 text-red-700' 
-                                  : 'bg-green-100 text-green-700'
-                              }`}>
-                                {isOutOfStock ? 'Out of Stock' : 'In Stock'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <span className="text-sm sm:text-base font-bold text-gray-900">
-                                {formatPrice(displayPrice)}
-                              </span>
-                              {regularPrice && regularPrice > displayPrice && (
-                                <span className="text-[10px] sm:text-xs text-gray-500 line-through">
-                                  {formatPrice(regularPrice)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                    {/* View All Results Link */}
-                    {searchResults.length > 0 && (
-                      <div className="p-2 bg-gray-50 border-t border-gray-200">
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleSearch(e);
-                          }}
-                          className="w-full text-center text-xs font-semibold text-purple-600 hover:text-purple-700 py-2"
-                        >
-                          View All Results ({searchResults.length}+)
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Desktop Navigation Bar */}
       <nav className="hidden md:block bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg">
@@ -722,7 +697,6 @@ export default function Header() {
               className="block px-4 py-3.5 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-bold transition-all duration-200 text-base"
               onClick={() => {
                 setIsMenuOpen(false);
-                setIsSearchOpen(false);
               }}
             >
               Home
@@ -742,7 +716,6 @@ export default function Header() {
                       className="flex-1 px-4 py-3 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-semibold transition-all duration-200 text-base"
                       onClick={() => {
                         setIsMenuOpen(false);
-                        setIsSearchOpen(false);
                       }}
                     >
                       {item.name}
@@ -775,7 +748,6 @@ export default function Header() {
                           className="block px-4 py-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-all duration-200 text-sm"
                           onClick={() => {
                             setIsMenuOpen(false);
-                            setIsSearchOpen(false);
                           }}
                         >
                           {subcategory.name}
@@ -810,7 +782,6 @@ export default function Header() {
                     className="block w-full px-4 py-3.5 text-gray-700 hover:bg-purple-50 hover:text-purple-600 text-center rounded-xl font-semibold transition-all duration-200"
                     onClick={() => {
                       setIsMenuOpen(false);
-                      setIsSearchOpen(false);
                     }}
                   >
                     Profile
@@ -820,7 +791,6 @@ export default function Header() {
                     className="block w-full px-4 py-3.5 text-gray-700 hover:bg-purple-50 hover:text-purple-600 text-center rounded-xl font-semibold transition-all duration-200"
                     onClick={() => {
                       setIsMenuOpen(false);
-                      setIsSearchOpen(false);
                     }}
                   >
                     Orders
@@ -829,7 +799,6 @@ export default function Header() {
                     onClick={() => {
                       signOut({ callbackUrl: '/' });
                       setIsMenuOpen(false);
-                      setIsSearchOpen(false);
                     }}
                     className="block w-full px-4 py-3.5 border-2 border-red-600 text-red-600 text-center rounded-xl font-semibold hover:bg-red-50 transition-all duration-200 hover:shadow-sm"
                   >
@@ -844,7 +813,6 @@ export default function Header() {
                     className="block w-full px-4 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-sm hover:shadow-md"
                     onClick={() => {
                       setIsMenuOpen(false);
-                      setIsSearchOpen(false);
                     }}
                   >
                     Log In
@@ -854,7 +822,6 @@ export default function Header() {
                     className="block w-full px-4 py-3.5 border-2 border-purple-600 text-purple-600 text-center rounded-xl font-semibold hover:bg-purple-50 transition-all duration-200 hover:shadow-sm"
                     onClick={() => {
                       setIsMenuOpen(false);
-                      setIsSearchOpen(false);
                     }}
                   >
                     Sign Up
