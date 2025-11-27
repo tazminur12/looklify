@@ -62,7 +62,7 @@ export default function FeaturedBlogs() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
             {[...Array(4)].map((_, index) => (
-              <div key={index} className="bg-white rounded-xl border border-gray-200 animate-pulse overflow-hidden">
+              <div key={index} className="bg-white rounded-xl border border-[#7c52c5] animate-pulse overflow-hidden">
                 <div className="w-full h-32 sm:h-40 lg:h-48 bg-gray-200"></div>
                 <div className="p-2 sm:p-3 lg:p-4 space-y-2 sm:space-y-3">
                   <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4"></div>
@@ -101,9 +101,6 @@ export default function FeaturedBlogs() {
             <span className="font-bold">Looklify Blog Articles</span>{' '}
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
           </h2>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-            Discover beauty tips, skincare routines, and expert advice
-          </p>
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium transition-colors group text-sm sm:text-base"
@@ -126,7 +123,7 @@ export default function FeaturedBlogs() {
             <Link
               key={blog._id}
               href={`/blog/${blog.slug}`}
-              className="group bg-white rounded-xl border border-gray-200 hover:border-purple-300 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
+              className="group bg-white rounded-xl border border-[#7c52c5] hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
             >
               {/* Featured Image */}
               <div className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden">

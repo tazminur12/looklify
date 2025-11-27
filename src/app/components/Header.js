@@ -238,20 +238,20 @@ export default function Header() {
   return (
     <header className="bg-white shadow-lg sticky top-0 z-60 border-b border-gray-100">
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2">
-        <div className="flex items-center gap-3 w-full">
-          {/* Logo Section - Text only */}
-          <div className="flex items-center">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-2 sm:py-2">
+        <div className="flex items-center gap-2 sm:gap-3 w-full">
+          {/* Logo Section - Text only - Visible on all screens */}
+          <div className="flex items-center flex-shrink-0">
             <Link href="/" className="flex items-center group">
-              <div className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
+              <div className="text-lg sm:text-xl lg:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
                 Looklify
               </div>
             </Link>
           </div>
 
-          {/* Mobile Search Bar - inline with header */}
-          <div className="flex flex-1 lg:hidden items-center gap-3 justify-end">
-            <div ref={mobileSearchRef} className="flex-1 max-w-[210px] sm:max-w-[250px] relative">
+          {/* Mobile Search Bar - inline with header - Only visible on mobile */}
+          <div className="flex flex-1 lg:hidden items-center gap-2 sm:gap-3 justify-between">
+            <div ref={mobileSearchRef} className="flex-1 relative">
               <form onSubmit={handleSearch} className="w-full">
                 <div className="flex items-stretch w-full border border-[#cbb5f7] rounded-[18px] overflow-hidden bg-white shadow-[0_2px_6px_rgba(111,59,160,0.08)]">
                   <input
@@ -374,9 +374,10 @@ export default function Header() {
               )}
             </div>
 
+            {/* Mobile menu button - Hamburger menu - Only visible on mobile */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2.5 text-[#1a1a1a] hover:text-purple-700 transition-colors duration-200"
+              className="lg:hidden p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 rounded-lg flex-shrink-0 ml-2"
               aria-label="Menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -529,8 +530,8 @@ export default function Header() {
             )}
           </div>
 
-          {/* Right Section - Cart, Wishlist, Profile, Login/Signup */}
-          <div className="flex items-center space-x-4 lg:space-x-6 flex-shrink-0">
+          {/* Right Section - Cart, Wishlist, Profile, Login/Signup - Hidden on mobile */}
+          <div className="hidden lg:flex items-center space-x-2 sm:space-x-3 lg:space-x-6 flex-shrink-0">
             {/* Wishlist Section */}
             {session && (
               <Link href="/wishlist" className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-all duration-200 group p-2 rounded-lg hover:bg-purple-50">
@@ -636,34 +637,14 @@ export default function Header() {
                 </div>
               ) : (
                 // User is not logged in - show login/signup buttons
-                <div className="hidden sm:flex items-center space-x-3">
+                <div className="flex items-center space-x-3">
                   <Link href="/login" className="text-sm font-semibold text-gray-700 hover:text-purple-600 transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-purple-50">Log In</Link>
                   <Link href="/signup" className="text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-sm hover:shadow-md">
                     Sign Up
                   </Link>
                 </div>
               )}
-              
-            {/* Mobile Login Button (only show when not logged in) */}
-            {!session && (
-              <div className="sm:hidden">
-                <Link href="/login" className="text-sm font-semibold text-gray-700 hover:text-purple-600 transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-purple-50">
-                  Login
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 rounded-lg"
-              aria-label="Menu"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
+            </div>
           </div>
         </div>
       </div>

@@ -99,8 +99,7 @@ export default function FeaturedBrands() {
         <div className="flex items-center justify-between mb-10">
           <div>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-              <span className="font-bold">Shop From</span>{' '}
-              <span className="font-bold text-purple-600">Brand</span>
+              <span className="font-bold">Shop From Brands</span>
             </h2>
             <div className="h-1 w-32 bg-purple-600 mt-2 rounded-full"></div>
           </div>

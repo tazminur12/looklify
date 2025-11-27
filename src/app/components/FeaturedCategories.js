@@ -86,7 +86,6 @@ export default function FeaturedCategories() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Categories</h2>
-            <p className="text-base text-gray-600">Discover our carefully curated selection of beauty products</p>
           </div>
           <div className="relative overflow-hidden">
             <div className="flex gap-3 sm:gap-4 overflow-hidden">
@@ -111,9 +110,6 @@ export default function FeaturedCategories() {
             Featured Categories
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
           </h2>
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-            Discover our carefully curated selection of beauty products across different categories
-          </p>
         </div>
 
         {/* Single-line horizontal slider */}

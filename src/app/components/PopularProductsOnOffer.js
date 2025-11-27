@@ -148,7 +148,6 @@ export default function PopularProductsOnOffer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Popular Products on Offer</h2>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-600">Don&apos;t miss out on these amazing deals!</p>
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 lg:gap-6">
@@ -180,9 +179,6 @@ export default function PopularProductsOnOffer() {
             Popular Products on Offer
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
           </h2>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-            Don&apos;t miss out on these amazing deals! Limited time offers on our most popular products
-          </p>
         </div>
         
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 lg:gap-6">
