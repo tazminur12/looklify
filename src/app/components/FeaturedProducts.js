@@ -144,7 +144,7 @@ export default function FeaturedProducts() {
             <p className="text-lg text-gray-600">Our handpicked selection of premium beauty products</p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
             {[...Array(8)].map((_, index) => (
               <div key={index} className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
                 <div className="w-full h-48 bg-gray-200"></div>
@@ -178,7 +178,7 @@ export default function FeaturedProducts() {
           </p>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 lg:gap-6">
           {featuredProducts.map((product) => {
             const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
             const imageUrl = primaryImage?.url || '/slider/1.webp';
@@ -193,7 +193,7 @@ export default function FeaturedProducts() {
               <Link
                 key={product._id}
                 href={`/shop/${product._id}`}
-                className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative"
+                className="group bg-white rounded-xl border border-[#7c52c5] overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative"
               >
                 {/* Product Image */}
                 <div className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
