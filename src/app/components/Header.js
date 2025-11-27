@@ -239,19 +239,19 @@ export default function Header() {
     <header className="bg-white shadow-lg sticky top-0 z-60 border-b border-gray-100">
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-2 sm:py-2">
-        <div className="flex items-center gap-2 sm:gap-3 w-full">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full">
           {/* Logo Section - Text only - Visible on all screens */}
           <div className="flex items-center flex-shrink-0">
             <Link href="/" className="flex items-center group">
-              <div className="text-lg sm:text-xl lg:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
+              <div className="text-base sm:text-lg lg:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
                 Looklify
               </div>
             </Link>
           </div>
 
           {/* Mobile Search Bar - inline with header - Only visible on mobile */}
-          <div className="flex flex-1 lg:hidden items-center gap-2 sm:gap-3 justify-between">
-            <div ref={mobileSearchRef} className="flex-1 relative">
+          <div className="flex flex-1 lg:hidden items-center gap-1.5 sm:gap-2 justify-between">
+            <div ref={mobileSearchRef} className="flex-1 relative max-w-[calc(100%-60px)]">
               <form onSubmit={handleSearch} className="w-full">
                 <div className="flex items-stretch w-full border border-[#cbb5f7] rounded-[18px] overflow-hidden bg-white shadow-[0_2px_6px_rgba(111,59,160,0.08)]">
                   <input
@@ -269,13 +269,13 @@ export default function Header() {
                       }
                     }}
                     placeholder="Search"
-                    className="flex-1 px-3 py-1.5 text-sm text-[#7b809a] placeholder-[#9fa3b8] focus:outline-none font-semibold bg-[#f5f5fb]"
+                    className="flex-1 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm text-[#7b809a] placeholder-[#9fa3b8] focus:outline-none font-semibold bg-[#f5f5fb]"
                   />
                   <button
                     type="submit"
-                    className="bg-[#6e33a6] text-white px-4 flex items-center justify-center"
+                    className="bg-[#6e33a6] text-white px-3 sm:px-4 flex items-center justify-center flex-shrink-0"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
@@ -377,7 +377,7 @@ export default function Header() {
             {/* Mobile menu button - Hamburger menu - Only visible on mobile */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 rounded-lg flex-shrink-0 ml-2"
+              className="lg:hidden p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 rounded-lg flex-shrink-0 ml-1 sm:ml-2"
               aria-label="Menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

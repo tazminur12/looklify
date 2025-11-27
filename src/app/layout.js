@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             <CartProvider>
               <WishlistProvider>
-                <div className="min-h-screen flex flex-col bg-white transition-colors duration-300">
+                <div className="min-h-screen flex flex-col bg-white transition-colors duration-300 w-full overflow-x-hidden">
                   <LayoutWrapper>
                     {children}
                   </LayoutWrapper>

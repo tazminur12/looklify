@@ -6,8 +6,13 @@ import bcrypt from 'bcryptjs';
 import dbConnect from '../lib/db';
 import User from '../models/User';
 
+// Validate required environment variables
+if (!process.env.NEXTAUTH_SECRET) {
+  console.warn('Warning: NEXTAUTH_SECRET is not set. This may cause authentication issues.');
+}
+
 export const authOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-change-in-production',
   debug: process.env.NODE_ENV === 'development',
   // Ensure NEXTAUTH_URL is properly set for production
   ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
