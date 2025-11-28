@@ -65,13 +65,11 @@ export default function FeaturedBrands() {
     return (
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-            <h2 className="text-4xl font-bold text-gray-900 mb-2">
-              <span className="font-bold">Shop From Brand</span>{' '}
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 relative">
+              <span className="font-bold">Shop From Brands</span>
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
             </h2>
-              <div className="h-1 w-32 bg-purple-600 mt-2 rounded-full"></div>
-            </div>
           </div>
           <div className="relative overflow-hidden">
             <div className="flex gap-4 overflow-hidden">
@@ -96,11 +94,11 @@ export default function FeaturedBrands() {
     <section className="py-10 sm:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-8 sm:mb-10">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 relative">
             <span className="font-bold">Shop From Brands</span>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
           </h2>
-          <div className="h-1 w-32 bg-purple-600 mt-2 rounded-full"></div>
         </div>
 
         {/* Single-line horizontal slider */}
