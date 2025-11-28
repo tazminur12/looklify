@@ -454,7 +454,7 @@ function ShopContent() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 {products.map((product) => {
                   const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
                   const imageUrl = primaryImage?.url || '/slider/1.webp';
@@ -463,7 +463,7 @@ function ShopContent() {
                   return (
                     <div key={product._id} className="group bg-white rounded-xl border border-[#7c52c5] overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                       {/* Product Image Container with white background */}
-                      <div className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden bg-white">
+                      <div className="relative w-full h-32 sm:h-40 lg:h-40 overflow-hidden bg-white">
                         <Link href={`/shop/${product._id}`}>
                           <Image
                             src={imageUrl}
@@ -485,9 +485,9 @@ function ShopContent() {
                       </div>
 
                       {/* Product Info */}
-                      <div className="p-2 sm:p-3 lg:p-4">
+                      <div className="p-2 sm:p-3 lg:p-3">
                         {/* Product Name */}
-                        <h3 className="font-semibold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors text-xs sm:text-sm lg:text-base min-h-[32px] sm:min-h-[36px]">
+                        <h3 className="font-semibold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors text-xs sm:text-sm lg:text-sm min-h-[32px] sm:min-h-[36px]">
                           <Link href={`/shop/${product._id}`} className="hover:text-purple-600 transition-colors">
                             {product.name}
                           </Link>
@@ -503,7 +503,7 @@ function ShopContent() {
                               const displayPrice = (salePrice && regularPrice) ? salePrice : (salePrice || legacyPrice);
                               return (
                                 <>
-                                  <span className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-gray-900">
+                                  <span className="text-xs sm:text-sm lg:text-sm xl:text-base font-bold text-gray-900">
                                     BDT {displayPrice}
                                   </span>
                                   {regularPrice && regularPrice > displayPrice && (
@@ -525,13 +525,13 @@ function ShopContent() {
                               }
                             }}
                             aria-label="wishlist"
-                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 ${
+                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-8 lg:h-8 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 ${
                               isInWishlist(product._id)
                                 ? 'text-red-500 border-red-200 bg-red-50'
                                 : 'text-gray-500 border-gray-200 hover:text-red-500 hover:border-red-300'
                             }`}
                           >
-                            <svg className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-5 lg:h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-4 lg:h-4 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
                           </button>
@@ -539,16 +539,16 @@ function ShopContent() {
 
                         {/* Bottom action bar - pill buttons */}
                         <div className="mt-1.5 sm:mt-2">
-                          <div className="flex gap-1.5 sm:gap-2 lg:gap-3">
+                          <div className="flex gap-1.5 sm:gap-2 lg:gap-2">
                             <button
                               onClick={() => handleAddToCart(product)}
-                              className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors text-xs sm:text-sm lg:text-base"
+                              className="flex-1 py-2 sm:py-2.5 lg:py-2 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors text-xs sm:text-sm lg:text-xs"
                             >
                               Add to Cart
                             </button>
                             <button
                               onClick={() => handleBuyNow(product._id)}
-                              className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-base"
+                              className="flex-1 py-2 sm:py-2.5 lg:py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-xs"
                             >
                               Buy Now
                             </button>

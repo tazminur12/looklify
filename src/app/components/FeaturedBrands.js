@@ -135,38 +135,37 @@ export default function FeaturedBrands() {
                 <Link
                   key={brand._id}
                   href={`/shop?brand=${brand.slug || brand._id}`}
-                  className="group relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 flex-shrink-0"
+                  className="group relative rounded-xl bg-white overflow-hidden flex items-center justify-center w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 flex-shrink-0"
                 >
-                  {/* Colorful gradient border - made lighter/subtle */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} rounded-xl p-[1px] group-hover:p-0.5 opacity-60 group-hover:opacity-90 transition-all duration-300`}>
-                    <div className="w-full h-full bg-white rounded-xl flex items-center justify-center p-3 relative overflow-hidden">
-                      {/* Brand Logo - fills the entire card */}
-                      {brand.logo?.url ? (
-                        <div className="w-full h-full relative rounded-lg overflow-hidden">
-                          <Image
-                            src={brand.logo.url}
-                            alt={brand.logo.alt || brand.name}
-                            fill
-                            className="object-contain group-hover:scale-105 transition-transform duration-300"
-                            sizes="(max-width: 640px) 128px, 160px"
-                            unoptimized={brand.logo.url.includes('cloudinary')}
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
-                          <span className="text-2xl sm:text-3xl font-bold text-gray-400">
-                            {brand.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Subtle hover overlay */}
-                      <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
-                    </div>
+                  {/* Gradient border wrapper */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} rounded-xl p-[1px] opacity-60`}>
+                    <div className="w-full h-full bg-white rounded-xl"></div>
                   </div>
                   
-                  {/* Hover shadow effect - softer */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} rounded-xl opacity-0 group-hover:opacity-10 blur-md transition-opacity duration-300 -z-10`}></div>
+                  {/* Brand Logo - exact same structure as brands page */}
+                  <div className="relative w-full h-full flex items-center justify-center p-3 z-10">
+                    {brand.logo?.url ? (
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={brand.logo.url}
+                          alt={brand.logo.alt || brand.name}
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 160px"
+                          unoptimized={brand.logo.url.includes('cloudinary')}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex flex-col items-center justify-center">
+                        <span className="text-2xl sm:text-3xl font-bold text-gray-400 mb-1">
+                          {brand.name?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-700 line-clamp-1 px-2">
+                          {brand.name}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </Link>
               );
             })}
@@ -192,11 +191,7 @@ export default function FeaturedBrands() {
         </div>
       </div>
       
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      
     </section>
   );
 }
