@@ -81,7 +81,6 @@ export default function WishlistPage() {
         if (product) {
           addToCart(product);
         }
-        console.log('Proceeding to checkout for product:', productId);
       }
     });
   };

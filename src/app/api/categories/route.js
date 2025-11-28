@@ -149,7 +149,6 @@ export async function POST(request) {
       categoryData.brand = brand;
     }
 
-    console.log('Creating category with data:', categoryData);
 
     const doc = new Category(categoryData);
 

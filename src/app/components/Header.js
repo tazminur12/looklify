@@ -85,6 +85,18 @@ export default function Header() {
     };
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMenuOpen]);
+
   // Debounced search function
   useEffect(() => {
     // Clear previous timeout
@@ -243,7 +255,7 @@ export default function Header() {
           {/* Logo Section - Text only - Visible on all screens */}
           <div className="flex items-center flex-shrink-0">
             <Link href="/" className="flex items-center group">
-              <div className="text-base sm:text-lg lg:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
                 Looklify
               </div>
             </Link>
@@ -251,9 +263,9 @@ export default function Header() {
 
           {/* Mobile Search Bar - inline with header - Only visible on mobile */}
           <div className="flex flex-1 lg:hidden items-center gap-1.5 sm:gap-2 justify-between">
-            <div ref={mobileSearchRef} className="flex-1 relative max-w-[calc(100%-60px)]">
+            <div ref={mobileSearchRef} className="flex-1 relative max-w-[calc(100%-80px)]">
               <form onSubmit={handleSearch} className="w-full">
-                <div className="flex items-stretch w-full border border-[#cbb5f7] rounded-[18px] overflow-hidden bg-white shadow-[0_2px_6px_rgba(111,59,160,0.08)]">
+                <div className="flex items-stretch w-full border border-[#cbb5f7] rounded-[14px] overflow-hidden bg-white shadow-[0_2px_6px_rgba(111,59,160,0.08)]">
                   <input
                     type="text"
                     value={searchTerm}
@@ -269,14 +281,14 @@ export default function Header() {
                       }
                     }}
                     placeholder="Search"
-                    className="flex-1 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm text-[#7b809a] placeholder-[#9fa3b8] focus:outline-none font-semibold bg-[#f5f5fb]"
+                    className="flex-1 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs text-[#7b809a] placeholder-[#9fa3b8] focus:outline-none font-medium bg-[#f5f5fb]"
                   />
                   <button
                     type="submit"
-                    className="bg-[#6e33a6] text-white px-3 sm:px-4 flex items-center justify-center flex-shrink-0"
+                    className="bg-[#6e33a6] text-white px-3 py-1.5 flex items-center justify-center flex-shrink-0 hover:bg-[#5a2a8a] transition-colors min-w-[36px]"
                   >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
                 </div>
@@ -668,150 +680,113 @@ export default function Header() {
         <div className="h-1 bg-gradient-to-r from-purple-400 to-pink-400"></div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Sidebar */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t border-purple-100 shadow-xl max-h-[calc(100vh-200px)] overflow-y-auto">
-          <div className="px-4 py-6 space-y-1">
-            {/* Home Link */}
-            <Link
-              href="/"
-              className="block px-4 py-3.5 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-bold transition-all duration-200 text-base"
-              onClick={() => {
-                setIsMenuOpen(false);
-              }}
-            >
-              Home
-            </Link>
-            
-            {/* Fixed Navigation Items - All items from navigationItems except Home */}
-            {mobileNavigationItems.map((item) => {
-              const isCategory = categories.some(cat => cat.name === item.name);
-              const isExpanded = expandedCategories.has(item.name);
-              const categorySubcategories = isCategory ? (subcategoriesByParent[item.name] || []) : [];
+        <>
+          {/* Backdrop Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-50 md:hidden transition-opacity duration-300"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          
+          {/* Sidebar Menu */}
+          <div className="fixed left-0 top-0 h-full w-[70%] max-w-sm bg-white shadow-2xl z-50 md:hidden transform translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+            {/* Menu Header */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
+              <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Menu Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+              {/* Shop Link */}
+              <Link
+                href="/shop"
+                className="block px-4 py-3.5 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-semibold transition-all duration-200 text-base"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                }}
+              >
+                Shop
+              </Link>
               
-              return (
-                <div key={item.name} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <Link
-                      href={item.href}
-                      className="flex-1 px-4 py-3 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-semibold transition-all duration-200 text-base"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      {item.name}
-                    </Link>
-                    {categorySubcategories.length > 0 && (
-                      <button
-                        onClick={() => toggleCategory(item.name)}
-                        className="px-3 py-3 text-gray-400 hover:text-purple-600 transition-colors duration-200"
-                        aria-label="Toggle submenu"
+              {/* Categories with Chevron Icons */}
+              {categories.map((category) => {
+                const isExpanded = expandedCategories.has(category.name);
+                const categorySubcategories = subcategoriesByParent[category.name] || [];
+                
+                return (
+                  <div key={category.name} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Link
+                        href={`/shop/${category.slug}`}
+                        className="flex-1 px-4 py-3.5 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-semibold transition-all duration-200 text-base"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                        }}
                       >
-                        <svg 
-                          className={`w-5 h-5 transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
+                        {category.name}
+                      </Link>
+                      {categorySubcategories.length > 0 && (
+                        <button
+                          onClick={() => toggleCategory(category.name)}
+                          className="px-3 py-3.5 text-gray-400 hover:text-purple-600 transition-colors duration-200"
+                          aria-label="Toggle submenu"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                          <svg 
+                            className={`w-5 h-5 transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Subcategories - Show when expanded */}
+                    {isExpanded && categorySubcategories.length > 0 && (
+                      <div className="ml-4 space-y-1 border-l-2 border-purple-100 pl-4">
+                        {categorySubcategories.map((subcategory) => (
+                          <Link
+                            key={subcategory._id || subcategory.slug}
+                            href={`/shop/${subcategory.slug}`}
+                            className="block px-4 py-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-all duration-200 text-sm"
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                            }}
+                          >
+                            {subcategory.name}
+                          </Link>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  
-                  {/* Subcategories - Show when expanded */}
-                  {isExpanded && categorySubcategories.length > 0 && (
-                    <div className="ml-4 space-y-1 border-l-2 border-purple-100 pl-4">
-                      {categorySubcategories.map((subcategory) => (
-                        <Link
-                          key={subcategory._id || subcategory.slug}
-                          href={`/shop/${subcategory.slug}`}
-                          className="block px-4 py-2.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-all duration-200 text-sm"
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                          }}
-                        >
-                          {subcategory.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            
-            {/* User Actions */}
-            <div className="border-t border-purple-100 my-6 pt-6">
-              {session ? (
-                // Mobile logged-in user menu
-                <div className="space-y-4">
-                  <div className="px-4 py-3 bg-gray-50 rounded-xl">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                        {session.user?.name?.charAt(0) || session.user?.email?.charAt(0) || 'U'}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {session.user?.name || 'User'}
-                        </p>
-                        <p className="text-xs text-gray-500">{session.user?.email}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <Link
-                    href="/profile"
-                    className="block w-full px-4 py-3.5 text-gray-700 hover:bg-purple-50 hover:text-purple-600 text-center rounded-xl font-semibold transition-all duration-200"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Profile
-                  </Link>
-                  <Link
-                    href="/my-orders"
-                    className="block w-full px-4 py-3.5 text-gray-700 hover:bg-purple-50 hover:text-purple-600 text-center rounded-xl font-semibold transition-all duration-200"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Orders
-                  </Link>
-                  <button
-                    onClick={() => {
-                      signOut({ callbackUrl: '/' });
-                      setIsMenuOpen(false);
-                    }}
-                    className="block w-full px-4 py-3.5 border-2 border-red-600 text-red-600 text-center rounded-xl font-semibold hover:bg-red-50 transition-all duration-200 hover:shadow-sm"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              ) : (
-                // Mobile login/signup buttons
-                <div className="space-y-4">
-                  <Link
-                    href="/login"
-                    className="block w-full px-4 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-sm hover:shadow-md"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Log In
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className="block w-full px-4 py-3.5 border-2 border-purple-600 text-purple-600 text-center rounded-xl font-semibold hover:bg-purple-50 transition-all duration-200 hover:shadow-sm"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Sign Up
-                  </Link>
-                </div>
-              )}
+                );
+              })}
+
+              {/* Comboo Link */}
+              <Link
+                href="/shop/combo-deals"
+                className="block px-4 py-3.5 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-semibold transition-all duration-200 text-base"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                }}
+              >
+                Comboo
+              </Link>
             </div>
           </div>
-        </div>
+        </>
       )}
     </header>
   );

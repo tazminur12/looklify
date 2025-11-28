@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import Product from '@/models/Product';
 import Category from '@/models/Category';
 import Brand from '@/models/Brand';
+import mongoose from 'mongoose';
 
 // GET /api/products - Get all products with filtering, sorting, and pagination (PUBLIC)
 export async function GET(request) {
@@ -46,9 +47,33 @@ export async function GET(request) {
         // It's an ObjectId, filter by category ID
         filter.category = category;
       } else {
-        // It's a slug, we need to find the category by slug first
-        const categoryDoc = await Category.findOne({ slug: category, status: 'active' });
+        // It's a slug, we need to find the category by slug first (case-insensitive)
+        const categorySlug = category.toLowerCase().trim();
+        let categoryDoc = await Category.findOne({ 
+          slug: categorySlug,
+          status: 'active'
+        });
+        
+        // If not found by exact slug match, try case-insensitive regex
+        if (!categoryDoc) {
+          categoryDoc = await Category.findOne({ 
+            slug: { $regex: new RegExp(`^${categorySlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+            status: 'active'
+          });
+        }
+        
+        // If still not found by slug, try to find by name (case-insensitive)
+        if (!categoryDoc) {
+          const categoryName = categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          categoryDoc = await Category.findOne({ 
+            name: { $regex: new RegExp(`^${categoryName}$`, 'i') }, 
+            status: 'active',
+            parent: null // Only main categories
+          });
+        }
+        
         if (categoryDoc) {
+          // Use the ObjectId directly from the document
           filter.category = categoryDoc._id;
         } else {
           // If category not found, return empty results
@@ -78,9 +103,8 @@ export async function GET(request) {
       }
     }
     
-    if (status) {
-      filter.status = status;
-    }
+    // Always filter by status (default to 'active' for public API)
+    filter.status = status || 'active';
     
     if (minPrice || maxPrice) {
       filter.price = {};

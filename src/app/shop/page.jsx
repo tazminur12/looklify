@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -42,14 +42,63 @@ function ShopContent() {
     skinConcerns: []
   });
   const [filtersLoading, setFiltersLoading] = useState(true);
+  const hasSyncedRef = useRef(false);
 
   useEffect(() => {
     fetchFilterOptions();
   }, []);
 
+  // Sync category and brand slugs from URL to _id after filter options are loaded (only once)
   useEffect(() => {
-    fetchProducts();
-  }, [filters]);
+    if (!filtersLoading && !hasSyncedRef.current && (filterOptions.categories.length > 0 || filterOptions.brands.length > 0)) {
+      const categoryParam = searchParams.get('category') || '';
+      const brandParam = searchParams.get('brand') || '';
+      let updated = false;
+      const updatedFilters = { ...filters };
+
+      if (filterOptions.categories.length > 0 && categoryParam) {
+        // Check if current category value is a slug (not an ObjectId)
+        const isSlug = !/^[0-9a-fA-F]{24}$/.test(categoryParam);
+        if (isSlug) {
+          // Find category by slug and update filter to use _id
+          const foundCategory = filterOptions.categories.find(
+            cat => cat.slug === categoryParam
+          );
+          if (foundCategory && foundCategory._id !== filters.category) {
+            updatedFilters.category = foundCategory._id;
+            updated = true;
+          }
+        }
+      }
+
+      if (filterOptions.brands.length > 0 && brandParam) {
+        // Check if current brand value is a slug (not an ObjectId)
+        const isSlug = !/^[0-9a-fA-F]{24}$/.test(brandParam);
+        if (isSlug) {
+          // Find brand by slug and update filter to use _id
+          const foundBrand = filterOptions.brands.find(
+            brand => brand.slug === brandParam
+          );
+          if (foundBrand && foundBrand._id !== filters.brand) {
+            updatedFilters.brand = foundBrand._id;
+            updated = true;
+          }
+        }
+      }
+
+      if (updated) {
+        setFilters(updatedFilters);
+      }
+      hasSyncedRef.current = true;
+    }
+  }, [filterOptions.categories, filterOptions.brands, filtersLoading, searchParams, filters]);
+
+  useEffect(() => {
+    // Only fetch products after filter options are loaded (to avoid race conditions)
+    if (!filtersLoading) {
+      fetchProducts();
+    }
+  }, [filters, filtersLoading]);
 
   const fetchFilterOptions = async () => {
     try {
@@ -412,37 +461,41 @@ function ShopContent() {
                   const discountPercentage = calculateDiscountPercentage(product);
 
                   return (
-                    <div key={product._id} className="bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 group">
-                      <div className="relative">
+                    <div key={product._id} className="group bg-white rounded-xl border border-[#7c52c5] overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      {/* Product Image Container with white background */}
+                      <div className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden bg-white">
                         <Link href={`/shop/${product._id}`}>
                           <Image
                             src={imageUrl}
                             alt={primaryImage?.alt || product.name}
                             width={400}
                             height={400}
-                            className="w-full h-40 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                           />
                         </Link>
 
-                        {/* Discount Badge - small pill top-right */}
+                        {/* Discount Badge - red oval top-right */}
                         {discountPercentage > 0 && (
-                          <div className="absolute top-2 right-2">
-                            <span className="px-2 py-1 text-[11px] font-semibold bg-red-600 text-white rounded-full shadow">
+                          <div className="absolute top-2 right-2 z-10">
+                            <span className="px-2.5 py-1.5 text-xs sm:text-sm font-bold bg-red-600 text-white rounded-full shadow-lg">
                               {discountPercentage}% OFF
                             </span>
                           </div>
                         )}
                       </div>
 
-                      <div className="p-3 sm:p-4">
-                        <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base line-clamp-2 leading-tight min-h-[36px]">
+                      {/* Product Info */}
+                      <div className="p-2 sm:p-3 lg:p-4">
+                        {/* Product Name */}
+                        <h3 className="font-semibold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors text-xs sm:text-sm lg:text-base min-h-[32px] sm:min-h-[36px]">
                           <Link href={`/shop/${product._id}`} className="hover:text-purple-600 transition-colors">
                             {product.name}
                           </Link>
                         </h3>
 
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
+                        {/* Price and Wishlist */}
+                        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                             {(() => {
                               const salePrice = product.salePrice;
                               const regularPrice = product.regularPrice || product.originalPrice;
@@ -450,9 +503,13 @@ function ShopContent() {
                               const displayPrice = (salePrice && regularPrice) ? salePrice : (salePrice || legacyPrice);
                               return (
                                 <>
-                                  <span className="text-base sm:text-lg font-bold text-gray-900">৳{displayPrice}</span>
+                                  <span className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-gray-900">
+                                    BDT {displayPrice}
+                                  </span>
                                   {regularPrice && regularPrice > displayPrice && (
-                                    <span className="text-xs sm:text-sm text-gray-500 line-through">৳{regularPrice}</span>
+                                    <span className="text-[10px] sm:text-xs text-gray-500 line-through">
+                                      BDT {regularPrice}
+                                    </span>
                                   )}
                                 </>
                               );
@@ -468,30 +525,30 @@ function ShopContent() {
                               }
                             }}
                             aria-label="wishlist"
-                            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${
+                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 ${
                               isInWishlist(product._id)
                                 ? 'text-red-500 border-red-200 bg-red-50'
                                 : 'text-gray-500 border-gray-200 hover:text-red-500 hover:border-red-300'
                             }`}
                           >
-                            <svg className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-5 lg:h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
                           </button>
                         </div>
 
                         {/* Bottom action bar - pill buttons */}
-                        <div className="mt-2">
-                          <div className="flex gap-3 text-sm sm:text-base">
+                        <div className="mt-1.5 sm:mt-2">
+                          <div className="flex gap-1.5 sm:gap-2 lg:gap-3">
                             <button
                               onClick={() => handleAddToCart(product)}
-                              className="flex-1 py-2.5 sm:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors"
+                              className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors text-xs sm:text-sm lg:text-base"
                             >
                               Add to Cart
                             </button>
                             <button
                               onClick={() => handleBuyNow(product._id)}
-                              className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                              className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-base"
                             >
                               Buy Now
                             </button>

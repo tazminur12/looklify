@@ -123,7 +123,7 @@ export default function BlogDetailPage() {
       </div>
 
       {/* Main Content */}
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 overflow-x-hidden">
         {/* Header */}
         <header className="mb-8">
           {/* Title */}
@@ -198,7 +198,7 @@ export default function BlogDetailPage() {
 
         {/* Content */}
         <div 
-          className="blog-content mb-12"
+          className="blog-content mb-12 overflow-x-hidden [&_img]:w-full [&_img]:max-w-full [&_img]:h-64 [&_img]:sm:h-96 [&_img]:lg:h-[500px] [&_img]:object-cover [&_img]:rounded-xl [&_img]:mt-3 [&_img]:mb-4 [&_img]:shadow-[0_20px_45px_-20px_rgba(139,92,246,0.35)] [&_img]:block [&_img]:box-border"
           dangerouslySetInnerHTML={{ __html: blog.content }}
         />
 

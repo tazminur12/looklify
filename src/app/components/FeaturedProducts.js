@@ -75,12 +75,10 @@ export default function FeaturedProducts() {
     const fetchFeaturedProducts = async () => {
       try {
         setLoading(true);
-        console.log('Fetching featured products...');
         const response = await fetch('/api/products?featured=true&limit=1000');
         
         if (response.ok) {
           const data = await response.json();
-          console.log('API Response:', data);
           const products = data.data?.products || [];
           // Sort by featuredSortOrder (ascending), then by createdAt (newest first)
           const sorted = [...products].sort((a, b) => {
@@ -182,9 +180,6 @@ export default function FeaturedProducts() {
             const discount = calculateDiscount(product);
             const displayPrice = getDisplayPrice(product);
             const regularPrice = getRegularPrice(product);
-            
-            // Debug logging
-            console.log('Product:', product.name, 'Image URL:', imageUrl, 'Images:', product.images);
             
             return (
               <Link

@@ -170,14 +170,10 @@ export default function AddProductPage() {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
-      console.log('Uploading file:', file.name, 'Size:', file.size);
-
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: uploadFormData,
       });
-
-      console.log('Upload response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -185,7 +181,6 @@ export default function AddProductPage() {
       }
 
       const data = await response.json();
-      console.log('Upload response data:', data);
       
       if (data.success && data.url) {
         const newImages = [...formData.images];
@@ -195,7 +190,6 @@ export default function AddProductPage() {
           publicId: data.publicId
         };
         setFormData(prev => ({ ...prev, images: newImages }));
-        console.log('Image uploaded successfully:', data.url);
       } else {
         throw new Error(data.error || 'Upload failed - no URL returned');
       }
@@ -1264,7 +1258,6 @@ export default function AddProductPage() {
                         accept="image/*"
                         onChange={(e) => {
                           const file = e.target.files[0];
-                          console.log('File selected:', file);
                           if (file) {
                             handleImageUpload(file, index);
                           }

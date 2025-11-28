@@ -77,7 +77,6 @@ export async function POST(request) {
       _id: { $ne: record._id },
     });
 
-    console.log(`✅ Password reset successfully for user: ${user.email}`);
 
     return NextResponse.json(
       { message: 'Password has been reset successfully. You can now log in with your new password.' },

@@ -175,8 +175,16 @@ export default function EditProductPage() {
               skinConcern: product.skinConcern || [],
               soldCount: product.soldCount || '0',
               watchersCount: product.watchersCount || '0',
-              weight: product.weight || { value: '', unit: 'g' },
-              dimensions: product.dimensions || { length: '', width: '', height: '', unit: 'cm' },
+              weight: product.weight ? {
+                value: product.weight.value !== undefined && product.weight.value !== null ? String(product.weight.value) : '',
+                unit: product.weight.unit || 'g'
+              } : { value: '', unit: 'g' },
+              dimensions: product.dimensions ? {
+                length: product.dimensions.length !== undefined && product.dimensions.length !== null ? String(product.dimensions.length) : '',
+                width: product.dimensions.width !== undefined && product.dimensions.width !== null ? String(product.dimensions.width) : '',
+                height: product.dimensions.height !== undefined && product.dimensions.height !== null ? String(product.dimensions.height) : '',
+                unit: product.dimensions.unit || 'cm'
+              } : { length: '', width: '', height: '', unit: 'cm' },
               features: typeof product.features === 'string' ? product.features : (Array.isArray(product.features) ? product.features.join('<br>') : ''),
               ingredients: typeof product.ingredients === 'string' ? product.ingredients : (Array.isArray(product.ingredients) ? product.ingredients.join('<br>') : ''),
               tags: product.tags && product.tags.length > 0 ? product.tags : [''],
@@ -241,14 +249,10 @@ export default function EditProductPage() {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
-      console.log('Uploading file:', file.name, 'Size:', file.size);
-
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: uploadFormData,
       });
-
-      console.log('Upload response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -256,7 +260,6 @@ export default function EditProductPage() {
       }
 
       const data = await response.json();
-      console.log('Upload response data:', data);
       
       if (data.success && data.url) {
         const newImages = [...formData.images];
@@ -266,7 +269,6 @@ export default function EditProductPage() {
           publicId: data.publicId
         };
         setFormData(prev => ({ ...prev, images: newImages }));
-        console.log('Image uploaded successfully:', data.url);
       } else {
         throw new Error(data.error || 'Upload failed - no URL returned');
       }
@@ -373,7 +375,6 @@ export default function EditProductPage() {
     if (!formData.sku.trim()) newErrors.sku = 'SKU is required';
     if (!formData.productCode.trim()) newErrors.productCode = 'Product code is required';
     if (formData.stock === '' || formData.stock < 0) newErrors.stock = 'Valid stock quantity is required';
-    if (!formData.brand) newErrors.brand = 'Brand is required';
     if (!formData.category) newErrors.category = 'Category is required';
 
     // SKU format validation (alphanumeric with dashes/underscores)
@@ -492,7 +493,8 @@ export default function EditProductPage() {
           minOrderQuantity: parseInt(formData.inventory.minOrderQuantity),
           maxOrderQuantity: formData.inventory.maxOrderQuantity ? parseInt(formData.inventory.maxOrderQuantity) : undefined
         },
-        subcategory: formData.subcategory || undefined,
+        brand: formData.brand && formData.brand.trim() ? formData.brand : null,
+        subcategory: formData.subcategory && formData.subcategory.trim() ? formData.subcategory : null,
         origin: formData.origin || undefined,
         bengaliName: formData.bengaliName || undefined,
         bengaliDescription: formData.bengaliDescription || undefined,
@@ -631,7 +633,7 @@ export default function EditProductPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Brand *
+                Brand
               </label>
               <select
                 value={formData.brand}
@@ -1022,7 +1024,7 @@ export default function EditProductPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.weight.value}
+                  value={formData.weight.value || ''}
                   onChange={(e) => handleNestedInputChange('weight', 'value', e.target.value)}
                   className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
                   placeholder="100"
@@ -1050,7 +1052,7 @@ export default function EditProductPage() {
                 <input
                   type="number"
                   step="0.1"
-                  value={formData.dimensions.length}
+                  value={formData.dimensions.length || ''}
                   onChange={(e) => handleNestedInputChange('dimensions', 'length', e.target.value)}
                   className="flex-1 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-xs"
                   placeholder="L"
@@ -1059,7 +1061,7 @@ export default function EditProductPage() {
                 <input
                   type="number"
                   step="0.1"
-                  value={formData.dimensions.width}
+                  value={formData.dimensions.width || ''}
                   onChange={(e) => handleNestedInputChange('dimensions', 'width', e.target.value)}
                   className="flex-1 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-xs"
                   placeholder="W"
@@ -1068,7 +1070,7 @@ export default function EditProductPage() {
                 <input
                   type="number"
                   step="0.1"
-                  value={formData.dimensions.height}
+                  value={formData.dimensions.height || ''}
                   onChange={(e) => handleNestedInputChange('dimensions', 'height', e.target.value)}
                   className="flex-1 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-xs"
                   placeholder="H"
@@ -1288,7 +1290,6 @@ export default function EditProductPage() {
                         accept="image/*"
                         onChange={(e) => {
                           const file = e.target.files[0];
-                          console.log('File selected:', file);
                           if (file) {
                             handleImageUpload(file, index);
                           }

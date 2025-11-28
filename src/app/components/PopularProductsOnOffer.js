@@ -287,7 +287,7 @@ export default function PopularProductsOnOffer() {
         {/* View All Button */}
         <div className="text-center mt-8 sm:mt-12">
           <Link
-            href="/shop"
+            href="/shop/offers"
             className="inline-flex items-center px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 font-semibold text-sm sm:text-base lg:text-lg transition-all transform hover:scale-105 shadow-lg"
           >
             <span>View All Offers</span>

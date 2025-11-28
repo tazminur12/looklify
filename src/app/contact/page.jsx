@@ -53,8 +53,8 @@ export default function ContactUsPage() {
         </svg>
       ),
       title: 'Phone',
-      content: '01866414126',
-      link: 'tel:01866414126',
+      content: '+8801866411426',
+      link: 'tel:+8801866414126',
     },
     {
       icon: (
@@ -63,8 +63,8 @@ export default function ContactUsPage() {
         </svg>
       ),
       title: 'Email',
-      content: 'looklify.official@gmail.com',
-      link: 'mailto:looklify.official@gmail.com',
+      content: 'contact@looklifybd.com',
+      link: 'mailto:contact@looklifybd.com',
     },
     {
       icon: (
@@ -74,7 +74,7 @@ export default function ContactUsPage() {
         </svg>
       ),
       title: 'Location',
-      content: 'Dhaka, Bangladesh',
+      content: 'Mohammadpur, Dhaka-1207, Bangladesh',
       link: '#',
     },
   ];
@@ -252,16 +252,8 @@ export default function ContactUsPage() {
               </h3>
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex justify-between">
-                  <span>Monday - Friday</span>
-                  <span className="font-medium">9:00 AM - 8:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Saturday</span>
-                  <span className="font-medium">10:00 AM - 6:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Sunday</span>
-                  <span className="font-medium">Closed</span>
+                  <span>Saturday to Friday</span>
+                  <span className="font-medium">24/7 Always Open</span>
                 </div>
               </div>
             </div>

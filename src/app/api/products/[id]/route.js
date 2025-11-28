@@ -129,6 +129,50 @@ export async function PUT(request, { params }) {
     // Prepare update object - start with body copy
     const updateData = { ...body };
     
+    // Handle optional fields - set to null/undefined if empty to avoid ObjectId casting errors
+    if ('brand' in body) {
+      if (!body.brand || body.brand === '' || body.brand === null) {
+        updateData.brand = null;
+      } else if (mongoose.Types.ObjectId.isValid(body.brand)) {
+        // Only set if it's a valid ObjectId
+        updateData.brand = new mongoose.Types.ObjectId(body.brand);
+      } else {
+        // Invalid ObjectId, set to null
+        updateData.brand = null;
+      }
+    }
+    
+    // Handle category field - ensure it's properly converted to ObjectId
+    if ('category' in body) {
+      if (!body.category || body.category === '' || body.category === null) {
+        // Category is required, don't allow null
+        return NextResponse.json(
+          { error: 'Category is required' },
+          { status: 400 }
+        );
+      } else if (mongoose.Types.ObjectId.isValid(body.category)) {
+        // Convert to ObjectId to ensure proper type
+        updateData.category = new mongoose.Types.ObjectId(body.category);
+      } else {
+        return NextResponse.json(
+          { error: 'Invalid category ID' },
+          { status: 400 }
+        );
+      }
+    }
+    
+    if ('subcategory' in body) {
+      if (!body.subcategory || body.subcategory === '' || body.subcategory === null) {
+        updateData.subcategory = null;
+      } else if (mongoose.Types.ObjectId.isValid(body.subcategory)) {
+        // Only set if it's a valid ObjectId
+        updateData.subcategory = new mongoose.Types.ObjectId(body.subcategory);
+      } else {
+        // Invalid ObjectId, set to null
+        updateData.subcategory = null;
+      }
+    }
+    
     // Remove special fields that shouldn't be updated
     delete updateData._id;
     delete updateData.__v;
@@ -149,6 +193,21 @@ export async function PUT(request, { params }) {
       updateData.isOfferProduct = Boolean(body.isOfferProduct);
     }
 
+    // Convert ObjectId fields in updateData to proper ObjectId instances for native MongoDB driver
+    const mongoUpdateData = { ...updateData };
+    if (mongoUpdateData.category && mongoose.Types.ObjectId.isValid(mongoUpdateData.category)) {
+      mongoUpdateData.category = new mongoose.Types.ObjectId(mongoUpdateData.category);
+    }
+    if (mongoUpdateData.brand && mongoose.Types.ObjectId.isValid(mongoUpdateData.brand)) {
+      mongoUpdateData.brand = new mongoose.Types.ObjectId(mongoUpdateData.brand);
+    }
+    if (mongoUpdateData.subcategory && mongoose.Types.ObjectId.isValid(mongoUpdateData.subcategory)) {
+      mongoUpdateData.subcategory = new mongoose.Types.ObjectId(mongoUpdateData.subcategory);
+    }
+    if (mongoUpdateData.updatedBy && mongoose.Types.ObjectId.isValid(mongoUpdateData.updatedBy)) {
+      mongoUpdateData.updatedBy = new mongoose.Types.ObjectId(mongoUpdateData.updatedBy);
+    }
+
     // Use native MongoDB driver to ensure field is saved
     const db = mongoose.connection.db;
     const collectionName = Product.collection.name; // Get actual collection name
@@ -160,7 +219,7 @@ export async function PUT(request, { params }) {
     // Update using native MongoDB driver
     const updateResult = await collection.updateOne(
       { _id: objectId },
-      { $set: updateData }
+      { $set: mongoUpdateData }
     );
 
     if (updateResult.matchedCount === 0) {

@@ -92,16 +92,21 @@ export default function DynamicShopPage() {
     const fetchCategory = async () => {
       try {
         setLoading(true);
+        setError(null);
         const response = await fetch('/api/shop/filters');
         const result = await response.json();
         
         if (result.success) {
-          // Find the category by slug
-          const foundCategory = result.data.categories.find(cat => cat.slug === params.id);
+          // Find the category by slug (case-insensitive)
+          const categorySlug = params.id.toLowerCase();
+          const foundCategory = result.data.categories.find(
+            cat => cat.slug?.toLowerCase() === categorySlug
+          );
+          
           if (foundCategory) {
             setCategory(foundCategory);
           } else {
-            setError('Category not found');
+            setError(`Category "${params.id}" not found`);
           }
           
           // Set filter options - ensure brands array exists
@@ -135,25 +140,28 @@ export default function DynamicShopPage() {
       
       try {
         setLoading(true);
+        setError(null);
         const params = new URLSearchParams({
-          category: category.slug,
-          limit: '12'
+          category: category.slug || category._id,
+          limit: '12',
+          status: 'active'
         });
 
         // Add filters if set
         if (filters.search) params.append('search', filters.search);
-        if (filters.category) params.append('category', filters.category);
         if (filters.brand) params.append('brand', filters.brand);
         if (filters.subcategory) params.append('subcategory', filters.subcategory);
         if (filters.skinType) params.append('skinType', filters.skinType);
         if (filters.skinConcern) params.append('skinConcern', filters.skinConcern);
 
-        const response = await fetch(`/api/products?${params}`);
+        const apiUrl = `/api/products?${params}`;
+        const response = await fetch(apiUrl);
         const result = await response.json();
 
         if (result.success) {
           setProducts(result.data.products);
         } else {
+          console.error('Failed to fetch products:', result.error);
           setError(result.error || 'Failed to fetch products');
         }
       } catch (error) {
@@ -724,30 +732,33 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
               </div>
 
               {/* Compact Product Info Grid */}
-              <div className="grid grid-cols-2 gap-2 text-xs mb-4">
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
+              <div className="grid grid-cols-2 gap-2 text-xs mb-4 relative">
+                {/* Vertical divider line */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-200 transform -translate-x-1/2"></div>
+                
+                <div className="flex justify-between py-1.5 border-b border-gray-100 pr-2">
                   <span className="text-gray-600">Brand:</span>
                   <span className="font-medium">{product.brand?.name || product.brand || 'N/A'}</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
+                <div className="flex justify-between py-1.5 border-b border-gray-100 pl-2">
                   <span className="text-gray-600">Origin:</span>
                   <span className="font-medium">{product.origin || 'N/A'}</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
+                <div className="flex justify-between py-1.5 border-b border-gray-100 pr-2">
                   <span className="text-gray-600">Code:</span>
                   <span className="font-medium">{product.productCode}</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
+                <div className="flex justify-between py-1.5 border-b border-gray-100 pl-2">
                   <span className="text-gray-600">Size:</span>
                   <span className="font-medium">
                     {product.weight?.value ? `${product.weight.value} ${product.weight.unit}` : 'N/A'}
                   </span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
+                <div className="flex justify-between py-1.5 border-b border-gray-100 pr-2">
                   <span className="text-gray-600">Category:</span>
                   <span className="font-medium">{product.category?.name || product.category || 'N/A'}</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
+                <div className="flex justify-between py-1.5 border-b border-gray-100 pl-2">
                   <span className="text-gray-600">Status:</span>
                   <span className={`font-medium ${
                     product.stock > 0 ? 'text-green-600' : 'text-red-600'
@@ -756,6 +767,29 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
                   </span>
                 </div>
               </div>
+
+              {/* Stock Availability Indicator - Professional */}
+              {product.stock > 0 && (
+                <div className="mb-4 px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-medium text-gray-700">Stock Available</span>
+                    </div>
+                    <span className="text-sm font-bold text-green-700">
+                      {product.stock} {product.stock === 1 ? 'unit' : 'units'}
+                    </span>
+                  </div>
+                  {product.stock <= (product.lowStockThreshold || 20) && product.stock > 0 && (
+                    <p className="text-xs text-amber-600 mt-1.5 flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      Limited stock remaining
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Quantity Selector - Compact */}
               <div className="mb-4">
@@ -894,12 +928,23 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
             {activeTab === 'ingredients' && (
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 text-sm">Ingredients:</h4>
-                {product.ingredients && product.ingredients.length > 0 ? (
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 text-xs">
-                    {product.ingredients.map((ingredient, index) => (
-                      <li key={index}>{ingredient}</li>
-                    ))}
-                  </ul>
+                {product.ingredients ? (
+                  Array.isArray(product.ingredients) ? (
+                    product.ingredients.length > 0 ? (
+                      <ul className="list-disc list-inside space-y-1 text-gray-700 text-xs">
+                        {product.ingredients.map((ingredient, index) => (
+                          <li key={index}>{ingredient}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500 text-xs">Ingredient information not available</p>
+                    )
+                  ) : (
+                    <div 
+                      className="text-gray-700 text-xs prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: product.ingredients }}
+                    />
+                  )
                 ) : (
                   <p className="text-gray-500 text-xs">Ingredient information not available</p>
                 )}
@@ -909,12 +954,23 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
             {activeTab === 'usage' && (
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 text-sm">Usage Instructions:</h4>
-                {product.features && product.features.length > 0 ? (
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 text-xs">
-                    {product.features.map((feature, index) => (
-                      <li key={index}>{feature}</li>
-                    ))}
-                  </ul>
+                {product.features ? (
+                  Array.isArray(product.features) ? (
+                    product.features.length > 0 ? (
+                      <ul className="list-disc list-inside space-y-1 text-gray-700 text-xs">
+                        {product.features.map((feature, index) => (
+                          <li key={index}>{feature}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500 text-xs">Usage instructions not available</p>
+                    )
+                  ) : (
+                    <div 
+                      className="text-gray-700 text-xs prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: product.features }}
+                    />
+                  )
                 ) : (
                   <p className="text-gray-500 text-xs">Usage instructions not available</p>
                 )}

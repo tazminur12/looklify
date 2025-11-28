@@ -156,8 +156,6 @@ export default function NewCategoryPage() {
         metaDescription: data.metaDescription?.trim() || ''
       };
 
-      console.log('Payload being sent:', payload);
-
       const res = await fetch('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -165,7 +163,6 @@ export default function NewCategoryPage() {
       });
 
       const result = await res.json();
-      console.log('API Response:', result);
       
       if (result.success) {
         Swal.fire({
