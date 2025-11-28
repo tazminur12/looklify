@@ -131,7 +131,7 @@ export default function FeaturedCategories() {
               <Link
                 key={category._id || category.name}
                 href={`/shop?category=${category.slug}`}
-                className="group bg-white rounded-xl p-3 sm:p-4 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-purple-100 hover:border-purple-300 relative overflow-hidden min-w-[104px] sm:min-w-[120px] flex-shrink-0"
+                className="group bg-white rounded-xl p-3 sm:p-4 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-[#7c52c5]/70 hover:border-[#7c52c5] relative overflow-hidden min-w-[104px] sm:min-w-[120px] flex-shrink-0"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative z-10">

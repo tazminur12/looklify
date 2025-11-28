@@ -101,20 +101,6 @@ export default function FeaturedBlogs() {
             <span className="font-bold">Looklify Blog Articles</span>{' '}
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
           </h2>
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium transition-colors group text-sm sm:text-base"
-          >
-            <span>View All</span>
-            <svg 
-              className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
         </div>
 
         {/* Blog Cards Grid - matching FeaturedProducts layout */}
@@ -192,6 +178,19 @@ export default function FeaturedBlogs() {
               </div>
             </Link>
           ))}
+        </div>
+
+        {/* View All Button */}
+        <div className="text-center mt-8 sm:mt-12">
+          <Link
+            href="/blog"
+            className="inline-flex items-center px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 font-semibold text-sm sm:text-base lg:text-lg transition-all transform hover:scale-105 shadow-lg"
+          >
+            <span>View All Blog Articles</span>
+            <svg className="ml-2 w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
         </div>
       </div>
     </section>

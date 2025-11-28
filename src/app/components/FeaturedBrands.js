@@ -93,7 +93,7 @@ export default function FeaturedBrands() {
   }
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-10 sm:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-10">
@@ -111,7 +111,7 @@ export default function FeaturedBrands() {
         >
           <div
             ref={scrollContainerRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
+            className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-3 sm:pb-4 -mx-4 px-4 sm:mx-0 sm:px-0"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
@@ -135,10 +135,10 @@ export default function FeaturedBrands() {
                 <Link
                   key={brand._id}
                   href={`/shop?brand=${brand.slug || brand._id}`}
-                  className="group relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0"
+                  className="group relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 flex-shrink-0"
                 >
-                  {/* Colorful gradient border */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} rounded-xl p-0.5 group-hover:p-1 transition-all duration-300`}>
+                  {/* Colorful gradient border - made lighter/subtle */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} rounded-xl p-[1px] group-hover:p-0.5 opacity-60 group-hover:opacity-90 transition-all duration-300`}>
                     <div className="w-full h-full bg-white rounded-xl flex items-center justify-center p-3 relative overflow-hidden">
                       {/* Brand Logo - fills the entire card */}
                       {brand.logo?.url ? (
@@ -165,8 +165,8 @@ export default function FeaturedBrands() {
                     </div>
                   </div>
                   
-                  {/* Hover shadow effect */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} rounded-xl opacity-0 group-hover:opacity-20 blur-md transition-opacity duration-300 -z-10`}></div>
+                  {/* Hover shadow effect - softer */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} rounded-xl opacity-0 group-hover:opacity-10 blur-md transition-opacity duration-300 -z-10`}></div>
                 </Link>
               );
             })}
@@ -176,7 +176,7 @@ export default function FeaturedBrands() {
         {/* View All Button - Centered at bottom */}
         <div className="text-center mt-8">
           <Link
-            href="/shop"
+            href="/brands"
             className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 font-semibold text-base sm:text-lg transition-all transform hover:scale-105 shadow-lg"
           >
             <span>View All Brands</span>

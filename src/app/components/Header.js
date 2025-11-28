@@ -24,45 +24,40 @@ export default function Header() {
   const desktopSearchRef = useRef(null);
   const mobileSearchRef = useRef(null);
   
-  // Fixed categories (not from backend)
-  const categories = [
-    { name: 'Skin Care', slug: 'skin-care' },
-    { name: 'Hair Care', slug: 'hair-care' },
-    { name: 'Lip Care', slug: 'lip-care' },
-    { name: 'Eye Care', slug: 'eye-care' },
-    { name: 'Body Care', slug: 'body-care' },
-    { name: 'Facial Care', slug: 'facial-care' },
-    { name: 'Teeth Care', slug: 'teeth-care' },
-    { name: 'Health & Beauty', slug: 'health-beauty' }
-  ];
+  // Categories from backend (main categories)
+  const [categories, setCategories] = useState([]);
   const { data: session, status } = useSession();
   const { getCartCount } = useCart();
   const { getWishlistCount } = useWishlist();
   const profileMenuRef = useRef(null);
 
-  // Fetch subcategories from backend for search dropdown only
+  // Fetch categories & subcategories from backend
   useEffect(() => {
-    const fetchSubcategories = async () => {
+    const fetchFilters = async () => {
       try {
         setLoadingSubcategories(true);
         const response = await fetch('/api/shop/filters');
         const data = await response.json();
         
         if (data.success) {
-          // Only fetch subcategories for search dropdown
+          // Main categories for header/menu
+          if (Array.isArray(data.data.categories)) {
+            setCategories(data.data.categories);
+          }
+          // Subcategories for mobile menu & search dropdown
           if (data.data.subcategories) {
             const allSubcategories = Object.values(data.data.subcategories).flat();
             setSubcategories(allSubcategories);
           }
         }
       } catch (error) {
-        console.error('Error fetching subcategories:', error);
+        console.error('Error fetching shop filters:', error);
       } finally {
         setLoadingSubcategories(false);
       }
     };
 
-    fetchSubcategories();
+    fetchFilters();
   }, []);
 
   // Close profile menu when clicking outside
@@ -153,25 +148,6 @@ export default function Header() {
     };
   }, [searchTerm, selectedSubcategory]);
 
-  // Fixed navigation items (not from backend)
-  const navigationItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Shop', href: '/shop' },
-    { name: 'Skin Care', href: '/shop/skin-care' },
-    { name: 'Hair Care', href: '/shop/hair-care' },
-    { name: 'Lip Care', href: '/shop/lip-care' },
-    { name: 'Eye Care', href: '/shop/eye-care' },
-    { name: 'Body Care', href: '/shop/body-care' },
-    { name: 'Facial Care', href: '/shop/facial-care' },
-    { name: 'Teeth Care', href: '/shop/teeth-care' },
-    { name: 'Health & Beauty', href: '/shop/health-beauty' },
-    { name: 'Comboo', href: '/shop/combo-deals' },
-    { name: 'Flash Sale', href: '/shop/flash-sale' },
-  ];
-
-  // Mobile navigation items - exclude Home, show all other items
-  const mobileNavigationItems = navigationItems.filter(item => item.name !== 'Home');
-
   // Group subcategories by parent category
   const subcategoriesByParent = subcategories.reduce((acc, subcategory) => {
     const parentName = subcategory.parent?.name || 'Other';
@@ -255,17 +231,17 @@ export default function Header() {
           {/* Logo Section - Text only - Visible on all screens */}
           <div className="flex items-center flex-shrink-0">
             <Link href="/" className="flex items-center group">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
+              <div className="text-2xl sm:text-3xl lg:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
                 Looklify
               </div>
             </Link>
           </div>
 
           {/* Mobile Search Bar - inline with header - Only visible on mobile */}
-          <div className="flex flex-1 lg:hidden items-center gap-1.5 sm:gap-2 justify-between">
-            <div ref={mobileSearchRef} className="flex-1 relative max-w-[calc(100%-80px)]">
+          <div className="flex lg:hidden items-center gap-1.5 sm:gap-2 ml-auto">
+            <div ref={mobileSearchRef} className="relative w-[55vw] max-w-[220px]">
               <form onSubmit={handleSearch} className="w-full">
-                <div className="flex items-stretch w-full border border-[#cbb5f7] rounded-[14px] overflow-hidden bg-white shadow-[0_2px_6px_rgba(111,59,160,0.08)]">
+                <div className="flex items-stretch w-full border border-[#6e33a6] rounded-full overflow-hidden bg-white shadow-sm">
                   <input
                     type="text"
                     value={searchTerm}
@@ -281,11 +257,11 @@ export default function Header() {
                       }
                     }}
                     placeholder="Search"
-                    className="flex-1 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs text-[#7b809a] placeholder-[#9fa3b8] focus:outline-none font-medium bg-[#f5f5fb]"
+                    className="flex-1 px-3 sm:px-3.5 py-1.5 text-[11px] sm:text-xs text-[#4b4f68] placeholder-[#9fa3b8] focus:outline-none font-medium bg-white"
                   />
                   <button
                     type="submit"
-                    className="bg-[#6e33a6] text-white px-3 py-1.5 flex items-center justify-center flex-shrink-0 hover:bg-[#5a2a8a] transition-colors min-w-[36px]"
+                    className="bg-[#6e33a6] text-white px-3.5 py-1.5 flex items-center justify-center flex-shrink-0 hover:bg-[#5a2a8a] transition-colors min-w-[40px]"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -665,13 +641,28 @@ export default function Header() {
       <nav className="hidden md:block bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center space-x-1 lg:space-x-2 py-1 lg:py-1.5">
-            {navigationItems.map((item) => (
+            {/* Static Home Link */}
+            <Link
+              href="/"
+              className="text-white hover:text-purple-100 font-medium transition-all duration-200 text-xs whitespace-nowrap px-2 py-1 rounded-md hover:bg-purple-500/30 hover:shadow-sm"
+            >
+              Home
+            </Link>
+            {/* Static Shop Link */}
+            <Link
+              href="/shop"
+              className="text-white hover:text-purple-100 font-medium transition-all duration-200 text-xs whitespace-nowrap px-2 py-1 rounded-md hover:bg-purple-500/30 hover:shadow-sm"
+            >
+              Shop
+            </Link>
+            {/* Backend Categories */}
+            {categories.map((category) => (
               <Link
-                key={item.name}
-                href={item.href}
+                key={category._id || category.slug}
+                href={`/shop/${category.slug}`}
                 className="text-white hover:text-purple-100 font-medium transition-all duration-200 text-xs whitespace-nowrap px-2 py-1 rounded-md hover:bg-purple-500/30 hover:shadow-sm"
               >
-                {item.name}
+                {category.name}
               </Link>
             ))}
           </div>
@@ -773,17 +764,6 @@ export default function Header() {
                   </div>
                 );
               })}
-
-              {/* Comboo Link */}
-              <Link
-                href="/shop/combo-deals"
-                className="block px-4 py-3.5 text-gray-900 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-semibold transition-all duration-200 text-base"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                }}
-              >
-                Comboo
-              </Link>
             </div>
           </div>
         </>

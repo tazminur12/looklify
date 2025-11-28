@@ -335,13 +335,6 @@ export default function ImageSlider() {
         </div>
       )}
 
-      {/* Slide Counter - Mobile optimized */}
-      {sliderImages.length > 1 && (
-        <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-black/30 backdrop-blur-sm text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium z-10">
-          {currentSlide + 1} / {sliderImages.length}
-        </div>
-      )}
-
       {/* Mobile Swipe Indicator */}
       {sliderImages.length > 1 && (
         <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 sm:hidden z-10">
