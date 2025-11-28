@@ -615,7 +615,7 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-6">
+      <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 py-6">
         {/* Compact Breadcrumb */}
         <nav className="flex items-center space-x-1.5 text-xs text-gray-500 mb-4">
           <Link href="/" className="hover:text-purple-600">Home</Link>
@@ -1062,7 +1062,7 @@ function CategoryView({ category, products, loading, error, addToCart, filters, 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-20 py-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">{category.name}</h1>
