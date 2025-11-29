@@ -1,7 +1,7 @@
 export default function FeaturesSection() {
   return (
     <section className="py-6 sm:py-8 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
         <div className="text-center mb-4 sm:mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Why Choose Looklify?</h2>
           <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">Experience the difference with our premium beauty solutions</p>

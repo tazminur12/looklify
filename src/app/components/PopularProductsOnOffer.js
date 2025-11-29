@@ -46,19 +46,19 @@ function ProductImage({ src, alt, className, onError }) {
   return (
     <>
       {/* Background that prevents black screen */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+      <div className="absolute inset-0 bg-white" />
       {isLoading && (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse z-10" />
+        <div className="absolute inset-0 bg-white animate-pulse z-10" />
       )}
       <Image
         src={imgSrc}
         alt={alt}
         fill
         className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300 relative z-20`}
+        style={{ objectFit: 'contain' }}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
         onLoadingComplete={() => setIsLoading(false)}
         unoptimized={imgSrc.includes('cloudinary')}
-        style={{ objectFit: 'cover' }}
       />
     </>
   );
@@ -173,7 +173,7 @@ export default function PopularProductsOnOffer() {
 
   return (
     <section className="py-12 sm:py-16 bg-gradient-to-br from-purple-50 to-pink-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 relative">
             Popular Products on Offer
@@ -190,22 +190,25 @@ export default function PopularProductsOnOffer() {
             const regularPrice = getRegularPrice(product);
             
             return (
-              <Link
+              <div
                 key={product._id}
-                href={`/shop/${product._id}`}
-                className="group bg-white rounded-xl border border-[#7c52c5] overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative"
+                className="group bg-white rounded-xl border border-[#7c52c5] overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                {/* Product Image */}
-                <div className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-                  <ProductImage
-                    src={imageUrl}
-                    alt={primaryImage?.alt || product.name}
-                    className="group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {/* Discount Badge - prominent for offers */}
+                {/* Product Image Container with white background */}
+                <div className="relative w-full h-32 sm:h-40 lg:h-40 overflow-hidden bg-white">
+                  <Link href={`/shop/${product._id}`}>
+                    <Image
+                      src={imageUrl}
+                      alt={primaryImage?.alt || product.name}
+                      width={400}
+                      height={400}
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </Link>
+                  {/* Discount Badge - red oval top-right */}
                   {discount > 0 && (
-                    <div className="absolute top-2 right-2 z-30">
-                      <span className="px-2.5 py-1.5 text-xs sm:text-sm font-bold bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-full shadow-lg animate-pulse">
+                    <div className="absolute top-2 right-2 z-10">
+                      <span className="px-2.5 py-1.5 text-xs sm:text-sm font-bold bg-red-600 text-white rounded-full shadow-lg">
                         {discount}% OFF
                       </span>
                     </div>
@@ -213,25 +216,27 @@ export default function PopularProductsOnOffer() {
                 </div>
                 
                 {/* Product Info */}
-                <div className="p-2 sm:p-3 lg:p-4">
+                <div className="p-2 sm:p-3 lg:p-3">
                   {/* Product Name */}
-                  <h3 className="font-semibold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors text-xs sm:text-sm lg:text-base min-h-[32px] sm:min-h-[36px]">
-                    {product.name}
+                  <h3 className="font-semibold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors text-xs sm:text-sm lg:text-sm min-h-[32px] sm:min-h-[36px]">
+                    <Link href={`/shop/${product._id}`} className="hover:text-purple-600 transition-colors">
+                      {product.name}
+                    </Link>
                   </h3>
                   
-                  {/* Price */}
+                  {/* Price and Wishlist */}
                   <div className="flex items-center justify-between mb-1.5 sm:mb-2">
                     <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                      <span className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-red-600">
-                        {formatPrice(displayPrice)}
+                      <span className="text-xs sm:text-sm lg:text-sm xl:text-base font-bold text-gray-900">
+                        BDT {displayPrice}
                       </span>
                       {regularPrice && regularPrice > displayPrice && (
                         <span className="text-[10px] sm:text-xs text-gray-500 line-through">
-                          {formatPrice(regularPrice)}
+                          BDT {regularPrice}
                         </span>
                       )}
                     </div>
-                    {/* Wishlist Button */}
+                    {/* Wishlist button on right */}
                     <button
                       onClick={(e) => {
                         e.preventDefault();
@@ -242,27 +247,27 @@ export default function PopularProductsOnOffer() {
                         }
                       }}
                       aria-label="wishlist"
-                      className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 ${
+                      className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-8 lg:h-8 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 ${
                         isInWishlist(product._id)
                           ? 'text-red-500 border-red-200 bg-red-50'
                           : 'text-gray-500 border-gray-200 hover:text-red-500 hover:border-red-300'
                       }`}
                     >
-                      <svg className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-5 lg:h-5 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-4 lg:h-4 ${isInWishlist(product._id) ? 'fill-current' : 'stroke-current'}`} fill={isInWishlist(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </button>
                   </div>
                   
-                  {/* Bottom action bar */}
+                  {/* Bottom action bar - pill buttons */}
                   <div className="mt-1.5 sm:mt-2">
-                    <div className="flex gap-1.5 sm:gap-2 lg:gap-3">
+                    <div className="flex gap-1.5 sm:gap-2 lg:gap-2">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           addToCart(product);
                         }}
-                        className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors text-xs sm:text-sm lg:text-base"
+                        className="flex-1 py-2 sm:py-2.5 lg:py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-xs"
                       >
                         Add to Cart
                       </button>
@@ -272,14 +277,14 @@ export default function PopularProductsOnOffer() {
                           addToCart(product);
                           router.push('/checkout');
                         }}
-                        className="flex-1 py-2 sm:py-2.5 lg:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-base"
+                        className="flex-1 py-2 sm:py-2.5 lg:py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-xs"
                       >
                         Buy Now
                       </button>
                     </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

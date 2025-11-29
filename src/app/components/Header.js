@@ -226,7 +226,7 @@ export default function Header() {
   return (
     <header className="bg-white shadow-lg sticky top-0 z-60 border-b border-gray-100">
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-2 sm:py-2">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 xl:px-12 2xl:px-16 py-2 sm:py-2">
         <div className="flex items-center gap-1.5 sm:gap-2 w-full">
           {/* Logo Section - Text only - Visible on all screens */}
           <div className="flex items-center flex-shrink-0">
@@ -639,7 +639,7 @@ export default function Header() {
 
       {/* Desktop Navigation Bar */}
       <nav className="hidden md:block bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="flex items-center justify-center space-x-1 lg:space-x-2 py-1 lg:py-1.5">
             {/* Static Home Link */}
             <Link

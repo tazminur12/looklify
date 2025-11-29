@@ -245,7 +245,7 @@ function ShopContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">All Products</h1>
@@ -542,7 +542,7 @@ function ShopContent() {
                           <div className="flex gap-1.5 sm:gap-2 lg:gap-2">
                             <button
                               onClick={() => handleAddToCart(product)}
-                              className="flex-1 py-2 sm:py-2.5 lg:py-2 rounded-full border-2 border-purple-600 text-purple-600 bg-white font-semibold hover:bg-purple-50 transition-colors text-xs sm:text-sm lg:text-xs"
+                              className="flex-1 py-2 sm:py-2.5 lg:py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-xs"
                             >
                               Add to Cart
                             </button>
