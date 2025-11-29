@@ -17,11 +17,40 @@ export default function CartPage() {
   const [appliedPromoCode, setAppliedPromoCode] = useState(null);
   const [promoCodeError, setPromoCodeError] = useState('');
   const [promoCodeLoading, setPromoCodeLoading] = useState(false);
+  const [selectedItems, setSelectedItems] = useState(new Set(cartItems.map(item => item.productId)));
 
   // When cartItems from context changes, stop local loading state
   useEffect(() => {
     setLoading(false);
+    setSelectedItems(new Set(cartItems.map(item => item.productId)));
   }, [cartItems]);
+
+  const handleSelectAll = () => {
+    if (selectedItems.size === cartItems.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(cartItems.map(item => item.productId)));
+    }
+  };
+
+  const handleSelectItem = (productId) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.add(productId);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const handleDeleteAll = () => {
+    if (window.confirm('Are you sure you want to remove all items from your cart?')) {
+      cartItems.forEach(item => {
+        removeFromCart(item.productId);
+      });
+      setSelectedItems(new Set());
+    }
+  };
 
   const handleQuantityChange = (productId, newQuantity) => {
     if (newQuantity < 1) return;
@@ -39,13 +68,28 @@ export default function CartPage() {
     setRemoving(null);
   };
 
+  const getSelectedItems = () => {
+    return cartItems.filter(item => selectedItems.has(item.productId));
+  };
+
   const calculateSubtotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return getSelectedItems().reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const calculateOriginalPrice = () => {
+    return getSelectedItems().reduce((total, item) => {
+      const original = item.originalPrice || item.price;
+      return total + (original * item.quantity);
+    }, 0);
+  };
+
+  const calculateDiscount = () => {
+    return calculateOriginalPrice() - calculateSubtotal();
   };
 
   const calculateTax = () => {
     // Calculate tax for each product individually if taxPercentage is set
-    return cartItems.reduce((total, item) => {
+    return getSelectedItems().reduce((total, item) => {
       if (item.taxPercentage && item.taxPercentage > 0) {
         return total + ((item.price * item.quantity) * item.taxPercentage / 100);
       }
@@ -63,7 +107,7 @@ export default function CartPage() {
     
     // Get shipping charges for each product
     let maxShipping = 0;
-    cartItems.forEach(item => {
+    getSelectedItems().forEach(item => {
       if (item.shippingCharges) {
         const locationCharge = item.shippingCharges[shippingLocation] || 0;
         if (locationCharge > maxShipping) {
@@ -74,7 +118,7 @@ export default function CartPage() {
     
     // If no product-specific shipping, use default
     if (maxShipping === 0) {
-      return 100; // Default shipping charge
+      return shippingLocation === 'insideDhaka' ? 70 : 130;
     }
     
     return maxShipping;
@@ -108,6 +152,10 @@ export default function CartPage() {
     return subtotal + tax + shipping - promoDiscount;
   };
 
+  const getTotalQuantity = () => {
+    return getSelectedItems().reduce((total, item) => total + item.quantity, 0);
+  };
+
   const handleApplyPromoCode = async () => {
     if (!promoCode.trim()) {
       setPromoCodeError('Please enter a promo code');
@@ -118,9 +166,10 @@ export default function CartPage() {
     setPromoCodeError('');
 
     try {
-      const productIds = cartItems.map(item => item.productId);
-      const categoryIds = [...new Set(cartItems.map(item => item.categoryId).filter(Boolean))];
-      const brandIds = [...new Set(cartItems.map(item => item.brandId).filter(Boolean))];
+      const selected = getSelectedItems();
+      const productIds = selected.map(item => item.productId);
+      const categoryIds = [...new Set(selected.map(item => item.categoryId).filter(Boolean))];
+      const brandIds = [...new Set(selected.map(item => item.brandId).filter(Boolean))];
 
       const response = await fetch('/api/promo-codes/validate', {
         method: 'POST',
@@ -205,126 +254,149 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-30 via-pink-30 to-blue-30 py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
-          <p className="text-lg text-gray-600">
-            {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
-          </p>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent border-b-2 border-purple-500 pb-2 inline-block">
+            Cart
+          </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6">
-                <h2 className="text-2xl font-bold text-white">Cart Items</h2>
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-md border-2 border-purple-100 overflow-hidden">
+              {/* Header with Select All and Delete All */}
+              <div className="px-4 py-3 bg-gradient-to-r from-purple-50 to-pink-50 border-b-2 border-purple-200 flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.size === cartItems.length && cartItems.length > 0}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 text-purple-600 border-purple-400 rounded focus:ring-purple-500"
+                  />
+                  <span className="text-sm font-medium text-purple-700">Unselect All</span>
+                </label>
+                <button
+                  onClick={handleDeleteAll}
+                  className="text-sm text-red-600 hover:text-red-700 font-medium hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                >
+                  Delete all
+                </button>
               </div>
               
-              <div className="divide-y divide-gray-200">
+              {/* Table Header */}
+              <div className="hidden md:grid md:grid-cols-12 gap-4 px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-purple-200 text-xs font-semibold text-purple-700 uppercase">
+                <div className="col-span-1"></div>
+                <div className="col-span-4">Product</div>
+                <div className="col-span-2 text-center">Price</div>
+                <div className="col-span-2 text-center">Quantity</div>
+                <div className="col-span-2 text-center">Subtotal</div>
+                <div className="col-span-1 text-center">Action</div>
+              </div>
+              
+              {/* Cart Items */}
+              <div className="divide-y divide-purple-100">
                 {cartItems.map((item, index) => (
                   <div 
                     key={item.productId} 
-                    className={`p-6 transition-all duration-300 ${
+                    className={`px-4 py-4 transition-all duration-300 hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-pink-50/50 ${
                       removing === item.productId ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-                    }`}
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    } ${index % 2 === 0 ? 'bg-white' : 'bg-purple-50/30'}`}
                   >
-                    <div className="grid grid-cols-[88px_1fr] sm:grid-cols-[128px_1fr] gap-4 items-start">
-                      {/* Product Image */}
-                      <div className="flex-shrink-0">
-                        <Link href={`/shop/${item.productId}`}>
-                          <div className="w-22 h-22 sm:w-32 sm:h-32 bg-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="grid grid-cols-12 gap-3 items-center">
+                      {/* Checkbox */}
+                      <div className="col-span-1 flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.has(item.productId)}
+                          onChange={() => handleSelectItem(item.productId)}
+                          className="w-4 h-4 text-purple-600 border-purple-400 rounded focus:ring-purple-500"
+                        />
+                      </div>
+
+                      {/* Product Image & Name */}
+                      <div className="col-span-12 md:col-span-4 flex items-center gap-3">
+                        <Link href={`/shop/${item.productId}`} className="flex-shrink-0">
+                          <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg overflow-hidden border-2 border-purple-200 shadow-sm hover:shadow-md transition-shadow">
                             {item.image ? (
                               <Image
                                 src={item.image}
                                 alt={item.name}
-                                width={128}
-                                height={128}
+                                width={64}
+                                height={64}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-5xl">
+                              <div className="w-full h-full flex items-center justify-center text-purple-400 text-2xl">
                                 📦
                               </div>
                             )}
                           </div>
                         </Link>
-                      </div>
-
-                      {/* Product Details */}
-                      <div className="flex-1 min-w-0">
                         <Link
                           href={`/shop/${item.productId}`}
-                          className="text-base sm:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors block"
+                          className="text-sm font-medium text-gray-900 hover:text-purple-600 transition-colors line-clamp-2"
                         >
                           {item.name}
                         </Link>
-                        <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                          {item.brand && `${item.brand} • `}
-                          {item.category}
-                        </p>
-                        
-                        {/* Price and Quantity */}
-                        <div className="mt-3 grid grid-cols-1 sm:flex sm:items-center sm:justify-between">
-                          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-0">
-                            {/* Quantity Controls */}
-                            <label className="text-xs sm:text-sm font-medium text-gray-700">Qty:</label>
-                            <div className="flex items-center border-2 border-gray-300 rounded-xl overflow-hidden">
-                              <button
-                                onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
-                                disabled={updating}
-                                className="px-3 py-1.5 sm:px-4 sm:py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 disabled:opacity-50 transition-colors font-semibold"
-                              >
-                                −
-                              </button>
-                              <span className="px-4 sm:px-6 py-1.5 sm:py-2 text-center min-w-[2.5rem] sm:min-w-[3.5rem] border-x-2 border-gray-300 font-semibold text-gray-900">
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
-                                disabled={updating}
-                                className="px-3 py-1.5 sm:px-4 sm:py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 disabled:opacity-50 transition-colors font-semibold"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </div>
+                      </div>
 
-                          {/* Price and Remove */}
-                          <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
-                            <div className="text-right">
-                              <p className="text-lg sm:text-xl font-bold text-purple-600">
-                                ৳{(item.price * item.quantity).toLocaleString()}
-                              </p>
-                              {item.originalPrice && item.originalPrice > item.price && (
-                                <div className="flex items-center gap-1">
-                                  <p className="text-xs sm:text-sm text-gray-500 line-through">
-                                    ৳{(item.originalPrice * item.quantity).toLocaleString()}
-                                  </p>
-                                  <span className="text-xs font-semibold text-red-600">
-                                    Save ৳{((item.originalPrice - item.price) * item.quantity).toLocaleString()}
-                                  </span>
-                                </div>
-                              )}
-                              {!item.originalPrice && (
-                                <p className="text-[11px] sm:text-xs text-gray-500">Per item: ৳{item.price?.toLocaleString()}</p>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => handleRemoveItem(item.productId)}
-                              disabled={updating}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg disabled:opacity-50 transition-all"
-                              title="Remove from cart"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
+                      {/* Price */}
+                      <div className="col-span-6 md:col-span-2 text-center md:text-left">
+                        <p className="text-sm font-semibold text-purple-700">
+                          ৳{item.price.toLocaleString()}
+                        </p>
+                        {item.originalPrice && item.originalPrice > item.price && (
+                          <p className="text-xs text-gray-500 line-through">
+                            ৳{item.originalPrice.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Quantity */}
+                      <div className="col-span-6 md:col-span-2 flex justify-center">
+                        <div className="flex items-center border-2 border-purple-500 rounded-lg overflow-hidden shadow-sm">
+                          <button
+                            onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
+                            disabled={updating || item.quantity <= 1}
+                            className="px-2 py-1 text-purple-700 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-semibold"
+                          >
+                            −
+                          </button>
+                          <span className="px-3 py-1 text-center min-w-[2rem] text-sm font-semibold text-purple-900 border-x-2 border-purple-500 bg-purple-50">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
+                            disabled={updating}
+                            className="px-2 py-1 text-purple-700 hover:bg-purple-100 disabled:opacity-50 transition-colors text-sm font-semibold"
+                          >
+                            +
+                          </button>
                         </div>
+                      </div>
+
+                      {/* Subtotal */}
+                      <div className="col-span-6 md:col-span-2 text-center md:text-left">
+                        <p className="text-sm font-semibold text-purple-700">
+                          ৳{(item.price * item.quantity).toLocaleString()}
+                        </p>
+                      </div>
+
+                      {/* Action */}
+                      <div className="col-span-6 md:col-span-1 flex justify-center md:justify-end">
+                        <button
+                          onClick={() => handleRemoveItem(item.productId)}
+                          disabled={updating}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg disabled:opacity-50 transition-all"
+                          title="Remove from cart"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -333,196 +405,165 @@ export default function CartPage() {
             </div>
           </div>
 
-          {/* Order Summary */}
+          {/* Cart Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
+            <div className="bg-white rounded-lg shadow-md border-2 border-purple-200 p-3 sticky top-6">
+              <h2 className="text-base font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2 pb-1.5 border-b-2 border-purple-300 text-center">
+                Cart Summary
+              </h2>
               
-              {/* Shipping Location Selection */}
-              <div className="mb-4 p-3 bg-gray-50 rounded-xl">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Delivery Location
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShippingLocation('insideDhaka')}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      shippingLocation === 'insideDhaka'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-purple-500'
-                    }`}
-                  >
-                    Inside Dhaka
-                  </button>
-                  <button
-                    onClick={() => setShippingLocation('outsideDhaka')}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      shippingLocation === 'outsideDhaka'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-purple-500'
-                    }`}
-                  >
-                    Outside Dhaka
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between text-gray-600">
-                  <span className="text-base">Subtotal</span>
-                  <span className="font-semibold text-gray-900">৳{calculateSubtotal().toLocaleString()}</span>
+              <div className="space-y-2 mb-3">
+                <div className="flex justify-between text-xs bg-blue-50 px-2 py-1.5 rounded-lg">
+                  <span className="text-blue-700 font-medium">Quantity</span>
+                  <span className="font-semibold text-blue-900">{getTotalQuantity()}</span>
                 </div>
                 
-                {/* Tax - Only show if any product has tax */}
-                {calculateTax() > 0 && (
-                  <div className="flex justify-between text-gray-600">
-                    <span className="text-base">Tax</span>
-                    <span className="font-semibold text-gray-900">৳{calculateTax().toFixed(2)}</span>
+                <div className="flex justify-between text-xs bg-purple-50 px-2 py-1.5 rounded-lg">
+                  <span className="text-purple-700 font-medium">Product Price</span>
+                  <span className="font-semibold text-purple-900">৳{calculateOriginalPrice().toLocaleString()}</span>
+                </div>
+                
+                {calculateDiscount() > 0 && (
+                  <div className="flex justify-between text-xs bg-green-50 px-2 py-1.5 rounded-lg">
+                    <span className="text-green-700 font-medium">Discount</span>
+                    <span className="font-semibold text-green-800">৳{calculateDiscount().toLocaleString()}</span>
                   </div>
                 )}
                 
-                <div className="flex justify-between text-gray-600">
-                  <span className="text-base">Shipping</span>
-                  <span className="font-semibold">
-                    {calculateShipping() === 0 ? (
-                      <span className="text-green-600">Free</span>
-                    ) : (
-                      `৳${calculateShipping().toLocaleString()}`
-                    )}
-                  </span>
+                {/* Tax - Only show if any product has tax */}
+                {calculateTax() > 0 && (
+                  <div className="flex justify-between text-xs bg-yellow-50 px-2 py-1.5 rounded-lg">
+                    <span className="text-yellow-700 font-medium">Tax</span>
+                    <span className="font-semibold text-yellow-900">৳{calculateTax().toFixed(2)}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between text-xs bg-pink-50 px-2 py-1.5 rounded-lg">
+                  <span className="text-pink-700 font-medium">Subtotal Price</span>
+                  <span className="font-semibold text-pink-900">৳{calculateSubtotal().toLocaleString()}</span>
+                </div>
+                
+                {/* Delivery Charge */}
+                <div className="pt-1.5 border-t-2 border-purple-200">
+                  <div className="flex justify-between text-xs text-purple-700 font-medium mb-1.5">
+                    <span>Delivery Charge</span>
+                  </div>
+                  <div className="space-y-0.5 text-[10px] text-gray-600 pl-1.5 bg-gray-50 p-1.5 rounded-lg">
+                    <div className="flex justify-between">
+                      <span>Inside Dhaka :</span>
+                      <span className="font-medium text-purple-700">৳70</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Outside Dhaka :</span>
+                      <span className="font-medium text-purple-700">৳130</span>
+                    </div>
+                  </div>
+                  <div className="mt-1.5 flex gap-1.5">
+                    <button
+                      onClick={() => setShippingLocation('insideDhaka')}
+                      className={`flex-1 px-1.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                        shippingLocation === 'insideDhaka'
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                          : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                      }`}
+                    >
+                      Inside
+                    </button>
+                    <button
+                      onClick={() => setShippingLocation('outsideDhaka')}
+                      className={`flex-1 px-1.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                        shippingLocation === 'outsideDhaka'
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                          : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                      }`}
+                    >
+                      Outside
+                    </button>
+                  </div>
                 </div>
                 
                 {/* Promo Discount */}
                 {appliedPromoCode && calculatePromoDiscount() > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span className="text-base">Discount ({appliedPromoCode.code})</span>
-                    <span className="font-semibold">-৳{calculatePromoDiscount().toFixed(2)}</span>
+                  <div className="flex justify-between text-xs bg-green-50 px-2 py-1.5 rounded-lg">
+                    <span className="text-green-700 font-medium">Promo Discount ({appliedPromoCode.code})</span>
+                    <span className="font-semibold text-green-800">-৳{calculatePromoDiscount().toFixed(2)}</span>
                   </div>
                 )}
                 
-                <div className="border-t-2 border-gray-200 pt-4">
-                  <div className="flex justify-between text-xl font-bold text-gray-900">
-                    <span>Total</span>
-                    <span className="text-purple-600">৳{calculateTotal().toFixed(2)}</span>
+                <div className="pt-2 border-t-2 border-purple-400 bg-gradient-to-r from-purple-50 to-pink-50 px-2 py-1.5 rounded-lg">
+                  <div className="flex justify-between text-sm font-bold">
+                    <span className="text-gray-900">Total</span>
+                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent text-base">৳{calculateTotal().toLocaleString()}</span>
                   </div>
                 </div>
-
-                {calculateSubtotal() < 1000 && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 mt-4">
-                    <p className="text-sm text-green-800">
-                      <span className="font-semibold">Save ৳100 on shipping!</span> Add ৳{(1000 - calculateSubtotal()).toLocaleString()} more to get free delivery.
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* Promo Code */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Promo Code
-                </label>
-                
-                {!appliedPromoCode ? (
-                  <div className="space-y-2">
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                        placeholder="Enter code"
-                        className={`flex-1 px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
-                          promoCodeError ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                        onKeyPress={(e) => e.key === 'Enter' && handleApplyPromoCode()}
-                      />
-                      <button 
-                        onClick={handleApplyPromoCode}
-                        disabled={promoCodeLoading || !promoCode.trim()}
-                        className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold flex items-center gap-2"
-                      >
-                        {promoCodeLoading ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Applying...
-                          </>
-                        ) : (
-                          'Apply'
-                        )}
-                      </button>
-                    </div>
-                    {promoCodeError && (
-                      <p className="text-sm text-red-600 bg-red-50 p-2 rounded-lg">
-                        {promoCodeError}
-                      </p>
-                    )}
+              {!appliedPromoCode && (
+                <div className="mb-3">
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      placeholder="Promo code"
+                      className={`flex-1 px-2 py-1.5 text-xs border-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-400 transition-all ${
+                        promoCodeError ? 'border-red-300 bg-red-50' : 'border-purple-300 bg-purple-50/50'
+                      }`}
+                      onKeyPress={(e) => e.key === 'Enter' && handleApplyPromoCode()}
+                    />
+                    <button 
+                      onClick={handleApplyPromoCode}
+                      disabled={promoCodeLoading || !promoCode.trim()}
+                      className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs font-medium shadow-md hover:shadow-lg"
+                    >
+                      {promoCodeLoading ? (
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        'Apply'
+                      )}
+                    </button>
                   </div>
-                ) : (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-green-600 font-semibold">✓ {appliedPromoCode.code}</span>
-                          <span className="text-sm text-green-700">{appliedPromoCode.name}</span>
-                        </div>
-                        <p className="text-sm text-green-600 mt-1">
-                          {appliedPromoCode.discountDisplay} applied
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleRemovePromoCode}
-                        className="text-red-500 hover:text-red-700 p-1 rounded"
-                        title="Remove promo code"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
+                  {promoCodeError && (
+                    <p className="text-[10px] text-red-600 mt-1 bg-red-50 px-1.5 py-0.5 rounded">{promoCodeError}</p>
+                  )}
+                </div>
+              )}
+
+              {appliedPromoCode && (
+                <div className="mb-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold text-green-700">✓ {appliedPromoCode.code}</span>
+                      <p className="text-[10px] text-green-600 mt-0.5">{appliedPromoCode.discountDisplay} applied</p>
                     </div>
+                    <button
+                      onClick={handleRemovePromoCode}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors"
+                      title="Remove"
+                    >
+                      ✕
+                    </button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Checkout Button */}
               <button
                 onClick={handleCheckout}
-                className="w-full mb-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
+                disabled={selectedItems.size === 0}
+                className="w-full px-3 py-2 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white rounded-lg hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                Proceed to Checkout
+                Checkout
               </button>
 
-              {/* Continue Shopping */}
-              <Link
-                href="/shop"
-                className="block w-full px-6 py-3 text-center border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-purple-500 transition-all font-semibold"
-              >
-                Continue Shopping
-              </Link>
-
-              {/* Security Badge */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <span className="font-medium">Secure Payment</span>
+              {calculateSubtotal() < 1000 && calculateSubtotal() > 0 && (
+                <div className="mt-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-1.5">
+                  <p className="text-[10px] text-green-800 text-center font-medium">
+                    ✨ Add ৳{(1000 - calculateSubtotal()).toLocaleString()} more for free delivery
+                  </p>
                 </div>
-              </div>
-
-              {/* Trust Badges */}
-              <div className="mt-6 grid grid-cols-3 gap-4 text-center">
-                <div className="p-3 bg-gray-50 rounded-xl">
-                  <div className="text-2xl mb-1">🚚</div>
-                  <p className="text-xs text-gray-600">Free Delivery</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-xl">
-                  <div className="text-2xl mb-1">↩️</div>
-                  <p className="text-xs text-gray-600">Easy Returns</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-xl">
-                  <div className="text-2xl mb-1">🛡️</div>
-                  <p className="text-xs text-gray-600">Quality</p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
