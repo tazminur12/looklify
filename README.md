@@ -7,7 +7,7 @@
 **Your premium destination for beauty and skincare products**
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-looklify.vercel.app-blue?style=for-the-badge&logo=vercel)](https://looklify.vercel.app)
-[![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.0.3-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.1.0-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.1.14-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 
