@@ -24,12 +24,8 @@ export default function CheckoutPage() {
   // Form states
   const [formData, setFormData] = useState({
     fullName: '',
-    email: '',
     phone: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    deliveryNotes: ''
+    address: ''
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -49,12 +45,8 @@ export default function CheckoutPage() {
       if (user) {
         setFormData({
           fullName: user.name || '',
-          email: user.email || '',
           phone: user.phone || '',
-          address: user.address || '',
-          city: user.city || '',
-          postalCode: user.postalCode || '',
-          deliveryNotes: ''
+          address: user.address || ''
         });
         // Load saved payment phone number from localStorage if available
         const savedPaymentPhone = localStorage.getItem('paymentPhoneNumber');
@@ -88,12 +80,6 @@ export default function CheckoutPage() {
       errors.fullName = 'Full name is required';
     }
 
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Invalid email format';
-    }
-
     if (!formData.phone.trim()) {
       errors.phone = 'Phone number is required';
     } else if (!/^(?:\+88|01)[0-9]{9}$/.test(formData.phone.replace(/\s/g, ''))) {
@@ -102,14 +88,6 @@ export default function CheckoutPage() {
 
     if (!formData.address.trim()) {
       errors.address = 'Delivery address is required';
-    }
-
-    if (!formData.city.trim()) {
-      errors.city = 'City is required';
-    }
-
-    if (!formData.postalCode.trim()) {
-      errors.postalCode = 'Postal code is required';
     }
 
     // Validate payment method specific fields
@@ -376,12 +354,8 @@ export default function CheckoutPage() {
         })),
         shipping: {
           fullName: formData.fullName,
-          email: formData.email,
           phone: formData.phone,
           address: formData.address,
-          city: formData.city,
-          postalCode: formData.postalCode,
-          deliveryNotes: formData.deliveryNotes,
           location: shippingLocation
         },
         payment: {
@@ -532,173 +506,109 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Step 1: Shipping Information */}
+            {/* Step 1: Delivery Details */}
             {currentStep === 1 && (
-              <div className="bg-white rounded-lg shadow-md border-2 border-purple-100 p-4">
-                <h2 className="text-base font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 pb-1.5 border-b-2 border-purple-300 flex items-center">
-                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mr-2"></span>
-                  Shipping Information
+              <div className="bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 rounded-lg shadow-lg border-2 border-purple-200 p-6">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center">
+                  <span className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mr-3"></span>
+                  Delivery Details
                 </h2>
 
-                <div className="space-y-3">
-                  {/* Full Name */}
+                <div className="space-y-5">
+                  {/* Name */}
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      Full Name <span className="text-red-500">*</span>
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                      Name (নাম)
                     </label>
                     <input
                       type="text"
                       value={formData.fullName}
                       onChange={(e) => handleInputChange('fullName', e.target.value)}
-                      className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
-                        formErrors.fullName ? 'border-red-300' : 'border-purple-200'
+                      className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-500 transition-all bg-white ${
+                        formErrors.fullName ? 'border-red-400 bg-red-50' : 'border-purple-200 hover:border-purple-300'
                       }`}
-                      placeholder="Enter your full name"
+                      placeholder="Enter your name"
                     />
                     {formErrors.fullName && (
-                      <p className="mt-1 text-xs text-red-600">{formErrors.fullName}</p>
+                      <p className="mt-1.5 text-xs text-red-600 font-medium">{formErrors.fullName}</p>
                     )}
                   </div>
 
-                  {/* Email */}
+                  {/* Phone Number */}
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      Email Address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
-                        formErrors.email ? 'border-red-300' : 'border-purple-200'
-                      }`}
-                      placeholder="your.email@example.com"
-                    />
-                    {formErrors.email && (
-                      <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>
-                    )}
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      Phone Number <span className="text-red-500">*</span>
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                      Phone Number (মোবাইল নাম্বার)
                     </label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
-                        formErrors.phone ? 'border-red-300' : 'border-purple-200'
+                      className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-500 transition-all bg-white ${
+                        formErrors.phone ? 'border-red-400 bg-red-50' : 'border-purple-200 hover:border-purple-300'
                       }`}
                       placeholder="01XXXXXXXXX or +880XXXXXXXXXX"
                     />
                     {formErrors.phone && (
-                      <p className="mt-1 text-xs text-red-600">{formErrors.phone}</p>
+                      <p className="mt-1.5 text-xs text-red-600 font-medium">{formErrors.phone}</p>
                     )}
                   </div>
 
-                  {/* Delivery Location */}
+                  {/* Delivery Address */}
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      Delivery Location <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShippingLocation('insideDhaka')}
-                        className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          shippingLocation === 'insideDhaka'
-                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
-                            : 'bg-purple-100 border-2 border-purple-200 text-purple-700 hover:border-purple-500'
-                        }`}
-                      >
-                        Inside Dhaka
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShippingLocation('outsideDhaka')}
-                        className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          shippingLocation === 'outsideDhaka'
-                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
-                            : 'bg-purple-100 border-2 border-purple-200 text-purple-700 hover:border-purple-500'
-                        }`}
-                      >
-                        Outside Dhaka
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Address */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      Delivery Address <span className="text-red-500">*</span>
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                      Delivery Address (ঠিকানা)
                     </label>
                     <textarea
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
-                      rows="3"
-                      className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${
-                        formErrors.address ? 'border-red-300' : 'border-purple-200'
+                      rows="4"
+                      className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-500 transition-all resize-none bg-white ${
+                        formErrors.address ? 'border-red-400 bg-red-50' : 'border-purple-200 hover:border-purple-300'
                       }`}
-                      placeholder="House/Apartment number, Street, Area"
+                      placeholder="Enter your delivery address"
                     />
                     {formErrors.address && (
-                      <p className="mt-1 text-xs text-red-600">{formErrors.address}</p>
+                      <p className="mt-1.5 text-xs text-red-600 font-medium">{formErrors.address}</p>
                     )}
                   </div>
 
-                  {/* City and Postal Code */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        City <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
-                        className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
-                          formErrors.city ? 'border-red-300' : 'border-purple-200'
-                        }`}
-                        placeholder="City name"
-                      />
-                      {formErrors.city && (
-                        <p className="mt-1 text-xs text-red-600">{formErrors.city}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Postal Code <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.postalCode}
-                        onChange={(e) => handleInputChange('postalCode', e.target.value)}
-                        className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
-                          formErrors.postalCode ? 'border-red-300' : 'border-purple-200'
-                        }`}
-                        placeholder="Postal code"
-                      />
-                      {formErrors.postalCode && (
-                        <p className="mt-1 text-xs text-red-600">{formErrors.postalCode}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Delivery Notes */}
+                  {/* Delivery Charge */}
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      Delivery Notes (Optional)
+                    <label className="block text-sm font-semibold text-gray-800 mb-3">
+                      Delivery Charge (ডেলিভারী চার্জ)
                     </label>
-                    <textarea
-                      value={formData.deliveryNotes}
-                      onChange={(e) => handleInputChange('deliveryNotes', e.target.value)}
-                      rows="2"
-                      className="w-full px-3 py-2 text-sm border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
-                      placeholder="Any special instructions for delivery"
-                    />
+                    <div className="space-y-3">
+                      <label className={`flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                        shippingLocation === 'insideDhaka' 
+                          ? 'border-purple-600 bg-gradient-to-r from-purple-50 to-pink-50 shadow-md' 
+                          : 'border-purple-200 hover:border-purple-400 hover:bg-purple-50/50'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="deliveryLocation"
+                          value="insideDhaka"
+                          checked={shippingLocation === 'insideDhaka'}
+                          onChange={() => setShippingLocation('insideDhaka')}
+                          className="w-5 h-5 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                        />
+                        <span className="text-sm text-gray-800 font-semibold">ঢাকা সিটির ভিতরে- ৭০ টাকা</span>
+                      </label>
+                      <label className={`flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                        shippingLocation === 'outsideDhaka' 
+                          ? 'border-purple-600 bg-gradient-to-r from-purple-50 to-pink-50 shadow-md' 
+                          : 'border-purple-200 hover:border-purple-400 hover:bg-purple-50/50'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="deliveryLocation"
+                          value="outsideDhaka"
+                          checked={shippingLocation === 'outsideDhaka'}
+                          onChange={() => setShippingLocation('outsideDhaka')}
+                          className="w-5 h-5 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                        />
+                        <span className="text-sm text-gray-800 font-semibold">ঢাকা সিটির বাইরে- ১৩০ টাকা</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>

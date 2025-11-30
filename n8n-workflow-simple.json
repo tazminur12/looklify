@@ -1,0 +1,248 @@
+{
+  "name": "Looklify Automation - Simple",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "looklify-event",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "looklify-webhook"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.LOOKLIFY_API_URL || 'http://localhost:3000' }}/api/automation/brain",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"event\": \"{{ $json.body.event }}\",\n  \"data\": {\n    \"userId\": \"{{ $json.body.userId }}\",\n    \"productId\": \"{{ $json.body.productId }}\",\n    \"orderId\": \"{{ $json.body.orderId }}\",\n    \"additionalData\": {{ JSON.stringify($json.body.additionalData || {}) }}\n  }\n}",
+        "options": {}
+      },
+      "id": "automation-brain",
+      "name": "Automation Brain API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "email-condition",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "send_email",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "whatsapp-condition",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "send_whatsapp",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "cart-recovery-condition",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "trigger_cart_recovery",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "switch",
+      "name": "Action Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $json.data.customer_email || $json.data.email }}",
+        "subject": "={{ $json.data.subject || 'Looklify' }}",
+        "emailType": "html",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "email-node",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 200],
+      "credentials": {
+        "smtp": {
+          "id": "smtp",
+          "name": "SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "to": "={{ $json.data.customer_phone || $json.data.phone }}",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "whatsapp-node",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "whatsapp",
+          "name": "WhatsApp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $json.data.customer_email }}",
+        "subject": "Complete Your Order - Special Discount! 🛒",
+        "emailType": "html",
+        "message": "={{ $json.message }}\n\n<br><br><strong>Discount Code:</strong> {{ $json.data.discount_code }}<br><strong>Discount:</strong> {{ $json.data.discount_percentage }}%<br><br><a href=\"{{ $env.LOOKLIFY_WEB_URL || 'http://localhost:3000' }}{{ $json.data.cart_url || '/cart' }}\">View Cart</a>",
+        "options": {}
+      },
+      "id": "cart-recovery-email",
+      "name": "Cart Recovery Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 400],
+      "credentials": {
+        "smtp": {
+          "id": "smtp",
+          "name": "SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"action\": $json.action, \"message\": $json.message } }}",
+        "options": {}
+      },
+      "id": "response",
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Automation Brain API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Automation Brain API": {
+      "main": [
+        [
+          {
+            "node": "Action Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Router": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Cart Recovery Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cart Recovery Email": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
+
+

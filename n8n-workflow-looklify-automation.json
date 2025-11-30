@@ -1,0 +1,663 @@
+{
+  "name": "Looklify Automation Brain Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "looklify-automation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "looklify-automation-webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.LOOKLIFY_API_URL || 'http://localhost:3000' }}/api/automation/brain",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"event\": \"{{ $json.body.event }}\",\n  \"data\": {\n    \"userId\": \"{{ $json.body.userId }}\",\n    \"productId\": \"{{ $json.body.productId }}\",\n    \"orderId\": \"{{ $json.body.orderId }}\",\n    \"additionalData\": {{ JSON.stringify($json.body.additionalData || {}) }}\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "call-automation-brain",
+      "name": "Call Automation Brain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-email",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "send_email",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-whatsapp",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "send_whatsapp",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-cart-recovery",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "trigger_cart_recovery",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-vip-offer",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "send_vip_offer",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-invoice",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "send_invoice",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-notify-admin",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "notify_admin",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-recommend",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "recommend_products",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-low-stock",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "low_stock_alert",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-restock",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "send_restock_alert",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-return",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "start_return_process",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-affiliate",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "affiliate_payout_summary",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "route-actions",
+      "name": "Route Actions",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $json.data.customer_email || $json.data.email }}",
+        "subject": "={{ $json.data.subject || 'Looklify - Your Skincare Journey' }}",
+        "emailType": "html",
+        "message": "={{ $json.message }}",
+        "options": {
+          "attachments": []
+        }
+      },
+      "id": "send-email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "to": "={{ $json.data.customer_phone || $json.data.phone }}",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "send-whatsapp",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "whatsapp-credentials",
+          "name": "WhatsApp Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "to": "={{ $json.data.customer_phone || $json.data.phone }}",
+        "message": "={{ $json.message }}\n\nDiscount Code: {{ $json.data.discount_code }}\nCart: {{ $json.data.cart_url || '/cart' }}",
+        "options": {}
+      },
+      "id": "cart-recovery-whatsapp",
+      "name": "Cart Recovery WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [850, 400],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "whatsapp-credentials",
+          "name": "WhatsApp Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $json.data.customer_email }}",
+        "subject": "VIP Offer - Exclusive Discount for You! 🎁",
+        "emailType": "html",
+        "message": "={{ $json.message }}\n\nYour VIP Discount Code: <strong>{{ $json.data.discount_code }}</strong>\nDiscount: {{ $json.data.discount_percentage || 15 }}%",
+        "options": {}
+      },
+      "id": "send-vip-email",
+      "name": "Send VIP Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 500],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $json.data.customer_email }}",
+        "subject": "Invoice for Order {{ $json.data.order_id }}",
+        "emailType": "html",
+        "message": "={{ $json.message }}\n\nOrder ID: {{ $json.data.order_id }}\nTotal: ৳{{ $json.data.order_total }}\n\nView Invoice: {{ $json.data.invoice_url }}",
+        "options": {
+          "attachments": []
+        }
+      },
+      "id": "send-invoice-email",
+      "name": "Send Invoice Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 600],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $env.ADMIN_EMAIL || 'admin@looklify.com' }}",
+        "subject": "Admin Notification: {{ $json.message }}",
+        "emailType": "html",
+        "message": "={{ $json.message }}\n\nDetails:\n{{ JSON.stringify($json.data, null, 2) }}",
+        "options": {}
+      },
+      "id": "notify-admin-email",
+      "name": "Notify Admin Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 700],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $json.data.customer_email }}",
+        "subject": "Product Recommendations for You ✨",
+        "emailType": "html",
+        "message": "={{ $json.message }}\n\nRecommended Products:\n{{ $json.data.recommendations.map(r => `- ${r.name} (৳${r.price})`).join('\\n') }}",
+        "options": {}
+      },
+      "id": "send-recommendations-email",
+      "name": "Send Recommendations Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 800],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $env.ADMIN_EMAIL || 'admin@looklify.com' }}",
+        "subject": "⚠️ Low Stock Alert: {{ $json.data.product_name }}",
+        "emailType": "html",
+        "message": "={{ $json.message }}\n\nProduct: {{ $json.data.product_name }}\nCurrent Stock: {{ $json.data.current_stock }}\nThreshold: {{ $json.data.low_stock_threshold }}\nSKU: {{ $json.data.sku }}",
+        "options": {}
+      },
+      "id": "low-stock-alert-email",
+      "name": "Low Stock Alert Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 900],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $json.data.interested_users.map(u => u.email).join(',') }}",
+        "subject": "🎉 {{ $json.data.product_name }} is Back in Stock!",
+        "emailType": "html",
+        "message": "={{ $json.message }}\n\nProduct: {{ $json.data.product_name }}\nStock: {{ $json.data.new_stock }} units\n\nView Product: {{ $json.data.product_url }}",
+        "options": {}
+      },
+      "id": "restock-alert-email",
+      "name": "Restock Alert Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 1000],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $json.data.customer_email }}",
+        "subject": "Return Request Received - Order {{ $json.data.order_id }}",
+        "emailType": "html",
+        "message": "={{ $json.message }}\n\nReturn Request ID: {{ $json.data.return_request_id }}\nOrder ID: {{ $json.data.order_id }}\nReason: {{ $json.data.return_reason }}",
+        "options": {}
+      },
+      "id": "return-process-email",
+      "name": "Return Process Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 1100],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "sendEmail",
+        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "toEmail": "={{ $env.ADMIN_EMAIL || 'admin@looklify.com' }}",
+        "subject": "Affiliate Payout Summary - Order {{ $json.data.order_id }}",
+        "emailType": "html",
+        "message": "={{ $json.message }}\n\nAffiliate ID: {{ $json.data.affiliate_id }}\nCommission: ৳{{ $json.data.commission_amount }}\nOrder Total: ৳{{ $json.data.order_total }}",
+        "options": {}
+      },
+      "id": "affiliate-payout-email",
+      "name": "Affiliate Payout Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 1200],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Call Automation Brain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Automation Brain": {
+      "main": [
+        [
+          {
+            "node": "Route Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Actions": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Cart Recovery WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send VIP Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Invoice Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Admin Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Recommendations Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Low Stock Alert Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Restock Alert Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Return Process Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Affiliate Payout Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cart Recovery WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send VIP Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Invoice Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Admin Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Recommendations Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Low Stock Alert Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restock Alert Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Process Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Affiliate Payout Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
+
+
