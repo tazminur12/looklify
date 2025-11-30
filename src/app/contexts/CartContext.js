@@ -101,7 +101,8 @@ export function CartProvider({ children }) {
           shippingCharges: product.shippingCharges || {
             insideDhaka: 0,
             outsideDhaka: 0
-          }
+          },
+          freeDelivery: product.freeDelivery || false
         }
       ];
     }

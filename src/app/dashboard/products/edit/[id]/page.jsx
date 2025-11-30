@@ -33,6 +33,10 @@ export default function EditProductPage() {
     salePrice: '',
     discountPercentage: '',
     taxPercentage: '',
+    shippingCharges: {
+      insideDhaka: '',
+      outsideDhaka: ''
+    },
     discountStartDate: '',
     discountEndDate: '',
     sku: '',
@@ -71,6 +75,7 @@ export default function EditProductPage() {
     isBestSeller: false,
     isNewArrival: false,
     isOfferProduct: false,
+    freeDelivery: false,
     inventory: {
       trackInventory: true,
       allowBackorder: false,
@@ -162,6 +167,13 @@ export default function EditProductPage() {
               salePrice: product.salePrice || '',
               discountPercentage: product.discountPercentage || '',
               taxPercentage: product.taxPercentage || '',
+              shippingCharges: product.shippingCharges ? {
+                insideDhaka: product.shippingCharges.insideDhaka !== undefined && product.shippingCharges.insideDhaka !== null ? String(product.shippingCharges.insideDhaka) : '',
+                outsideDhaka: product.shippingCharges.outsideDhaka !== undefined && product.shippingCharges.outsideDhaka !== null ? String(product.shippingCharges.outsideDhaka) : ''
+              } : {
+                insideDhaka: '',
+                outsideDhaka: ''
+              },
               discountStartDate: product.discountStartDate ? product.discountStartDate.split('T')[0] : '',
               discountEndDate: product.discountEndDate ? product.discountEndDate.split('T')[0] : '',
               sku: product.sku || '',
@@ -194,6 +206,7 @@ export default function EditProductPage() {
               isBestSeller: Boolean(product.isBestSeller),
               isNewArrival: Boolean(product.isNewArrival),
               isOfferProduct: Boolean(product.isOfferProduct),
+              freeDelivery: Boolean(product.freeDelivery),
               inventory: product.inventory || {
                 trackInventory: true,
                 allowBackorder: false,
@@ -463,6 +476,10 @@ export default function EditProductPage() {
         salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
         discountPercentage: formData.discountPercentage ? parseFloat(formData.discountPercentage) : undefined,
         taxPercentage: formData.taxPercentage ? parseFloat(formData.taxPercentage) : undefined,
+        shippingCharges: {
+          insideDhaka: formData.shippingCharges.insideDhaka ? parseFloat(formData.shippingCharges.insideDhaka) : 0,
+          outsideDhaka: formData.shippingCharges.outsideDhaka ? parseFloat(formData.shippingCharges.outsideDhaka) : 0
+        },
         discountStartDate: formData.discountStartDate || undefined,
         discountEndDate: formData.discountEndDate || undefined,
         stock: parseInt(formData.stock),
@@ -503,7 +520,8 @@ export default function EditProductPage() {
         featuredSortOrder: formData.featuredSortOrder ? parseInt(formData.featuredSortOrder) : 0,
         isBestSeller: Boolean(formData.isBestSeller),
         isNewArrival: Boolean(formData.isNewArrival),
-        isOfferProduct: Boolean(formData.isOfferProduct)
+        isOfferProduct: Boolean(formData.isOfferProduct),
+        freeDelivery: Boolean(formData.freeDelivery)
       };
 
       const response = await fetch(`/api/products/${productId}`, {
@@ -879,6 +897,52 @@ export default function EditProductPage() {
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Tax percentage applied to the product</p>
               {errors.taxPercentage && <p className="mt-1 text-xs text-red-600">{errors.taxPercentage}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Shipping Charge - Inside Dhaka (৳)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.shippingCharges.insideDhaka}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  shippingCharges: {
+                    ...prev.shippingCharges,
+                    insideDhaka: e.target.value
+                  }
+                }))}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
+                placeholder="50"
+                disabled={formData.freeDelivery}
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shipping charge for orders inside Dhaka</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Shipping Charge - Outside Dhaka (৳)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.shippingCharges.outsideDhaka}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  shippingCharges: {
+                    ...prev.shippingCharges,
+                    outsideDhaka: e.target.value
+                  }
+                }))}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
+                placeholder="100"
+                disabled={formData.freeDelivery}
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shipping charge for orders outside Dhaka</p>
             </div>
 
             <div>
@@ -1476,6 +1540,29 @@ export default function EditProductPage() {
                 className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
               />
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Track Inventory</span>
+            </label>
+            <label className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border border-gray-200 dark:border-gray-600">
+              <input
+                type="checkbox"
+                checked={formData.freeDelivery}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  handleInputChange('freeDelivery', isChecked);
+                  // Automatically set shipping charges to 0 when free delivery is enabled
+                  if (isChecked) {
+                    setFormData(prev => ({
+                      ...prev,
+                      freeDelivery: true,
+                      shippingCharges: {
+                        insideDhaka: '0',
+                        outsideDhaka: '0'
+                      }
+                    }));
+                  }
+                }}
+                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              />
+              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">🚚 Free Delivery</span>
             </label>
             {/* Featured Sort Order */}
             <div className="col-span-2 lg:col-span-4 mt-2">

@@ -98,10 +98,9 @@ export default function CartPage() {
   };
 
   const calculateShipping = () => {
-    const subtotal = calculateSubtotal();
-    
-    // Free shipping if subtotal is over 1000
-    if (subtotal > 1000) {
+    // Check if any selected item has free delivery enabled
+    const hasFreeDelivery = getSelectedItems().some(item => item.freeDelivery === true);
+    if (hasFreeDelivery) {
       return 0;
     }
     
@@ -122,6 +121,10 @@ export default function CartPage() {
     }
     
     return maxShipping;
+  };
+  
+  const hasFreeDelivery = () => {
+    return getSelectedItems().some(item => item.freeDelivery === true);
   };
 
   const calculatePromoDiscount = () => {
@@ -146,10 +149,10 @@ export default function CartPage() {
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
     const tax = calculateTax();
-    const shipping = calculateShipping();
     const promoDiscount = calculatePromoDiscount();
     
-    return subtotal + tax + shipping - promoDiscount;
+    // Total doesn't include shipping - shipping is shown separately
+    return subtotal + tax - promoDiscount;
   };
 
   const getTotalQuantity = () => {
@@ -412,141 +415,68 @@ export default function CartPage() {
                 Cart Summary
               </h2>
               
-              <div className="space-y-2 mb-3">
-                <div className="flex justify-between text-xs bg-blue-50 px-2 py-1.5 rounded-lg">
-                  <span className="text-blue-700 font-medium">Quantity</span>
-                  <span className="font-semibold text-blue-900">{getTotalQuantity()}</span>
+              <div className="space-y-0 mb-3">
+                <div className="flex justify-between text-xs px-2 py-1.5 bg-gray-100">
+                  <span className="text-gray-700">Quantity:</span>
+                  <span className="font-semibold text-gray-900">{getTotalQuantity()}</span>
                 </div>
                 
-                <div className="flex justify-between text-xs bg-purple-50 px-2 py-1.5 rounded-lg">
-                  <span className="text-purple-700 font-medium">Product Price</span>
-                  <span className="font-semibold text-purple-900">৳{calculateOriginalPrice().toLocaleString()}</span>
+                <div className="flex justify-between text-xs px-2 py-1.5 bg-white">
+                  <span className="text-gray-700">Product Price:</span>
+                  <span className="font-semibold text-gray-900">৳{calculateOriginalPrice().toLocaleString()}</span>
                 </div>
                 
                 {calculateDiscount() > 0 && (
-                  <div className="flex justify-between text-xs bg-green-50 px-2 py-1.5 rounded-lg">
-                    <span className="text-green-700 font-medium">Discount</span>
-                    <span className="font-semibold text-green-800">৳{calculateDiscount().toLocaleString()}</span>
+                  <div className="flex justify-between text-xs px-2 py-1.5 bg-gray-100">
+                    <span className="text-gray-700">Discount:</span>
+                    <span className="font-semibold text-gray-900">৳{calculateDiscount().toLocaleString()}</span>
                   </div>
                 )}
                 
                 {/* Tax - Only show if any product has tax */}
                 {calculateTax() > 0 && (
-                  <div className="flex justify-between text-xs bg-yellow-50 px-2 py-1.5 rounded-lg">
-                    <span className="text-yellow-700 font-medium">Tax</span>
-                    <span className="font-semibold text-yellow-900">৳{calculateTax().toFixed(2)}</span>
+                  <div className="flex justify-between text-xs px-2 py-1.5 bg-white">
+                    <span className="text-gray-700">Tax:</span>
+                    <span className="font-semibold text-gray-900">৳{calculateTax().toFixed(2)}</span>
                   </div>
                 )}
                 
-                <div className="flex justify-between text-xs bg-pink-50 px-2 py-1.5 rounded-lg">
-                  <span className="text-pink-700 font-medium">Subtotal Price</span>
-                  <span className="font-semibold text-pink-900">৳{calculateSubtotal().toLocaleString()}</span>
+                <div className="flex justify-between text-xs px-2 py-1.5 bg-white">
+                  <span className="text-gray-700">Subtotal Price:</span>
+                  <span className="font-semibold text-gray-900">৳{calculateSubtotal().toLocaleString()}</span>
                 </div>
                 
                 {/* Delivery Charge */}
-                <div className="pt-1.5 border-t-2 border-purple-200">
-                  <div className="flex justify-between text-xs text-purple-700 font-medium mb-1.5">
-                    <span>Delivery Charge</span>
-                  </div>
-                  <div className="space-y-0.5 text-[10px] text-gray-600 pl-1.5 bg-gray-50 p-1.5 rounded-lg">
-                    <div className="flex justify-between">
-                      <span>Inside Dhaka :</span>
-                      <span className="font-medium text-purple-700">৳70</span>
+                <div className="px-2 py-1.5 bg-gray-100">
+                  <div className="text-xs">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-gray-700">Delivery Charge:</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Outside Dhaka :</span>
-                      <span className="font-medium text-purple-700">৳130</span>
-                    </div>
-                  </div>
-                  <div className="mt-1.5 flex gap-1.5">
-                    <button
-                      onClick={() => setShippingLocation('insideDhaka')}
-                      className={`flex-1 px-1.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
-                        shippingLocation === 'insideDhaka'
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
-                          : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                      }`}
-                    >
-                      Inside
-                    </button>
-                    <button
-                      onClick={() => setShippingLocation('outsideDhaka')}
-                      className={`flex-1 px-1.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
-                        shippingLocation === 'outsideDhaka'
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
-                          : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                      }`}
-                    >
-                      Outside
-                    </button>
+                    {hasFreeDelivery() ? (
+                      <div className="flex justify-between items-center text-green-700 font-semibold">
+                        <span>Free Delivery</span>
+                        <span className="text-green-600">৳ 0</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-0.5 pl-0">
+                        <div className="flex justify-between text-gray-700">
+                          <span>Inside Dhaka :</span>
+                          <span className="font-semibold text-gray-900">৳ 70</span>
+                        </div>
+                        <div className="flex justify-between text-gray-700">
+                          <span>Outside Dhaka :</span>
+                          <span className="font-semibold text-gray-900">৳ 130</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
-                {/* Promo Discount */}
-                {appliedPromoCode && calculatePromoDiscount() > 0 && (
-                  <div className="flex justify-between text-xs bg-green-50 px-2 py-1.5 rounded-lg">
-                    <span className="text-green-700 font-medium">Promo Discount ({appliedPromoCode.code})</span>
-                    <span className="font-semibold text-green-800">-৳{calculatePromoDiscount().toFixed(2)}</span>
-                  </div>
-                )}
-                
-                <div className="pt-2 border-t-2 border-purple-400 bg-gradient-to-r from-purple-50 to-pink-50 px-2 py-1.5 rounded-lg">
-                  <div className="flex justify-between text-sm font-bold">
-                    <span className="text-gray-900">Total</span>
-                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent text-base">৳{calculateTotal().toLocaleString()}</span>
-                  </div>
+                <div className="flex justify-between text-xs px-2 py-1.5 bg-white border-t border-gray-200 pt-2">
+                  <span className="text-gray-900 font-bold">Total:</span>
+                  <span className="font-bold text-gray-900">৳{calculateTotal().toLocaleString()}</span>
                 </div>
               </div>
-
-              {/* Promo Code */}
-              {!appliedPromoCode && (
-                <div className="mb-3">
-                  <div className="flex gap-1.5">
-                    <input
-                      type="text"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                      placeholder="Promo code"
-                      className={`flex-1 px-2 py-1.5 text-xs border-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-400 transition-all ${
-                        promoCodeError ? 'border-red-300 bg-red-50' : 'border-purple-300 bg-purple-50/50'
-                      }`}
-                      onKeyPress={(e) => e.key === 'Enter' && handleApplyPromoCode()}
-                    />
-                    <button 
-                      onClick={handleApplyPromoCode}
-                      disabled={promoCodeLoading || !promoCode.trim()}
-                      className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs font-medium shadow-md hover:shadow-lg"
-                    >
-                      {promoCodeLoading ? (
-                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        'Apply'
-                      )}
-                    </button>
-                  </div>
-                  {promoCodeError && (
-                    <p className="text-[10px] text-red-600 mt-1 bg-red-50 px-1.5 py-0.5 rounded">{promoCodeError}</p>
-                  )}
-                </div>
-              )}
-
-              {appliedPromoCode && (
-                <div className="mb-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-semibold text-green-700">✓ {appliedPromoCode.code}</span>
-                      <p className="text-[10px] text-green-600 mt-0.5">{appliedPromoCode.discountDisplay} applied</p>
-                    </div>
-                    <button
-                      onClick={handleRemovePromoCode}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors"
-                      title="Remove"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Checkout Button */}
               <button
@@ -557,13 +487,6 @@ export default function CartPage() {
                 Checkout
               </button>
 
-              {calculateSubtotal() < 1000 && calculateSubtotal() > 0 && (
-                <div className="mt-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-1.5">
-                  <p className="text-[10px] text-green-800 text-center font-medium">
-                    ✨ Add ৳{(1000 - calculateSubtotal()).toLocaleString()} more for free delivery
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>

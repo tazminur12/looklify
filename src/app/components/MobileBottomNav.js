@@ -53,6 +53,20 @@ export default function MobileBottomNav() {
   const { getCartCount } = useCart();
   const { getWishlistCount } = useWishlist();
 
+  // Check if user is admin or super admin
+  const isAdmin = session?.user?.role && ['Super Admin', 'Admin'].includes(session?.user?.role);
+
+  // Dashboard nav item (only for admins)
+  const dashboardNavItem = isAdmin ? {
+    label: 'Dashboard',
+    href: '/dashboard',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  } : null;
+
   const userNavItem = {
     label: session ? 'Profile' : 'Login',
     href: session ? '/profile' : '/login',
@@ -63,7 +77,10 @@ export default function MobileBottomNav() {
     ),
   };
 
-  const navItems = [...navItemsConfig, userNavItem];
+  // Build nav items array - include dashboard if user is admin
+  const navItems = dashboardNavItem 
+    ? [...navItemsConfig, dashboardNavItem, userNavItem]
+    : [...navItemsConfig, userNavItem];
 
   const getBadgeValue = (key) => {
     if (key === 'cart') {

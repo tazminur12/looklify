@@ -73,6 +73,7 @@ export default function AddProductPage() {
     isBestSeller: false,
     isNewArrival: false,
     isOfferProduct: false,
+    freeDelivery: false,
     inventory: {
       trackInventory: true,
       allowBackorder: false,
@@ -427,7 +428,8 @@ export default function AddProductPage() {
         featuredSortOrder: formData.featuredSortOrder ? parseInt(formData.featuredSortOrder) : 0,
         isBestSeller: Boolean(formData.isBestSeller),
         isNewArrival: Boolean(formData.isNewArrival),
-        isOfferProduct: Boolean(formData.isOfferProduct)
+        isOfferProduct: Boolean(formData.isOfferProduct),
+        freeDelivery: Boolean(formData.freeDelivery)
       };
 
       const response = await fetch('/api/products', {
@@ -823,6 +825,7 @@ export default function AddProductPage() {
                 }))}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
                 placeholder="50"
+                disabled={formData.freeDelivery}
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shipping charge for orders inside Dhaka</p>
             </div>
@@ -845,8 +848,36 @@ export default function AddProductPage() {
                 }))}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
                 placeholder="100"
+                disabled={formData.freeDelivery}
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shipping charge for orders outside Dhaka</p>
+            </div>
+
+            <div className="lg:col-span-2">
+              <label className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border border-gray-200 dark:border-gray-600">
+                <input
+                  type="checkbox"
+                  checked={formData.freeDelivery}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    handleInputChange('freeDelivery', isChecked);
+                    // Automatically set shipping charges to 0 when free delivery is enabled
+                    if (isChecked) {
+                      setFormData(prev => ({
+                        ...prev,
+                        freeDelivery: true,
+                        shippingCharges: {
+                          insideDhaka: '0',
+                          outsideDhaka: '0'
+                        }
+                      }));
+                    }
+                  }}
+                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                />
+                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">🚚 Free Delivery</span>
+              </label>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 ml-11">Enable free delivery for this product. Cart and checkout will show "Free delivery" automatically.</p>
             </div>
 
             <div>
