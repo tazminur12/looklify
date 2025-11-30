@@ -191,14 +191,14 @@ export default function BlogDetailPage() {
 
         {/* Excerpt */}
         {blog.excerpt && (
-          <div className="bg-purple-50 border-l-4 border-purple-600 p-6 rounded-r-lg mb-8">
-            <p className="text-lg text-gray-700 italic">{blog.excerpt}</p>
+          <div className="bg-purple-50 border-l-4 border-purple-600 p-4 sm:p-6 rounded-r-lg mb-3 sm:mb-8">
+            <p className="text-base sm:text-lg text-gray-700 italic">{blog.excerpt}</p>
           </div>
         )}
 
         {/* Content */}
         <div 
-          className="blog-content mb-12 overflow-x-hidden [&_img]:w-full [&_img]:max-w-full [&_img]:h-auto [&_img]:sm:h-auto [&_img]:md:h-96 [&_img]:lg:h-[500px] [&_img]:object-contain [&_img]:sm:object-cover [&_img]:rounded-xl [&_img]:mt-3 [&_img]:mb-4 [&_img]:shadow-[0_20px_45px_-20px_rgba(139,92,246,0.35)] [&_img]:block [&_img]:box-border"
+          className="blog-content blog-content-mobile mb-12 overflow-x-hidden [&_img]:w-full [&_img]:max-w-full [&_img]:h-auto [&_img]:sm:h-auto [&_img]:md:h-96 [&_img]:lg:h-[500px] [&_img]:object-contain [&_img]:sm:object-cover [&_img]:rounded-xl [&_img]:mt-0 [&_img]:sm:mt-3 [&_img]:mb-0 [&_img]:sm:mb-4 [&_img]:shadow-[0_20px_45px_-20px_rgba(139,92,246,0.35)] [&_img]:block [&_img]:box-border"
           dangerouslySetInnerHTML={{ __html: blog.content }}
         />
 

@@ -130,8 +130,11 @@ html {
 }
 
 @media (max-width: 640px) {
-  .blog-content p {
+  .blog-content p,
+  .blog-content-mobile p {
     text-align: left;
+    margin-bottom: 0.5rem !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -341,6 +344,76 @@ html {
 }
 
 /* Blog content images - styled via Tailwind classes in component */
+.blog-content img,
+.blog-content-mobile img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  box-sizing: border-box;
+}
+
+/* Mobile: Remove margins from images for tight spacing */
+@media (max-width: 640px) {
+  /* Force remove all margins and padding from images */
+  .blog-content-mobile img {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  
+  /* Minimal spacing for any element immediately after image */
+  .blog-content-mobile img + p,
+  .blog-content-mobile img + div,
+  .blog-content-mobile img + h1,
+  .blog-content-mobile img + h2,
+  .blog-content-mobile img + h3,
+  .blog-content-mobile img + h4,
+  .blog-content-mobile img + h5,
+  .blog-content-mobile img + h6,
+  .blog-content-mobile img + span,
+  .blog-content-mobile img + strong,
+  .blog-content-mobile img + em {
+    margin-top: 0.25rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Remove extra space from paragraph before image */
+  .blog-content-mobile p + img,
+  .blog-content-mobile div + img,
+  .blog-content-mobile h1 + img,
+  .blog-content-mobile h2 + img,
+  .blog-content-mobile h3 + img,
+  .blog-content-mobile h4 + img,
+  .blog-content-mobile h5 + img,
+  .blog-content-mobile h6 + img {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0 !important;
+  }
+  
+  /* Very tight spacing between consecutive paragraphs on mobile */
+  .blog-content-mobile p + p {
+    margin-top: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Remove spacing from divs and other block elements */
+  .blog-content-mobile > div {
+    margin-top: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .blog-content-mobile div + p,
+  .blog-content-mobile p + div {
+    margin-top: 0 !important;
+  }
+  
+  /* Remove any line-height spacing that might create gaps */
+  .blog-content-mobile img {
+    line-height: 0;
+  }
+}
 
 .blog-content video,
 .blog-content iframe {

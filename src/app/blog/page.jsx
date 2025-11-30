@@ -48,17 +48,27 @@ function BlogContent() {
         const data = await response.json();
         if (data.success) {
           setBlogs(data.data.blogs || []);
-          // Note: Public API might not return pagination, so we'll handle it differently
-          setPagination(prev => ({
-            ...prev,
-            currentPage: filters.page,
-            totalCount: data.data.blogs?.length || 0
-          }));
+          // Use pagination from API response if available
+          if (data.data.pagination) {
+            setPagination({
+              currentPage: data.data.pagination.currentPage || filters.page,
+              totalPages: data.data.pagination.totalPages || 1,
+              totalCount: data.data.pagination.totalCount || 0
+            });
+          } else {
+            // Fallback if pagination not available
+            setPagination(prev => ({
+              ...prev,
+              currentPage: filters.page,
+              totalCount: data.data.blogs?.length || 0
+            }));
+          }
         } else {
           setError(data.error || 'Failed to load blogs');
         }
       } else {
-        setError('Failed to load blogs');
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || errorData.details || 'Failed to load blogs');
       }
     } catch (err) {
       console.error('Error fetching blogs:', err);

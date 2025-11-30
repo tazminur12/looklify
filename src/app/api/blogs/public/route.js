@@ -2,14 +2,18 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Blog from '@/models/Blog';
 
-// GET /api/blogs/public - Public API to get published featured blogs
+// GET /api/blogs/public - Public API to get published blogs with pagination, search, filters
 export async function GET(request) {
   try {
     await dbConnect();
 
     const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page')) || 1;
     const limit = parseInt(searchParams.get('limit')) || 10;
     const featured = searchParams.get('featured');
+    const search = searchParams.get('search') || '';
+    const tag = searchParams.get('tag') || '';
+    const category = searchParams.get('category') || '';
 
     const filter = {
       status: 'published'
@@ -20,19 +24,53 @@ export async function GET(request) {
       filter.isFeatured = true;
     }
 
-    const sort = { publishDate: -1 };
+    // Search filter
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { excerpt: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } },
+        { slug: { $regex: search, $options: 'i' } }
+      ];
+    }
 
-    const blogs = await Blog.find(filter)
-      .sort(sort)
-      .limit(limit)
-      .populate('author', 'name email')
-      .select('title slug excerpt featuredImage publishDate author views tags categories')
-      .lean();
+    // Tag filter
+    if (tag) {
+      filter.tags = tag;
+    }
+
+    // Category filter
+    if (category) {
+      filter.categories = category;
+    }
+
+    const sort = { publishDate: -1 };
+    const skip = (page - 1) * limit;
+
+    // Get blogs and total count
+    const [blogs, totalCount] = await Promise.all([
+      Blog.find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .populate('author', 'name email')
+        .select('title slug excerpt featuredImage publishDate author views tags categories')
+        .lean(),
+      Blog.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
 
     return NextResponse.json({
       success: true,
       data: {
-        blogs
+        blogs,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalCount,
+          limit
+        }
       }
     });
   } catch (error) {
