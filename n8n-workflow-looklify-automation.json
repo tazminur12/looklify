@@ -29,7 +29,7 @@
     },
     {
       "parameters": {
-        "url": "={{ $env.LOOKLIFY_API_URL || 'http://localhost:3000' }}/api/automation/brain",
+        "url": "http://localhost:3000/api/automation/brain",
         "authentication": "none",
         "sendBody": true,
         "specifyBody": "json",
@@ -147,15 +147,6 @@
                 "type": "string",
                 "operation": "contains"
               }
-            },
-            {
-              "id": "condition-affiliate",
-              "leftValue": "={{ $json.action }}",
-              "rightValue": "affiliate_payout_summary",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
             }
           ],
           "combinator": "or"
@@ -172,7 +163,7 @@
       "parameters": {
         "resource": "email",
         "operation": "sendEmail",
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "fromEmail": "yourgmail@gmail.com",
         "toEmail": "={{ $json.data.customer_email || $json.data.email }}",
         "subject": "={{ $json.data.subject || 'Looklify - Your Skincare Journey' }}",
         "emailType": "html",
@@ -237,7 +228,7 @@
       "parameters": {
         "resource": "email",
         "operation": "sendEmail",
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "fromEmail": "yourgmail@gmail.com",
         "toEmail": "={{ $json.data.customer_email }}",
         "subject": "VIP Offer - Exclusive Discount for You! 🎁",
         "emailType": "html",
@@ -260,7 +251,7 @@
       "parameters": {
         "resource": "email",
         "operation": "sendEmail",
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "fromEmail": "yourgmail@gmail.com",
         "toEmail": "={{ $json.data.customer_email }}",
         "subject": "Invoice for Order {{ $json.data.order_id }}",
         "emailType": "html",
@@ -285,8 +276,8 @@
       "parameters": {
         "resource": "email",
         "operation": "sendEmail",
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
-        "toEmail": "={{ $env.ADMIN_EMAIL || 'admin@looklify.com' }}",
+        "fromEmail": "yourgmail@gmail.com",
+        "toEmail": "admin@yourstore.com",
         "subject": "Admin Notification: {{ $json.message }}",
         "emailType": "html",
         "message": "={{ $json.message }}\n\nDetails:\n{{ JSON.stringify($json.data, null, 2) }}",
@@ -308,7 +299,7 @@
       "parameters": {
         "resource": "email",
         "operation": "sendEmail",
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "fromEmail": "yourgmail@gmail.com",
         "toEmail": "={{ $json.data.customer_email }}",
         "subject": "Product Recommendations for You ✨",
         "emailType": "html",
@@ -331,8 +322,8 @@
       "parameters": {
         "resource": "email",
         "operation": "sendEmail",
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
-        "toEmail": "={{ $env.ADMIN_EMAIL || 'admin@looklify.com' }}",
+        "fromEmail": "yourgmail@gmail.com",
+        "toEmail": "admin@yourstore.com",
         "subject": "⚠️ Low Stock Alert: {{ $json.data.product_name }}",
         "emailType": "html",
         "message": "={{ $json.message }}\n\nProduct: {{ $json.data.product_name }}\nCurrent Stock: {{ $json.data.current_stock }}\nThreshold: {{ $json.data.low_stock_threshold }}\nSKU: {{ $json.data.sku }}",
@@ -354,7 +345,7 @@
       "parameters": {
         "resource": "email",
         "operation": "sendEmail",
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "fromEmail": "yourgmail@gmail.com",
         "toEmail": "={{ $json.data.interested_users.map(u => u.email).join(',') }}",
         "subject": "🎉 {{ $json.data.product_name }} is Back in Stock!",
         "emailType": "html",
@@ -377,7 +368,7 @@
       "parameters": {
         "resource": "email",
         "operation": "sendEmail",
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
+        "fromEmail": "yourgmail@gmail.com",
         "toEmail": "={{ $json.data.customer_email }}",
         "subject": "Return Request Received - Order {{ $json.data.order_id }}",
         "emailType": "html",
@@ -389,29 +380,6 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2,
       "position": [850, 1100],
-      "credentials": {
-        "smtp": {
-          "id": "smtp-credentials",
-          "name": "SMTP Account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "resource": "email",
-        "operation": "sendEmail",
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@looklify.com' }}",
-        "toEmail": "={{ $env.ADMIN_EMAIL || 'admin@looklify.com' }}",
-        "subject": "Affiliate Payout Summary - Order {{ $json.data.order_id }}",
-        "emailType": "html",
-        "message": "={{ $json.message }}\n\nAffiliate ID: {{ $json.data.affiliate_id }}\nCommission: ৳{{ $json.data.commission_amount }}\nOrder Total: ৳{{ $json.data.order_total }}",
-        "options": {}
-      },
-      "id": "affiliate-payout-email",
-      "name": "Affiliate Payout Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
-      "position": [850, 1200],
       "credentials": {
         "smtp": {
           "id": "smtp-credentials",
@@ -505,11 +473,6 @@
           },
           {
             "node": "Return Process Email",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Affiliate Payout Email",
             "type": "main",
             "index": 0
           }
@@ -616,17 +579,6 @@
       ]
     },
     "Return Process Email": {
-      "main": [
-        [
-          {
-            "node": "Merge Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Affiliate Payout Email": {
       "main": [
         [
           {

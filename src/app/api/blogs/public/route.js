@@ -44,7 +44,8 @@ export async function GET(request) {
       filter.categories = category;
     }
 
-    const sort = { publishDate: -1 };
+    // Sort by sortOrder first (ascending - lower numbers first), then by publishDate (descending - newest first)
+    const sort = { sortOrder: 1, publishDate: -1 };
     const skip = (page - 1) * limit;
 
     // Get blogs and total count
@@ -54,7 +55,7 @@ export async function GET(request) {
         .skip(skip)
         .limit(limit)
         .populate('author', 'name email')
-        .select('title slug excerpt featuredImage publishDate author views tags categories')
+        .select('title slug excerpt featuredImage publishDate author views tags categories sortOrder')
         .lean(),
       Blog.countDocuments(filter)
     ]);

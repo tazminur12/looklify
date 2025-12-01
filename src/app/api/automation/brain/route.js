@@ -498,32 +498,6 @@ async function processEvent(eventType, eventData) {
       };
     }
     
-    case 'AFFILIATE_ORDER': {
-      if (!orderData) {
-        return {
-          action: 'nothing',
-          message: '',
-          data: {}
-        };
-      }
-      
-      const affiliateId = additionalData?.affiliateId || '';
-      const commission = additionalData?.commission || 0;
-      
-      return {
-        action: 'affiliate_payout_summary',
-        message: `Affiliate order processed! Order ${orderData.orderId} generated a commission of ৳${commission} for affiliate ${affiliateId}`,
-        data: {
-          order_id: orderData.orderId,
-          affiliate_id: affiliateId,
-          commission_amount: commission,
-          order_total: orderData.pricing?.total || 0,
-          commission_percentage: additionalData?.commissionPercentage || 0,
-          payout_date: additionalData?.payoutDate || new Date().toISOString()
-        }
-      };
-    }
-    
     // Cart abandonment - triggered when checkout started but order not completed
     case 'CART_ABANDONED': {
       if (!userData) {
@@ -597,7 +571,6 @@ export async function POST(request) {
       'RESTOCK',
       'NEW_USER',
       'RETURN_REQUEST',
-      'AFFILIATE_ORDER',
       'CART_ABANDONED'
     ];
     
@@ -647,7 +620,6 @@ export async function GET() {
       'RESTOCK',
       'NEW_USER',
       'RETURN_REQUEST',
-      'AFFILIATE_ORDER',
       'CART_ABANDONED'
     ]
   });
