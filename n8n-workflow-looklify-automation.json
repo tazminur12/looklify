@@ -161,9 +161,8 @@
     },
     {
       "parameters": {
-        "resource": "email",
-        "operation": "sendEmail",
-        "fromEmail": "yourgmail@gmail.com",
+        "resource": "message",
+        "operation": "send",
         "toEmail": "={{ $json.data.customer_email || $json.data.email }}",
         "subject": "={{ $json.data.subject || 'Looklify - Your Skincare Journey' }}",
         "emailType": "html",
@@ -174,13 +173,13 @@
       },
       "id": "send-email",
       "name": "Send Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [850, 200],
       "credentials": {
-        "smtp": {
-          "id": "smtp-credentials",
-          "name": "SMTP Account"
+        "gmailOAuth2": {
+          "id": "gmail-credentials",
+          "name": "Gmail Account"
         }
       }
     },
@@ -226,9 +225,8 @@
     },
     {
       "parameters": {
-        "resource": "email",
-        "operation": "sendEmail",
-        "fromEmail": "yourgmail@gmail.com",
+        "resource": "message",
+        "operation": "send",
         "toEmail": "={{ $json.data.customer_email }}",
         "subject": "VIP Offer - Exclusive Discount for You! 🎁",
         "emailType": "html",
@@ -237,21 +235,20 @@
       },
       "id": "send-vip-email",
       "name": "Send VIP Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [850, 500],
       "credentials": {
-        "smtp": {
-          "id": "smtp-credentials",
-          "name": "SMTP Account"
+        "gmailOAuth2": {
+          "id": "gmail-credentials",
+          "name": "Gmail Account"
         }
       }
     },
     {
       "parameters": {
-        "resource": "email",
-        "operation": "sendEmail",
-        "fromEmail": "yourgmail@gmail.com",
+        "resource": "message",
+        "operation": "send",
         "toEmail": "={{ $json.data.customer_email }}",
         "subject": "Invoice for Order {{ $json.data.order_id }}",
         "emailType": "html",
@@ -262,21 +259,20 @@
       },
       "id": "send-invoice-email",
       "name": "Send Invoice Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [850, 600],
       "credentials": {
-        "smtp": {
-          "id": "smtp-credentials",
-          "name": "SMTP Account"
+        "gmailOAuth2": {
+          "id": "gmail-credentials",
+          "name": "Gmail Account"
         }
       }
     },
     {
       "parameters": {
-        "resource": "email",
-        "operation": "sendEmail",
-        "fromEmail": "yourgmail@gmail.com",
+        "resource": "message",
+        "operation": "send",
         "toEmail": "admin@yourstore.com",
         "subject": "Admin Notification: {{ $json.message }}",
         "emailType": "html",
@@ -285,21 +281,20 @@
       },
       "id": "notify-admin-email",
       "name": "Notify Admin Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [850, 700],
       "credentials": {
-        "smtp": {
-          "id": "smtp-credentials",
-          "name": "SMTP Account"
+        "gmailOAuth2": {
+          "id": "gmail-credentials",
+          "name": "Gmail Account"
         }
       }
     },
     {
       "parameters": {
-        "resource": "email",
-        "operation": "sendEmail",
-        "fromEmail": "yourgmail@gmail.com",
+        "resource": "message",
+        "operation": "send",
         "toEmail": "={{ $json.data.customer_email }}",
         "subject": "Product Recommendations for You ✨",
         "emailType": "html",
@@ -308,21 +303,20 @@
       },
       "id": "send-recommendations-email",
       "name": "Send Recommendations Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [850, 800],
       "credentials": {
-        "smtp": {
-          "id": "smtp-credentials",
-          "name": "SMTP Account"
+        "gmailOAuth2": {
+          "id": "gmail-credentials",
+          "name": "Gmail Account"
         }
       }
     },
     {
       "parameters": {
-        "resource": "email",
-        "operation": "sendEmail",
-        "fromEmail": "yourgmail@gmail.com",
+        "resource": "message",
+        "operation": "send",
         "toEmail": "admin@yourstore.com",
         "subject": "⚠️ Low Stock Alert: {{ $json.data.product_name }}",
         "emailType": "html",
@@ -331,21 +325,20 @@
       },
       "id": "low-stock-alert-email",
       "name": "Low Stock Alert Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [850, 900],
       "credentials": {
-        "smtp": {
-          "id": "smtp-credentials",
-          "name": "SMTP Account"
+        "gmailOAuth2": {
+          "id": "gmail-credentials",
+          "name": "Gmail Account"
         }
       }
     },
     {
       "parameters": {
-        "resource": "email",
-        "operation": "sendEmail",
-        "fromEmail": "yourgmail@gmail.com",
+        "resource": "message",
+        "operation": "send",
         "toEmail": "={{ $json.data.interested_users.map(u => u.email).join(',') }}",
         "subject": "🎉 {{ $json.data.product_name }} is Back in Stock!",
         "emailType": "html",
@@ -354,21 +347,20 @@
       },
       "id": "restock-alert-email",
       "name": "Restock Alert Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [850, 1000],
       "credentials": {
-        "smtp": {
-          "id": "smtp-credentials",
-          "name": "SMTP Account"
+        "gmailOAuth2": {
+          "id": "gmail-credentials",
+          "name": "Gmail Account"
         }
       }
     },
     {
       "parameters": {
-        "resource": "email",
-        "operation": "sendEmail",
-        "fromEmail": "yourgmail@gmail.com",
+        "resource": "message",
+        "operation": "send",
         "toEmail": "={{ $json.data.customer_email }}",
         "subject": "Return Request Received - Order {{ $json.data.order_id }}",
         "emailType": "html",
@@ -377,13 +369,13 @@
       },
       "id": "return-process-email",
       "name": "Return Process Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [850, 1100],
       "credentials": {
-        "smtp": {
-          "id": "smtp-credentials",
-          "name": "SMTP Account"
+        "gmailOAuth2": {
+          "id": "gmail-credentials",
+          "name": "Gmail Account"
         }
       }
     },

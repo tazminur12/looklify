@@ -12,6 +12,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.1",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
@@ -20,8 +21,9 @@
     "daisyui": "^5.2.3",
     "dotenv": "^17.2.3",
     "firebase": "^12.4.0",
+    "html2canvas": "^1.4.1",
     "jodit-react": "^5.2.38",
-    "jspdf": "^3.0.3",
+    "jspdf": "^3.0.4",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.545.0",
     "mongodb": "^6.20.0",
@@ -38,7 +40,8 @@
     "recharts": "^3.3.0",
     "sweetalert2": "^11.26.3",
     "swiper": "^12.0.2",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
