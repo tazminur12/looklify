@@ -14,9 +14,22 @@ const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || process.env.N
  */
 export async function sendAutomationEvent(event, data = {}) {
   if (!N8N_WEBHOOK_URL) {
-    console.warn('N8N_WEBHOOK_URL is not configured. Automation events will not be sent.');
+    console.warn('⚠️ N8N_WEBHOOK_URL is not configured. Automation events will not be sent.');
     return { success: false, error: 'N8N_WEBHOOK_URL not configured' };
   }
+
+  const payload = {
+    event,
+    ...data
+  };
+
+  console.log('🚀 Sending automation event to n8n:', {
+    url: N8N_WEBHOOK_URL,
+    event,
+    hasUserId: !!data.userId,
+    hasOrderId: !!data.orderId,
+    hasProductId: !!data.productId
+  });
 
   try {
     const response = await fetch(N8N_WEBHOOK_URL, {
@@ -24,20 +37,46 @@ export async function sendAutomationEvent(event, data = {}) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        event,
-        ...data
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('❌ n8n webhook error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
     }
 
-    const result = await response.json();
-    return { success: true, data: result };
+    // Check if response has content
+    const contentType = response.headers.get('content-type');
+    const responseText = await response.text();
+    
+    // If response is empty, consider it success (n8n might return empty response)
+    if (!responseText || responseText.trim() === '') {
+      console.log('✅ Automation event sent successfully (empty response from n8n)');
+      return { success: true, data: { message: 'Event received by n8n' } };
+    }
+
+    // Try to parse JSON if content-type indicates JSON
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        const result = JSON.parse(responseText);
+        console.log('✅ Automation event sent successfully:', result);
+        return { success: true, data: result };
+      } catch (parseError) {
+        console.warn('⚠️ Response is not valid JSON, treating as success:', responseText);
+        return { success: true, data: { message: responseText } };
+      }
+    }
+
+    // If not JSON, return as text
+    console.log('✅ Automation event sent successfully (non-JSON response):', responseText);
+    return { success: true, data: { message: responseText } };
   } catch (error) {
-    console.error('Error sending automation event:', error);
+    console.error('❌ Error sending automation event:', error.message);
     return { success: false, error: error.message };
   }
 }

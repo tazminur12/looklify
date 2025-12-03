@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 import PromoCode from '@/models/PromoCode';
+import { sendAutomationEvent } from '@/lib/automation-events';
 
 // GET /api/orders - Get all orders (admin/staff) or user's orders
 export async function GET(request) {
@@ -263,6 +264,19 @@ export async function POST(request) {
       .populate('items.productId', 'name sku stock')
       .populate('promoCode', 'code name type value')
       .lean();
+
+    // Trigger automation event for order success
+    if (session?.user?.id) {
+      try {
+        await sendAutomationEvent('ORDER_SUCCESS', {
+          orderId: order._id.toString(),
+          userId: session.user.id
+        });
+      } catch (error) {
+        // Don't fail the order if automation fails
+        console.error('Failed to trigger automation event:', error);
+      }
+    }
 
     return NextResponse.json({
       success: true,
