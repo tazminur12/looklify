@@ -5,6 +5,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import dbConnect from '../lib/db';
 import User from '../models/User';
+import { trackNewUser } from '../lib/automation-events';
 
 // Validate required environment variables
 if (!process.env.NEXTAUTH_SECRET) {
@@ -133,6 +134,12 @@ export const authOptions = {
               profileImage: user.image,
             });
             await existingUser.save();
+            
+            // Trigger welcome message for new OAuth user (non-blocking)
+            trackNewUser(existingUser._id.toString()).catch(error => {
+              console.error('Error sending welcome message for OAuth user:', error);
+              // Don't fail login if welcome message fails
+            });
           } else {
             // Update last login and profile image if needed
             await User.findByIdAndUpdate(existingUser._id, {
@@ -176,6 +183,18 @@ export const authOptions = {
         // Return session instead of null to prevent logout
         return session;
       }
+    },
+    async redirect({ url, baseUrl }) {
+      // If redirecting to dashboard, check if user has permission
+      // Otherwise, redirect to home page
+      if (url.startsWith(`${baseUrl}/dashboard`)) {
+        return url;
+      }
+      // Default redirect to home page
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      return baseUrl;
     },
   },
   pages: {

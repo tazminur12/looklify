@@ -4,6 +4,7 @@ import User from '@/models/User';
 import Product from '@/models/Product';
 import Order from '@/models/Order';
 import PromoCode from '@/models/PromoCode';
+import mongoose from 'mongoose';
 
 // Helper function to generate discount codes
 function generateDiscountCode(percentage, prefix = 'LOOK') {
@@ -19,6 +20,40 @@ async function saveDiscountCodeToDatabase(code, percentage, userId, context = ''
     if (existingCode) {
       // If exists, return the existing code
       return existingCode.code;
+    }
+
+    // Get createdBy user ID - use provided userId if valid, otherwise find an admin user
+    let createdByUserId = null;
+    
+    // Check if userId is valid ObjectId
+    if (userId && userId !== '' && mongoose.Types.ObjectId.isValid(userId)) {
+      const user = await User.findById(userId);
+      if (user) {
+        createdByUserId = user._id;
+      }
+    }
+    
+    // If no valid userId, find an admin user to use as createdBy
+    if (!createdByUserId) {
+      const adminUser = await User.findOne({ 
+        role: { $in: ['Super Admin', 'Admin'] },
+        isActive: true 
+      }).select('_id');
+      
+      if (adminUser) {
+        createdByUserId = adminUser._id;
+      } else {
+        // Last resort: find any active user
+        const anyUser = await User.findOne({ isActive: true }).select('_id');
+        if (anyUser) {
+          createdByUserId = anyUser._id;
+        }
+      }
+    }
+    
+    // If still no user found, throw error
+    if (!createdByUserId) {
+      throw new Error('No valid user found to set as createdBy for promo code');
     }
 
     // Calculate expiry date (30 days from now)
@@ -59,9 +94,12 @@ async function saveDiscountCodeToDatabase(code, percentage, userId, context = ''
       usageLimitPerUser: 1,
       validFrom: validFrom,
       validUntil: validUntil,
-      applicableUsers: userId ? [userId] : [], // If userId provided, make it user-specific
+      applicableUsers: userId && mongoose.Types.ObjectId.isValid(userId) 
+        ? [new mongoose.Types.ObjectId(userId)] 
+        : [], // If userId provided, make it user-specific
       status: 'active',
-      autoApply: false
+      autoApply: false,
+      createdBy: createdByUserId // Set the required createdBy field
     });
 
     await promoCode.save();
@@ -187,7 +225,36 @@ async function processEvent(eventType, eventData) {
   // Fetch user if not provided
   let userData = user;
   if (!userData && userId) {
-    userData = await User.findById(userId);
+    try {
+      // Skip if userId is empty string or invalid
+      if (!userId || userId === '' || userId === 'N/A') {
+        console.log('⚠️ Invalid userId provided, skipping user fetch');
+      } else {
+        // Try finding by MongoDB _id first (ObjectId)
+        if (mongoose.Types.ObjectId.isValid(userId)) {
+          userData = await User.findById(userId);
+        }
+        
+        // If not found, try finding by email or other fields
+        if (!userData && typeof userId === 'string') {
+          // Try as email
+          if (userId.includes('@')) {
+            userData = await User.findOne({ email: userId });
+          }
+        }
+      }
+      
+      console.log('🔍 User fetch result:', {
+        userId,
+        isValid: userId && userId !== '' && userId !== 'N/A',
+        found: !!userData,
+        userEmail: userData?.email || 'N/A',
+        userName: userData?.name || 'N/A'
+      });
+    } catch (error) {
+      console.error('❌ Error fetching user:', error);
+      userData = null;
+    }
   }
   
   // Fetch product if not provided
@@ -201,14 +268,74 @@ async function processEvent(eventType, eventData) {
   // Fetch order if not provided
   let orderData = order;
   if (!orderData && orderId) {
-    orderData = await Order.findById(orderId)
-      .populate('items.productId')
-      .populate('user');
+    try {
+      // Skip if orderId is empty string or invalid
+      if (!orderId || orderId === '' || orderId === 'N/A') {
+        console.log('⚠️ Invalid orderId provided, skipping order fetch');
+      } else {
+        // Try finding by MongoDB _id first (ObjectId)
+        if (mongoose.Types.ObjectId.isValid(orderId)) {
+          orderData = await Order.findById(orderId)
+            .populate('items.productId')
+            .populate('user');
+        }
+        
+        // If not found by _id, try finding by orderId string field
+        if (!orderData && typeof orderId === 'string') {
+          orderData = await Order.findOne({ orderId: orderId })
+            .populate('items.productId')
+            .populate('user');
+        }
+      }
+      
+      console.log('🔍 Order fetch result:', {
+        orderId,
+        isValidObjectId: orderId ? mongoose.Types.ObjectId.isValid(orderId) : false,
+        found: !!orderData,
+        customerEmail: orderData?.shipping?.email || 'N/A',
+        customerName: orderData?.shipping?.fullName || 'N/A',
+        orderTotal: orderData?.pricing?.total || 0
+      });
+    } catch (error) {
+      console.error('❌ Error fetching order:', error);
+      orderData = null;
+    }
   }
   
-  const userName = userData?.name || 'there';
-  const userEmail = userData?.email || '';
-  const userPhone = userData?.phone || '';
+  // If user not found but order has user reference, try to populate (after order fetch)
+  if (!userData && orderData?.user) {
+    if (typeof orderData.user === 'object') {
+      userData = orderData.user;
+    } else if (mongoose.Types.ObjectId.isValid(orderData.user)) {
+      userData = await User.findById(orderData.user);
+    }
+  }
+  
+  // Try to get user info either from DB, order data, or from additionalData (fallback)
+  // Note: These are fallback values, ORDER_SUCCESS case will override with more specific logic
+  const userName =
+    userData?.name ||
+    orderData?.shipping?.fullName ||
+    additionalData?.customerName ||
+    additionalData?.customer_name ||
+    additionalData?.name ||
+    'there';
+
+  const userEmail =
+    userData?.email ||
+    orderData?.shipping?.email ||
+    additionalData?.customerEmail ||
+    additionalData?.customer_email ||
+    additionalData?.email ||
+    '';
+
+  const userPhone =
+    userData?.phone ||
+    orderData?.shipping?.phone ||
+    additionalData?.customerPhone ||
+    additionalData?.customer_phone ||
+    additionalData?.phone ||
+    '';
   
   // Process each event type
   switch (eventType) {
@@ -326,83 +453,239 @@ async function processEvent(eventType, eventData) {
     }
     
     case 'ORDER_SUCCESS': {
-      if (!userData || !orderData) {
-        return {
-          action: 'nothing',
-          message: '',
-          data: {}
-        };
+      // Be tolerant: even if user/order not fully loaded, still try to send emails
+      const safeOrder = orderData || {};
+      
+      // Get email from multiple sources (order shipping, user, additionalData)
+      const finalUserEmail = 
+        orderData?.shipping?.email || 
+        userData?.email || 
+        additionalData?.customerEmail || 
+        additionalData?.email || 
+        '';
+      
+      const finalUserName = 
+        orderData?.shipping?.fullName || 
+        userData?.name || 
+        additionalData?.customerName || 
+        additionalData?.name || 
+        'there';
+      
+      const finalUserPhone = 
+        orderData?.shipping?.phone || 
+        userData?.phone || 
+        additionalData?.customerPhone || 
+        additionalData?.phone || 
+        '';
+      
+      const finalOrderTotal = 
+        orderData?.pricing?.total || 
+        additionalData?.orderTotal || 
+        0;
+      
+      console.log('📦 ORDER_SUCCESS processing:', {
+        hasOrderData: !!orderData,
+        orderId: orderId,
+        orderDataOrderId: orderData?.orderId,
+        orderDataId: orderData?._id,
+        hasUserData: !!userData,
+        userId: userId,
+        finalUserEmail: finalUserEmail,
+        finalUserName: finalUserName,
+        orderTotal: finalOrderTotal,
+        shippingEmail: orderData?.shipping?.email,
+        shippingFullName: orderData?.shipping?.fullName,
+        additionalDataKeys: Object.keys(additionalData || {})
+      });
+      
+      // Check if repeat customer only when we have a user
+      let orderCount = 0;
+      let isRepeatCustomer = false;
+      if (userData) {
+        orderCount = await Order.countDocuments({ user: userData._id });
+        isRepeatCustomer = orderCount > 1;
       }
-      
-      // Check if repeat customer
-      const orderCount = await Order.countDocuments({ user: userData._id });
-      const isRepeatCustomer = orderCount > 1;
-      
-      // Generate invoice and send notifications
-      const actions = [];
-      const messages = [];
-      
-      // Always send invoice
-      actions.push('send_invoice');
-      
-      // Notify admin
-      actions.push('notify_admin');
-      
-      // If repeat customer, send VIP offer
-      if (isRepeatCustomer) {
-        const discountCode = generateDiscountCode(15, 'VIP');
-        // Save discount code to database
-        const savedCode = await saveDiscountCodeToDatabase(discountCode, 15, userData._id.toString(), 'VIP');
-        actions.push('send_vip_offer');
-        
+
+      // If we don't have a valid customer email, still return action but with store_to_mongo
+      // This ensures the workflow continues and can route to AI Agent for decision making
+      if (!finalUserEmail || typeof finalUserEmail !== 'string' || !finalUserEmail.includes('@')) {
+        console.log('⚠️ No valid customer email found, but still routing to AI Agent for decision');
         return {
-          action: actions.join(','), // Multiple actions
-          message: '', // AI will generate messages
+          action: 'store_to_mongo', // Changed from 'nothing' to allow routing
+          message: '',
           data: {
-            order_id: orderData.orderId,
-            customer_name: userName,
-            customer_email: userEmail,
-            customer_phone: userPhone,
-            order_total: orderData.pricing?.total || 0,
-            items: orderData.items.map(item => ({
+            order_id: safeOrder.orderId || orderId || additionalData?.orderIdString || '',
+            customer_name: finalUserName,
+            customer_email: finalUserEmail || '',
+            customer_phone: finalUserPhone || '',
+            order_total: finalOrderTotal,
+            items: (safeOrder.items || []).map(item => ({
               name: item.name,
               quantity: item.quantity,
               price: item.price,
               product_id: item.productId?._id || item.productId
             })),
-            discount_code: savedCode,
-            discount_percentage: 15,
-            is_repeat_customer: true,
+            is_repeat_customer: isRepeatCustomer,
             order_count: orderCount,
-            invoice_url: `/orders/${orderData._id}/invoice`,
+            invoice_url: `/orders/${safeOrder._id || orderId || ''}/invoice`,
             event_type: 'ORDER_SUCCESS',
-            context: 'repeat_customer_vip_offer'
+            context: isRepeatCustomer ? 'repeat_customer_vip_offer' : 'new_customer_order',
+            has_valid_email: false
           }
         };
       }
       
-      return {
-        action: actions.join(','),
+      console.log('✅ Valid customer email found, proceeding with email actions');
+
+      // IMPORTANT: Invoice must ALWAYS be sent for EVERY order (new or repeat customer)
+      // For repeat customers, we ALSO send VIP offer
+      // 
+      // Strategy for repeat customers:
+      // 1. Return action: 'send_invoice send_vip_offer' (space-separated)
+      //    - "Route Actions" switch uses "contains" operation
+      //    - This matches BOTH outputs: send_invoice (contains "send_invoice") AND send_vip_offer (contains "send_vip_offer")
+      //    - Both routes go to separate AI Agent instances
+      // 2. Set explicit data flags: send_invoice: true, send_vip_offer: true
+      //    - "Route Messages" switch checks both action AND data flags as backup
+      //    - This ensures both emails are sent even if action parsing fails
+      //
+      // Strategy for new customers:
+      // 1. Return action: 'send_invoice' only
+      // 2. Set send_invoice: true flag
+      //    - Invoice email will be sent, no VIP offer
+      
+      const baseInvoiceData = {
+        order_id: safeOrder.orderId || orderId || additionalData?.orderIdString || '',
+        customer_name: finalUserName,
+        customer_email: finalUserEmail,
+        customer_phone: finalUserPhone,
+        order_total: finalOrderTotal,
+        items: (safeOrder.items || []).map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          product_id: item.productId?._id || item.productId
+        })),
+        invoice_url: `/orders/${safeOrder._id || orderId || ''}/invoice`,
+        event_type: 'ORDER_SUCCESS',
+        has_valid_email: true,
+        // Always set send_invoice flag to ensure invoice is sent
+        send_invoice: true
+      };
+
+      // If repeat customer, also prepare VIP offer data
+      if (isRepeatCustomer) {
+        const discountCode = generateDiscountCode(15, 'VIP');
+        // Save discount code to database (best-effort)
+        const savedCode = await saveDiscountCodeToDatabase(
+          discountCode,
+          15,
+          userData?._id?.toString() || '',
+          'VIP'
+        );
+        
+        const repeatCustomerResponse = {
+          // CRITICAL: Space-separated actions ensure BOTH outputs match in "Route Actions" switch
+          // Format: 'send_invoice send_vip_offer'
+          // - Matches send_invoice output (contains "send_invoice") ✓
+          // - Matches send_vip_offer output (contains "send_vip_offer") ✓
+          // Both will route to separate AI Agent instances, then to respective email nodes
+          action: 'send_invoice send_vip_offer',
+          message: '', // AI will generate messages
+          data: {
+            // CRITICAL: Put routing flags FIRST so they're less likely to be filtered/modified
+            // "Route Messages" switch checks: $json.data.send_invoice === true (boolean)
+            // These MUST be at the top and MUST be boolean true
+            send_invoice: true,  // CRITICAL: Invoice always goes - Route Messages checks this FIRST
+            send_vip_offer: true, // CRITICAL: VIP offer for repeat customers - Route Messages checks this
+            
+            // Store action in data as backup (Route Messages can check data.action too)
+            action: 'send_invoice send_vip_offer', // Backup action in data object
+            original_action: 'send_invoice send_vip_offer',
+            action_backup: 'send_invoice send_vip_offer',
+            
+            // Spread base invoice data
+            ...baseInvoiceData,
+            
+            // VIP offer specific data
+            discount_code: savedCode,
+            discount_percentage: 15,
+            is_repeat_customer: true,
+            order_count: orderCount,
+            context: 'repeat_customer_vip_offer',
+            
+            // Additional backup flags (multiple formats to ensure routing works)
+            send_invoice_num: 1,  // Numeric backup
+            send_vip_offer_num: 1,
+            send_invoice_str: 'true',  // String backup
+            send_vip_offer_str: 'true',
+            
+            // Helper flags for workflow
+            requires_both_emails: true,
+            invoice_required: true,
+            vip_offer_required: true,
+            email_type: 'invoice_and_vip',
+            send_both: true
+          }
+        };
+        
+        console.log('📧✅ Repeat customer - Sending BOTH invoice AND VIP offer:', {
+          action: repeatCustomerResponse.action,
+          actionContainsInvoice: repeatCustomerResponse.action.includes('send_invoice'),
+          actionContainsVip: repeatCustomerResponse.action.includes('send_vip_offer'),
+          sendInvoiceFlag: repeatCustomerResponse.data.send_invoice,
+          sendVipOfferFlag: repeatCustomerResponse.data.send_vip_offer,
+          customerEmail: finalUserEmail,
+          orderId: baseInvoiceData.order_id,
+          orderTotal: finalOrderTotal
+        });
+        
+        return repeatCustomerResponse;
+      }
+      
+      const newCustomerResponse = {
+        action: 'send_invoice', // CRITICAL: Invoice must ALWAYS be sent for every order
         message: '', // AI will generate messages
         data: {
-          order_id: orderData.orderId,
-          customer_name: userName,
-          customer_email: userEmail,
-          customer_phone: userPhone,
-          order_total: orderData.pricing?.total || 0,
-          items: orderData.items.map(item => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price,
-            product_id: item.productId?._id || item.productId
-          })),
+          // CRITICAL: Put routing flag FIRST so it's less likely to be filtered/modified
+          // "Route Messages" switch checks: $json.data.send_invoice === true (boolean)
+          // This MUST be at the top and MUST be boolean true
+          send_invoice: true,  // CRITICAL: Invoice always goes - Route Messages checks this FIRST
+          
+          // Store action in data as backup (Route Messages can check data.action too)
+          action: 'send_invoice', // Backup action in data object
+          original_action: 'send_invoice',
+          action_backup: 'send_invoice',
+          
+          // Spread base invoice data
+          ...baseInvoiceData,
+          
+          // Customer info
           is_repeat_customer: false,
           order_count: orderCount,
-          invoice_url: `/orders/${orderData._id}/invoice`,
-          event_type: 'ORDER_SUCCESS',
-          context: 'new_customer_order'
+          context: 'new_customer_order',
+          
+          // Additional backup flags (multiple formats to ensure routing works)
+          send_invoice_num: 1,  // Numeric backup
+          send_invoice_str: 'true',  // String backup
+          
+          // Helper flags
+          invoice_required: true,
+          email_type: 'invoice_only',
+          send_vip_offer: false // No VIP offer for new customers
         }
       };
+      
+      console.log('📧✅ New customer - Sending invoice only (no VIP offer):', {
+        action: newCustomerResponse.action,
+        sendInvoiceFlag: newCustomerResponse.data.send_invoice,
+        sendVipOfferFlag: newCustomerResponse.data.send_vip_offer,
+        customerEmail: finalUserEmail,
+        orderId: baseInvoiceData.order_id,
+        orderTotal: finalOrderTotal
+      });
+      
+      return newCustomerResponse;
     }
     
     case 'ORDER_DELIVERED': {
@@ -677,7 +960,138 @@ export async function POST(request) {
     await dbConnect();
     
     const body = await request.json();
-    const { event, data } = body;
+    
+    // Log raw body for debugging
+    console.log('📥 Raw request body received:', {
+      bodyKeys: Object.keys(body),
+      bodyType: typeof body,
+      body: JSON.stringify(body, null, 2).substring(0, 1000) // First 1000 chars
+    });
+    
+    // Handle n8n webhook wrapper format - n8n wraps the actual payload in body.body
+    // When called from n8n test mode or webhook, the structure is:
+    // { headers: {...}, params: {...}, query: {...}, body: { event, userId, ... }, webhookUrl: "...", executionMode: "..." }
+    const actualPayload = body.body && typeof body.body === 'object' && !body.body.body 
+      ? body.body  // n8n webhook wrapper - actual data is in body.body
+      : body;      // Direct call - data is at root level
+    
+    const { event, data } = actualPayload;
+    
+    // Handle multiple formats:
+    // 1. { event, data: {...} } - nested format from n8n
+    // 2. { event, userId, orderId, ... } - flat format
+    // 3. Direct fields at root level
+    const rawData = data || actualPayload;
+    
+    // If we have data nested, use it; otherwise check if main fields are at root level
+    // This handles cases where n8n sends { event, data: { userId, ... } } or { event, userId, ... }
+    
+    // Normalize data keys (handle both camelCase and snake_case)
+    // Also filter out empty strings and convert to null
+    const normalizeValue = (value) => {
+      if (value === null || value === undefined || value === '') return null;
+      if (value === 'N/A' || value === 'null' || value === 'undefined') return null;
+      // Convert string 'null' to actual null
+      if (typeof value === 'string' && value.toLowerCase() === 'null') return null;
+      // If it's a string that looks like "null", convert it
+      if (typeof value === 'string' && value.trim() === 'null') return null;
+      return value;
+    };
+    
+    // Extract additionalData first - check multiple possible locations
+    // Make sure we preserve the full additionalData object even if it's nested
+    let extractedAdditionalData = {};
+    
+    if (rawData?.additionalData && typeof rawData.additionalData === 'object') {
+      extractedAdditionalData = { ...rawData.additionalData };
+    } else if (rawData?.additional_data && typeof rawData.additional_data === 'object') {
+      extractedAdditionalData = { ...rawData.additional_data };
+    } else if (actualPayload?.additionalData && typeof actualPayload.additionalData === 'object') {
+      extractedAdditionalData = { ...actualPayload.additionalData };
+    } else if (actualPayload?.additional_data && typeof actualPayload.additional_data === 'object') {
+      extractedAdditionalData = { ...actualPayload.additional_data };
+    }
+    
+    // Build normalized data with priority: main fields > additionalData fields
+    // Also check actualPayload directly in case data is at root level
+    const normalizedData = {
+      userId: normalizeValue(
+        rawData?.userId || 
+        rawData?.user_id || 
+        actualPayload?.userId ||
+        actualPayload?.user_id ||
+        extractedAdditionalData?.userId || 
+        extractedAdditionalData?.user_id
+      ),
+      orderId: normalizeValue(
+        rawData?.orderId || 
+        rawData?.order_id || 
+        actualPayload?.orderId ||
+        actualPayload?.order_id ||
+        extractedAdditionalData?.orderId || 
+        extractedAdditionalData?.order_id ||
+        extractedAdditionalData?.orderIdString
+      ),
+      productId: normalizeValue(
+        rawData?.productId || 
+        rawData?.product_id || 
+        actualPayload?.productId ||
+        actualPayload?.product_id ||
+        extractedAdditionalData?.productId || 
+        extractedAdditionalData?.product_id
+      ),
+      additionalData: extractedAdditionalData
+    };
+    
+    // Merge any other fields from rawData into additionalData for fallback
+    const fieldsToIgnore = ['userId', 'user_id', 'orderId', 'order_id', 'productId', 'product_id', 'additionalData', 'additional_data', 'event', 'data'];
+    Object.keys(rawData || {}).forEach(key => {
+      if (!fieldsToIgnore.includes(key)) {
+        if (normalizedData.additionalData[key] === undefined || normalizedData.additionalData[key] === null) {
+          const value = rawData[key];
+          if (value !== null && value !== undefined && value !== '') {
+            normalizedData.additionalData[key] = value;
+          }
+        }
+      }
+    });
+    
+    // Also merge from actualPayload if different from rawData
+    if (data && actualPayload !== rawData) {
+      Object.keys(actualPayload || {}).forEach(key => {
+        if (!fieldsToIgnore.includes(key)) {
+          if (normalizedData.additionalData[key] === undefined || normalizedData.additionalData[key] === null) {
+            const value = actualPayload[key];
+            if (value !== null && value !== undefined && value !== '') {
+              normalizedData.additionalData[key] = value;
+            }
+          }
+        }
+      });
+    }
+    
+    // Clean up additionalData - remove null/undefined/empty values
+    Object.keys(normalizedData.additionalData).forEach(key => {
+      const value = normalizedData.additionalData[key];
+      if (value === null || value === undefined || value === '' || value === 'null' || value === 'undefined') {
+        delete normalizedData.additionalData[key];
+      }
+    });
+    
+    console.log('📥 Automation Brain API called:', {
+      event,
+      hasData: !!rawData,
+      rawDataKeys: rawData ? Object.keys(rawData) : [],
+      actualPayloadKeys: Object.keys(actualPayload || {}),
+      isN8nWrapper: !!body.body && body.body !== body,
+      hasNestedData: !!data,
+      normalizedOrderId: normalizedData.orderId || 'N/A',
+      normalizedUserId: normalizedData.userId || 'N/A',
+      normalizedProductId: normalizedData.productId || 'N/A',
+      hasAdditionalData: !!normalizedData.additionalData && Object.keys(normalizedData.additionalData).length > 0,
+      additionalDataKeys: normalizedData.additionalData ? Object.keys(normalizedData.additionalData) : [],
+      normalizedData: JSON.stringify(normalizedData, null, 2)
+    });
     
     if (!event) {
       return NextResponse.json(
@@ -709,8 +1123,8 @@ export async function POST(request) {
       );
     }
     
-    // Process the event
-    const result = await processEvent(event, data || {});
+    // Process the event with normalized data
+    const result = await processEvent(event, normalizedData);
     
     // Return the automation decision
     return NextResponse.json(result, { status: 200 });

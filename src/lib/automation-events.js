@@ -18,17 +18,43 @@ export async function sendAutomationEvent(event, data = {}) {
     return { success: false, error: 'N8N_WEBHOOK_URL not configured' };
   }
 
+  // Structure payload to match n8n workflow expectations
+  // n8n workflow expects flat structure: { event, userId, orderId, productId, additionalData }
+  // Ensure all values are properly set (not undefined, convert null to empty string for n8n)
   const payload = {
-    event,
-    ...data
+    event: event || '',
+    userId: data.userId || data.user_id || null,
+    orderId: data.orderId || data.order_id || null,
+    productId: data.productId || data.product_id || null,
+    // Merge additionalData with other data fields
+    additionalData: {
+      ...(data.additionalData || {}),
+      // Include any other data fields that might be passed
+      ...Object.fromEntries(
+        Object.entries(data).filter(([key]) => 
+          !['userId', 'user_id', 'orderId', 'order_id', 'productId', 'product_id', 'additionalData', 'additional_data'].includes(key)
+        )
+      )
+    }
   };
+
+  // Remove null values from additionalData if they exist
+  Object.keys(payload.additionalData).forEach(key => {
+    if (payload.additionalData[key] === null || payload.additionalData[key] === undefined) {
+      delete payload.additionalData[key];
+    }
+  });
 
   console.log('🚀 Sending automation event to n8n:', {
     url: N8N_WEBHOOK_URL,
     event,
-    hasUserId: !!data.userId,
-    hasOrderId: !!data.orderId,
-    hasProductId: !!data.productId
+    hasUserId: !!payload.userId,
+    hasOrderId: !!payload.orderId,
+    hasProductId: !!payload.productId,
+    hasAdditionalData: !!payload.additionalData && Object.keys(payload.additionalData).length > 0,
+    additionalDataKeys: payload.additionalData ? Object.keys(payload.additionalData) : [],
+    payloadKeys: Object.keys(payload),
+    payload: JSON.stringify(payload, null, 2)
   });
 
   try {
@@ -201,21 +227,6 @@ export async function trackReturnRequest(orderId, userId, reason = '', items = [
       reason,
       items,
       returnRequestId: `RET-${Date.now()}`
-    }
-  });
-}
-
-/**
- * Affiliate Order Event
- */
-export async function trackAffiliateOrder(orderId, affiliateId, commission = 0, commissionPercentage = 0) {
-  return sendAutomationEvent('AFFILIATE_ORDER', {
-    orderId,
-    additionalData: {
-      affiliateId,
-      commission,
-      commissionPercentage,
-      payoutDate: new Date().toISOString()
     }
   });
 }

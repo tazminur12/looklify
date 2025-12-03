@@ -1,0 +1,1233 @@
+{
+  "name": "Looklify Automation Brain Workflow Update",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "looklify-automation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b54c42c2-df9b-4577-a560-8ac88ae1844f",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1376,
+        256
+      ],
+      "webhookId": "looklify-automation-webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "00deb565-3e0f-42e7-8900-43223fcac8d1",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/automation/brain",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ Array.isArray($json) ? $json[0] : $json }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "99a37a79-5cec-4bce-a21c-441852c73f01",
+      "name": "Call Automation Brain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1152,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ Array.isArray($json) ? $json[0]?.action : $json.action }}",
+                    "rightValue": "send_email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "f95bbbab-6ed5-41e9-be89-abe2aa761037"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "send_email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ Array.isArray($json) ? $json[0]?.action : $json.action }}",
+                    "rightValue": "send_invoice",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "61d421a1-8ee4-4b75-84ba-3ea819afa237"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "send_invoice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ Array.isArray($json) ? $json[0]?.action : $json.action }}",
+                    "rightValue": "send_vip_offer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "9824073c-7315-44a6-9fbe-899350fdf46c"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "send_vip_offer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ Array.isArray($json) ? $json[0]?.action : $json.action }}",
+                    "rightValue": "recommend_products",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "318cbfbb-9485-474c-bae1-a8476d306a22"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "recommend_products"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ Array.isArray($json) ? $json[0]?.action : $json.action }}",
+                    "rightValue": "low_stock_alert",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "97d0296f-48f4-4c6a-9c3f-ac40baf022e9"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "low_stock_alert"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ Array.isArray($json) ? $json[0]?.action : $json.action }}",
+                    "rightValue": "send_restock_alert",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "f1e15fa7-38fb-445b-a1d5-d061d5ca8fc6"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "send_restock_alert"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ Array.isArray($json) ? $json[0]?.action : $json.action }}",
+                    "rightValue": "start_return_process",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "5e3ddb8b-701f-49a8-b002-640a277896c9"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "start_return_process"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ Array.isArray($json) ? $json[0]?.action : $json.action }}",
+                    "rightValue": "trigger_cart_recovery",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "0153c8e6-eea6-4480-a417-e5f6fe019496"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "trigger_cart_recovery"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ Array.isArray($json) ? $json[0]?.action : $json.action }}",
+                    "rightValue": "store_to_mongo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "store_to_mongo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1731618a-9ea5-410c-8123-8e0d1ee072d3",
+      "name": "Route Actions",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -864,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "parse-ai-response",
+              "name": "aiGenerated",
+              "value": "={{ $json.output ? JSON.parse($json.output) : {} }}",
+              "type": "object"
+            },
+            {
+              "id": "get-email-message",
+              "name": "emailMessage",
+              "value": "={{ $json.output ? (JSON.parse($json.output).email?.message || '') : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "get-email-subject",
+              "name": "emailSubject",
+              "value": "={{ $json.output ? (JSON.parse($json.output).email?.subject || '') : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "get-whatsapp-message",
+              "name": "whatsappMessage",
+              "value": "={{ $json.output ? (JSON.parse($json.output).whatsapp?.message || '') : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "preserve-action",
+              "name": "action",
+              "value": "={{ Array.isArray($('Call Automation Brain').item.json) ? $('Call Automation Brain').item.json[0]?.action : $('Call Automation Brain').item.json.action }}",
+              "type": "string"
+            },
+            {
+              "id": "preserve-data",
+              "name": "data",
+              "value": "={{ Array.isArray($('Call Automation Brain').item.json) ? $('Call Automation Brain').item.json[0]?.data : $('Call Automation Brain').item.json.data }}",
+              "type": "object"
+            },
+            {
+              "id": "preserve-message",
+              "name": "message",
+              "value": "={{ Array.isArray($('Call Automation Brain').item.json) ? $('Call Automation Brain').item.json[0]?.message : $('Call Automation Brain').item.json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "46ed8882-74b0-47a9-ab69-f73acc2dc5df",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -256,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "send_email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "2f1b4fe2-5c43-46ef-8a9e-41d8213f9770"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "send_email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "send_vip_offer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "54d7c5de-d6fb-4939-95eb-366346887b31"
+                  },
+                  {
+                    "leftValue": "={{ Boolean($json.data?.send_vip_offer) }}",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    },
+                    "id": "vip-flag-check"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "send_vip_offer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "send_invoice",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "a8d301a4-cb6d-4baf-80bf-1ea4d33ef128"
+                  },
+                  {
+                    "leftValue": "={{ Boolean($json.data?.send_invoice) }}",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    },
+                    "id": "invoice-flag-check"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "send_invoice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "recommend_products",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "7eb19617-197f-4b48-af0d-9beb50505dae"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "recommend_products"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "low_stock_alert",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "eacff36a-e57e-4b2e-8a9b-8c06cb019d68"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "low_stock_alert"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "send_restock_alert",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "50c7d69c-7c72-4dc6-8b0d-bd684200fa83"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "send_restock_alert"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "start_return_process",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "86f633fd-5ea7-4a74-982b-2c9553bfe2e0"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "start_return_process"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "trigger_cart_recovery",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "5d1541b0-092c-4d40-ab5c-eab7a3576906"
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "trigger_cart_recovery"
+            }
+          ]
+        },
+        "options": {
+          "convertTypes": true
+        }
+      },
+      "id": "cccf36b7-4010-4baf-b443-e4e1fcc0bb3c",
+      "name": "Route Messages",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        32,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.data.customer_email }}",
+        "subject": "={{ $json.emailSubject || $json.data.subject || ($json.data.welcome_message ? 'Welcome to Looklify - Your Skincare Journey Begins! 🌟' : 'Looklify - Your Skincare Journey') }}",
+        "message": "={{ $json.emailMessage || ($json.data.welcome_message ? '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Welcome to Looklify</title></head><body style=\"margin: 0; padding: 0; font-family: \\'Segoe UI\\', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;\"><table role=\"presentation\" style=\"width: 100%; border-collapse: collapse; background-color: #f5f5f5; padding: 20px;\"><tr><td align=\"center\" style=\"padding: 20px 0;\"><table role=\"presentation\" style=\"width: 600px; max-width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;\"><tr><td style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;\"><h1 style=\"margin: 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: 1px;\">LOOKLIFY</h1><p style=\"margin: 10px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;\">Your Beauty, Our Passion</p></td></tr><tr><td style=\"padding: 40px 30px;\"><h2 style=\"margin: 0 0 20px 0; color: #333333; font-size: 28px; font-weight: 600;\">Welcome, ' + ($json.data.customer_name || 'there') + '! 👋</h2><p style=\"margin: 0 0 20px 0; color: #555555; font-size: 16px; line-height: 1.6;\">We\\'re absolutely thrilled to have you join the Looklify family! Your journey to radiant, healthy skin starts here.</p><p style=\"margin: 0 0 30px 0; color: #555555; font-size: 16px; line-height: 1.6;\">As a special welcome gift, we\\'ve created an exclusive discount code just for you. Use it on your first purchase and save on premium skincare products!</p><div style=\"background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 12px; text-align: center; margin: 30px 0;\"><p style=\"margin: 0 0 10px 0; color: #ffffff; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;\">Your Exclusive Welcome Code</p><div style=\"background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 15px 0; border: 3px dashed #ffffff;\"><p style=\"margin: 0; font-size: 36px; font-weight: 700; color: #f5576c; letter-spacing: 4px; font-family: \\'Courier New\\', monospace;\">' + ($json.data.discount_code || 'N/A') + '</p></div><p style=\"margin: 15px 0 0 0; color: #ffffff; font-size: 20px; font-weight: 600;\">' + ($json.data.discount_percentage || 10) + '% OFF</p><p style=\"margin: 10px 0 0 0; color: #ffffff; font-size: 14px; opacity: 0.9;\">Valid for 30 days | One-time use</p></div><div style=\"text-align: center; margin: 35px 0;\"><a href=\"https://looklify.com/shop\" style=\"display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);\">Start Shopping Now →</a></div><div style=\"margin: 40px 0 30px 0; padding: 25px; background-color: #f8f9fa; border-radius: 8px;\"><h3 style=\"margin: 0 0 20px 0; color: #333333; font-size: 20px; font-weight: 600;\">Why Choose Looklify?</h3><ul style=\"margin: 0; padding-left: 20px; color: #555555; font-size: 15px; line-height: 1.8;\"><li style=\"margin-bottom: 10px;\">✨ Premium quality skincare products</li><li style=\"margin-bottom: 10px;\">🚚 Fast & reliable delivery</li><li style=\"margin-bottom: 10px;\">💯 Authentic products guarantee</li><li style=\"margin-bottom: 10px;\">🎁 Exclusive offers & discounts</li><li>💬 Expert skincare advice & support</li></ul></div><p style=\"margin: 30px 0 0 0; color: #555555; font-size: 16px; line-height: 1.6;\">If you have any questions or need help choosing the right products for your skin, our team is here to assist you. Just reply to this email or contact us anytime!</p><p style=\"margin: 20px 0 0 0; color: #555555; font-size: 16px; line-height: 1.6;\">Welcome aboard! We can\\'t wait to be part of your skincare journey.</p><p style=\"margin: 30px 0 0 0; color: #555555; font-size: 16px; line-height: 1.6; font-weight: 600;\">With love,<br>The Looklify Team 💜</p></td></tr><tr><td style=\"background-color: #2c3e50; padding: 30px; text-align: center;\"><p style=\"margin: 0 0 10px 0; color: #ffffff; font-size: 14px;\"><strong>LOOKLIFY</strong> - Your Trusted Skincare Partner</p><p style=\"margin: 0 0 15px 0; color: #bdc3c7; font-size: 12px;\">© 2025 Looklify. All rights reserved.</p><div style=\"margin: 20px 0 0 0;\"><a href=\"https://looklify.com\" style=\"color: #3498db; text-decoration: none; margin: 0 10px; font-size: 12px;\">Website</a><span style=\"color: #7f8c8d;\">|</span><a href=\"https://looklify.com/contact\" style=\"color: #3498db; text-decoration: none; margin: 0 10px; font-size: 12px;\">Contact Us</a><span style=\"color: #7f8c8d;\">|</span><a href=\"https://looklify.com/privacy-policy\" style=\"color: #3498db; text-decoration: none; margin: 0 10px; font-size: 12px;\">Privacy Policy</a></div></td></tr></table></td></tr></table></body></html>' : $json.message) }}",
+        "options": {}
+      },
+      "id": "9f5b924b-4c21-48af-935d-96345dce0b91",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        -112
+      ],
+      "webhookId": "e1561fae-a1c1-422f-801d-2650693cf571",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YvGRbuWkjJxC304b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "946172431904295",
+        "recipientPhoneNumber": "={{ $json.data.customer_phone }}",
+        "textBody": "={{ $json.whatsappMessage || $json.message || 'Thank you for your interest in Looklify!' }}",
+        "additionalFields": {}
+      },
+      "id": "1199d515-6d95-43ef-abab-00dfa46fefe5",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        192,
+        64
+      ],
+      "webhookId": "9ced538e-e4eb-442d-839f-d5440a28c4ea",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "A5BrCdD4SeGHqn0W",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "946172431904295",
+        "recipientPhoneNumber": "={{ $json.data.customer_phone }}",
+        "textBody": "={{ $json.whatsappMessage || $json.message || 'Hi! We noticed you left items in your cart. Complete your purchase now and get a special discount!' }}",
+        "additionalFields": {}
+      },
+      "id": "ef26724d-18cf-4341-a3a3-29c57e5b9059",
+      "name": "Cart Recovery WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        352,
+        144
+      ],
+      "webhookId": "5886690a-4def-43a0-9805-30e1c47ca80d",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "A5BrCdD4SeGHqn0W",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.data.customer_email }}",
+        "subject": "={{ $json.emailSubject || 'VIP Offer - Exclusive Discount for You! 🎁' }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\n<div style='background-color: #f0f0f0; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0;'>\n  <h2 style='color: #333; margin-bottom: 10px;'>🎁 Your Exclusive VIP Discount Code</h2>\n  <div style='background-color: #fff; padding: 15px; border: 2px dashed #ff6b6b; border-radius: 8px; margin: 15px 0;'>\n    <p style='font-size: 32px; font-weight: bold; color: #ff6b6b; letter-spacing: 3px; margin: 0;'>{{ $json.data.discount_code || 'N/A' }}</p>\n  </div>\n  <p style='font-size: 18px; color: #555; margin: 10px 0;'><strong>{{ $json.data.discount_percentage || 15 }}% OFF</strong> on your next purchase!</p>\n  <p style='color: #666; font-size: 14px; margin-top: 10px;'>Copy this code and use it at checkout</p>\n</div>",
+        "options": {}
+      },
+      "id": "bd4aa3f5-e06d-4e76-8de5-4dfa27b32f95",
+      "name": "Send VIP Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        288
+      ],
+      "webhookId": "948ddbd1-1bf3-4535-867b-e4c9495fc8ab",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YvGRbuWkjJxC304b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.data.customer_email }}",
+        "subject": "={{ $json.emailSubject || 'Invoice for Order ' + $json.data.order_id }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\n<div style='background-color: #f0f0f0; padding: 25px; border-radius: 10px; text-align: center; margin: 20px 0;'>\n  <h2 style='color: #333; margin-bottom: 20px; font-size: 24px;'>📄 Your Order Invoice</h2>\n  <div style='background-color: #fff; padding: 20px; border-radius: 8px; margin: 15px 0; text-align: left;'>\n    <div style='margin-bottom: 15px;'>\n      <p style='color: #666; font-size: 14px; margin: 0 0 5px 0;'>Order ID</p>\n      <p style='font-size: 20px; font-weight: bold; color: #333; margin: 0; letter-spacing: 1px;'>{{ $json.data.order_id }}</p>\n    </div>\n    <div style='margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;'>\n      <p style='color: #666; font-size: 14px; margin: 0 0 5px 0;'>Total Amount</p>\n      <p style='font-size: 28px; font-weight: bold; color: #ff6b6b; margin: 0;'>৳{{ $json.data.order_total }}</p>\n    </div>\n  </div>\n  <a href='{{ $json.data.invoice_url }}' style='display: inline-block; background-color: #ff6b6b; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; margin-top: 15px;'>View Full Invoice</a>\n  <p style='color: #666; font-size: 14px; margin-top: 20px;'>Thank you for your purchase!</p>\n</div>",
+        "options": {}
+      },
+      "id": "9591198f-a530-483a-a312-6b7bce0aea1c",
+      "name": "Send Invoice Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        368,
+        416
+      ],
+      "webhookId": "0e6e37d0-3d2e-41d2-9dfb-808aa91e646d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YvGRbuWkjJxC304b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.data.customer_email }}",
+        "subject": "={{ $json.emailSubject || 'Product Recommendations for You ✨' }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nRecommended Products:\n{{ $json.data.recommendations.map(r => `- ${r.name} (৳${r.price})`).join('\\n') }}",
+        "options": {}
+      },
+      "id": "b32957fa-a40d-4ceb-a199-7b18fe4fba9c",
+      "name": "Send Recommendations Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        736
+      ],
+      "webhookId": "8a554a2c-b3ba-4b0b-bdc9-e947ea36dc4d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YvGRbuWkjJxC304b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.data.customer_email }}",
+        "subject": "={{ $json.emailSubject || '⚠️ Low Stock Alert: ' + ($json.data.product_name || '') }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nProduct: {{ $json.data.product_name }}\nCurrent Stock: {{ $json.data.current_stock }}\nThreshold: {{ $json.data.low_stock_threshold }}\nSKU: {{ $json.data.sku }}",
+        "options": {}
+      },
+      "id": "8efe5f16-9f4f-4c70-a09b-b135a7c892e7",
+      "name": "Low Stock Alert Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        896
+      ],
+      "webhookId": "d3443587-3abb-4772-8422-629e6877e8e3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YvGRbuWkjJxC304b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.data.customer_email }}",
+        "subject": "={{ $json.emailSubject || '🎉 ' + ($json.data.product_name || '') + ' is Back in Stock!' }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nProduct: {{ $json.data.product_name }}\nStock: {{ $json.data.new_stock }} units\n\nView Product: {{ $json.data.product_url }}",
+        "options": {}
+      },
+      "id": "4949f4f9-91d8-4cc2-a929-4004b0aef978",
+      "name": "Restock Alert Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        1104
+      ],
+      "webhookId": "19e65011-2c5f-45d9-bf51-fcf85fa86ae3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YvGRbuWkjJxC304b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.data.customer_email }}",
+        "subject": "={{ $json.emailSubject || 'Return Request Received - Order ' + ($json.data.order_id || '') }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nReturn Request ID: {{ $json.data.return_request_id }}\nOrder ID: {{ $json.data.order_id }}\nReason: {{ $json.data.return_reason }}",
+        "options": {}
+      },
+      "id": "c586c411-c17b-436c-85f6-97b234e04556",
+      "name": "Return Process Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        1264
+      ],
+      "webhookId": "8ec2bbd8-4bdf-4a2d-ae9e-550b60372de9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YvGRbuWkjJxC304b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "options": {}
+      },
+      "id": "ffbba88a-5439-4956-a87d-02e01861f325",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        944,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1TW4WIteE46LHEoWTQrcFRsePKD0ktMDvpzQRlidhA1Q",
+          "mode": "list",
+          "cachedResultName": "User List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TW4WIteE46LHEoWTQrcFRsePKD0ktMDvpzQRlidhA1Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toISO() || '' }}",
+            "Event": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.event || (Array.isArray($json) ? $json[0]?.data : $json.data)?.event_type || 'N/A' }}",
+            "Action": "={{ Array.isArray($json) ? $json[0]?.action : $json.action || 'N/A' }}",
+            "User ID": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.user_id || (Array.isArray($json) ? $json[0]?.data : $json.data)?.userId || 'N/A' }}",
+            "Customer Name": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.customer_name || 'N/A' }}",
+            "Customer Email": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.customer_email || 'N/A' }}",
+            "Customer Phone": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.customer_phone || 'N/A' }}",
+            "Product ID": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.product_id || (Array.isArray($json) ? $json[0]?.data : $json.data)?.productId || 'N/A' }}",
+            "Product Name": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.product_name || 'N/A' }}",
+            "Order ID": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.order_id || (Array.isArray($json) ? $json[0]?.data : $json.data)?.orderId || 'N/A' }}",
+            "Order Total": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.order_total || (Array.isArray($json) ? $json[0]?.data : $json.data)?.cart_value || 0 }}",
+            "Discount Code": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.discount_code || 'N/A' }}",
+            "Discount Percentage": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.discount_percentage || 0 }}",
+            "Context": "={{ (Array.isArray($json) ? $json[0]?.data : $json.data)?.context || 'N/A' }}",
+            "Message": "={{ Array.isArray($json) ? $json[0]?.message : $json.message || 'N/A' }}",
+            "Additional Data": "={{ JSON.stringify((Array.isArray($json) ? $json[0]?.data : $json.data)?.additionalData || {}) }}"
+          }
+        },
+        "options": {
+          "cellFormat": "USER_ENTERED",
+          "useAppend": true
+        }
+      },
+      "id": "45c9b7f8-c5d4-4163-83d2-390c5d4f2ff5",
+      "name": "Save User to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -848,
+        608
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rlQavmvH0RXBB4Ey",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI assistant for Looklify, a premium skincare brand in Bangladesh. Your task is to generate personalized messages in Bengali-English mix (70% Bengali, 30% English) for customer communications.\n\n**Brand Voice:**\n- Warm, trustworthy, and skincare-focused\n- Professional yet friendly\n- Use emojis sparingly but effectively\n- Focus on customer care and product benefits\n\n**Message Format:**\nYou must return a JSON object with this exact structure:\n{\n  \"email\": {\n    \"subject\": \"Email subject (max 60 characters, compelling)\",\n    \"message\": \"Email body (150-300 words, HTML formatted)\"\n  },\n  \"whatsapp\": {\n    \"message\": \"WhatsApp message (100-200 words, plain text, no HTML)\"\n  }\n}\n\n**Context:**\nAction: {{ Array.isArray($('Call Automation Brain').item.json) ? $('Call Automation Brain').item.json[0]?.action : $('Call Automation Brain').item.json.action || $json.action }}\nCustomer Name: {{ (Array.isArray($('Call Automation Brain').item.json) ? $('Call Automation Brain').item.json[0]?.data : $('Call Automation Brain').item.json.data)?.customer_name || $json.data?.customer_name || 'Valued Customer' }}\nEvent Type: {{ (Array.isArray($('Call Automation Brain').item.json) ? $('Call Automation Brain').item.json[0]?.data : $('Call Automation Brain').item.json.data)?.event_type || $json.data?.event_type || 'N/A' }}\nContext: {{ (Array.isArray($('Call Automation Brain').item.json) ? $('Call Automation Brain').item.json[0]?.data : $('Call Automation Brain').item.json.data)?.context || $json.data?.context || 'general' }}\n\n**Data Available:**\n{{ JSON.stringify((Array.isArray($('Call Automation Brain').item.json) ? $('Call Automation Brain').item.json[0]?.data : $('Call Automation Brain').item.json.data) || $json.data || {}, null, 2) }}\n\n**Instructions:**\n1. Generate personalized messages based on the action and context\n2. If discount_code exists, prominently display it in the email\n3. Use Bengali for main content, English for technical terms and brand names\n4. Keep WhatsApp messages shorter and more casual\n5. Include relevant product/order details naturally\n6. End with a clear call-to-action\n\nGenerate the JSON response now:",
+        "options": {
+          "systemMessage": "You are a helpful assistant for Looklify skincare brand. Always respond with valid JSON only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -640,
+        96
+      ],
+      "id": "72c370bc-421a-417c-b4dd-b201daa9a496",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        480
+      ],
+      "id": "cf1288de-8e8c-4102-ac0d-2114a5cd1806",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BahVSUsFjIHPp0Lb",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Call Automation Brain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Automation Brain": {
+      "main": [
+        [
+          {
+            "node": "Route Actions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save User to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Actions": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Route Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Messages": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send VIP Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Invoice Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Recommendations Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Low Stock Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Restock Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Process Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cart Recovery WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cart Recovery WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send VIP Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Invoice Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Recommendations Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Low Stock Alert Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restock Alert Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Process Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save User to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "8240e5f8-0e16-4df2-b6bb-5f6eba3ca4e3",
+  "meta": {
+    "instanceId": "87bddbd31c54a1394ef0ac5cf03c4f5c99c98810f23d92d5a460e8b6502d0bc8"
+  },
+  "id": "8D0iFbPhj8m89uw9",
+  "tags": []
+}

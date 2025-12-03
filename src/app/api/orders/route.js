@@ -265,17 +265,42 @@ export async function POST(request) {
       .populate('promoCode', 'code name type value')
       .lean();
 
-    // Trigger automation event for order success
-    if (session?.user?.id) {
-      try {
-        await sendAutomationEvent('ORDER_SUCCESS', {
-          orderId: order._id.toString(),
-          userId: session.user.id
-        });
-      } catch (error) {
-        // Don't fail the order if automation fails
-        console.error('Failed to trigger automation event:', error);
-      }
+    // Trigger automation event for order success (for both logged-in and guest users)
+    try {
+      await sendAutomationEvent('ORDER_SUCCESS', {
+        orderId: order._id.toString(),
+        userId: session?.user?.id || null,
+        additionalData: {
+          orderId: order._id.toString(), // MongoDB ObjectId
+          orderIdString: order.orderId, // Human-readable order ID (ORD-...)
+          userId: session?.user?.id || null,
+          orderTotal: order.pricing?.total || 0,
+          customerEmail: userEmail,
+          customerName: shipping.fullName,
+          customerPhone: shipping.phone,
+          shippingAddress: shipping.address,
+          shippingCity: shippingCity,
+          shippingLocation: shipping.location,
+          orderStatus: order.status,
+          paymentMethod: payment.method,
+          paymentStatus: payment.status,
+          items: order.items.map(item => ({
+            productId: item.productId?.toString() || item.productId,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            sku: item.sku
+          })),
+          promoCode: promoCode || null,
+          subtotal: order.pricing?.subtotal || 0,
+          tax: order.pricing?.tax || 0,
+          shippingCost: order.pricing?.shipping || 0,
+          discount: order.pricing?.discount || 0
+        }
+      });
+    } catch (error) {
+      // Don't fail the order if automation fails
+      console.error('Failed to trigger automation event:', error);
     }
 
     return NextResponse.json({

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import dbConnect from '../../../../lib/db';
 import User from '../../../../models/User';
+import { trackNewUser } from '../../../../lib/automation-events';
 
 export async function POST(request) {
   try {
@@ -48,6 +49,12 @@ export async function POST(request) {
     });
 
     await user.save();
+
+    // Trigger welcome message for new user (non-blocking)
+    trackNewUser(user._id.toString()).catch(error => {
+      console.error('Error sending welcome message:', error);
+      // Don't fail registration if welcome message fails
+    });
 
     // Return success response (without password)
     return NextResponse.json(

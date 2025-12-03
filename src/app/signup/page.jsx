@@ -127,7 +127,7 @@ export default function SignupPage() {
       if (result?.error) {
         setErrors({ general: 'Registration successful but login failed. Please try logging in manually.' });
       } else {
-        router.push('/dashboard');
+        router.push('/');
       }
     } catch (error) {
       console.error('Signup error:', error);
@@ -139,7 +139,7 @@ export default function SignupPage() {
 
   const handleSocialLogin = async (provider) => {
     try {
-      await signIn(provider, { callbackUrl: '/dashboard' });
+      await signIn(provider, { callbackUrl: '/' });
     } catch (error) {
       console.error('Social login error:', error);
     }
