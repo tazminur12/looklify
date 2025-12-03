@@ -126,6 +126,29 @@ export async function POST(request) {
       );
     }
 
+    // Validate required fields from checkout page
+    // Checkout page only sends: fullName, phone, address, location
+    if (!shipping.fullName || !shipping.phone || !shipping.address || !shipping.location) {
+      return NextResponse.json(
+        { error: 'Missing required shipping fields: fullName, phone, address, and location are required' },
+        { status: 400 }
+      );
+    }
+
+    // Auto-fill required fields that checkout page doesn't send:
+    // 1. Email - use from shipping (checkout form) or session if logged in
+    const userEmail = shipping.email || session?.user?.email;
+    
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: 'Email is required. Please provide email in shipping information.' },
+        { status: 400 }
+      );
+    }
+
+    // 2. City - infer from location (insideDhaka = "Dhaka", outsideDhaka = "Outside Dhaka")
+    const shippingCity = shipping.city || (shipping.location === 'insideDhaka' ? 'Dhaka' : 'Outside Dhaka');
+
     // Validate stock availability
     for (const item of items) {
       const product = await Product.findById(item.productId);
@@ -206,11 +229,10 @@ export async function POST(request) {
       })),
       shipping: {
         fullName: shipping.fullName,
-        email: shipping.email,
+        email: userEmail,
         phone: shipping.phone,
         address: shipping.address,
-        city: shipping.city,
-        postalCode: shipping.postalCode,
+        city: shippingCity,
         deliveryNotes: shipping.deliveryNotes || '',
         location: shipping.location
       },

@@ -74,7 +74,7 @@ const OrderSchema = new mongoose.Schema({
     },
     postalCode: {
       type: String,
-      required: true,
+      default: '',
       trim: true
     },
     deliveryNotes: {

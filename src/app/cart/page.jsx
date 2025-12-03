@@ -97,30 +97,45 @@ export default function CartPage() {
     }, 0);
   };
 
-  const calculateShipping = () => {
+  // Calculate shipping charges for both locations
+  const getShippingCharges = () => {
     // Check if any selected item has free delivery enabled
     const hasFreeDelivery = getSelectedItems().some(item => item.freeDelivery === true);
     if (hasFreeDelivery) {
-      return 0;
+      return { insideDhaka: 0, outsideDhaka: 0 };
     }
     
-    // Get shipping charges for each product
-    let maxShipping = 0;
+    let maxInsideDhaka = 0;
+    let maxOutsideDhaka = 0;
+    
     getSelectedItems().forEach(item => {
       if (item.shippingCharges) {
-        const locationCharge = item.shippingCharges[shippingLocation] || 0;
-        if (locationCharge > maxShipping) {
-          maxShipping = locationCharge;
+        const insideCharge = item.shippingCharges.insideDhaka || 0;
+        const outsideCharge = item.shippingCharges.outsideDhaka || 0;
+        
+        if (insideCharge > maxInsideDhaka) {
+          maxInsideDhaka = insideCharge;
+        }
+        if (outsideCharge > maxOutsideDhaka) {
+          maxOutsideDhaka = outsideCharge;
         }
       }
     });
     
-    // If no product-specific shipping, use default
-    if (maxShipping === 0) {
-      return shippingLocation === 'insideDhaka' ? 70 : 130;
+    // If no product-specific shipping, use defaults
+    if (maxInsideDhaka === 0) {
+      maxInsideDhaka = 70;
+    }
+    if (maxOutsideDhaka === 0) {
+      maxOutsideDhaka = 130;
     }
     
-    return maxShipping;
+    return { insideDhaka: maxInsideDhaka, outsideDhaka: maxOutsideDhaka };
+  };
+
+  const calculateShipping = () => {
+    const charges = getShippingCharges();
+    return charges[shippingLocation] || 0;
   };
   
   const hasFreeDelivery = () => {
@@ -461,11 +476,11 @@ export default function CartPage() {
                       <div className="space-y-0.5 pl-0">
                         <div className="flex justify-between text-gray-700">
                           <span>Inside Dhaka :</span>
-                          <span className="font-semibold text-gray-900">৳ 70</span>
+                          <span className="font-semibold text-gray-900">৳ {getShippingCharges().insideDhaka}</span>
                         </div>
                         <div className="flex justify-between text-gray-700">
                           <span>Outside Dhaka :</span>
-                          <span className="font-semibold text-gray-900">৳ 130</span>
+                          <span className="font-semibold text-gray-900">৳ {getShippingCharges().outsideDhaka}</span>
                         </div>
                       </div>
                     )}

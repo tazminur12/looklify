@@ -24,6 +24,7 @@ export default function CheckoutPage() {
   // Form states
   const [formData, setFormData] = useState({
     fullName: '',
+    email: '',
     phone: '',
     address: ''
   });
@@ -45,6 +46,7 @@ export default function CheckoutPage() {
       if (user) {
         setFormData({
           fullName: user.name || '',
+          email: user.email || '',
           phone: user.phone || '',
           address: user.address || ''
         });
@@ -78,6 +80,12 @@ export default function CheckoutPage() {
 
     if (!formData.fullName.trim()) {
       errors.fullName = 'Full name is required';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Invalid email format';
     }
 
     if (!formData.phone.trim()) {
@@ -129,28 +137,45 @@ export default function CheckoutPage() {
     }, 0);
   };
 
-  const calculateShipping = () => {
+  // Calculate shipping charges for both locations
+  const getShippingCharges = () => {
     // Check if any cart item has free delivery enabled
     const hasFreeDelivery = cartItems.some(item => item.freeDelivery === true);
     if (hasFreeDelivery) {
-      return 0;
+      return { insideDhaka: 0, outsideDhaka: 0 };
     }
     
-    let maxShipping = 0;
+    let maxInsideDhaka = 0;
+    let maxOutsideDhaka = 0;
+    
     cartItems.forEach(item => {
       if (item.shippingCharges) {
-        const locationCharge = item.shippingCharges[shippingLocation] || 0;
-        if (locationCharge > maxShipping) {
-          maxShipping = locationCharge;
+        const insideCharge = item.shippingCharges.insideDhaka || 0;
+        const outsideCharge = item.shippingCharges.outsideDhaka || 0;
+        
+        if (insideCharge > maxInsideDhaka) {
+          maxInsideDhaka = insideCharge;
+        }
+        if (outsideCharge > maxOutsideDhaka) {
+          maxOutsideDhaka = outsideCharge;
         }
       }
     });
     
-    if (maxShipping === 0) {
-      return shippingLocation === 'insideDhaka' ? 70 : 130;
+    // If no product-specific shipping, use defaults
+    if (maxInsideDhaka === 0) {
+      maxInsideDhaka = 70;
+    }
+    if (maxOutsideDhaka === 0) {
+      maxOutsideDhaka = 130;
     }
     
-    return maxShipping;
+    return { insideDhaka: maxInsideDhaka, outsideDhaka: maxOutsideDhaka };
+  };
+
+  const calculateShipping = () => {
+    const charges = getShippingCharges();
+    return charges[shippingLocation] || 0;
   };
   
   const hasFreeDelivery = () => {
@@ -354,6 +379,7 @@ export default function CheckoutPage() {
         })),
         shipping: {
           fullName: formData.fullName,
+          email: formData.email,
           phone: formData.phone,
           address: formData.address,
           location: shippingLocation
@@ -534,6 +560,25 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                      Email (ইমেইল)
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-500 transition-all bg-white ${
+                        formErrors.email ? 'border-red-400 bg-red-50' : 'border-purple-200 hover:border-purple-300'
+                      }`}
+                      placeholder="Enter your email"
+                    />
+                    {formErrors.email && (
+                      <p className="mt-1.5 text-xs text-red-600 font-medium">{formErrors.email}</p>
+                    )}
+                  </div>
+
                   {/* Phone Number */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -591,7 +636,9 @@ export default function CheckoutPage() {
                           onChange={() => setShippingLocation('insideDhaka')}
                           className="w-5 h-5 text-purple-600 focus:ring-purple-500 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-800 font-semibold">ঢাকা সিটির ভিতরে- ৭০ টাকা</span>
+                        <span className="text-sm text-gray-800 font-semibold">
+                          ঢাকা সিটির ভিতরে- {getShippingCharges().insideDhaka} টাকা
+                        </span>
                       </label>
                       <label className={`flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
                         shippingLocation === 'outsideDhaka' 
@@ -606,7 +653,9 @@ export default function CheckoutPage() {
                           onChange={() => setShippingLocation('outsideDhaka')}
                           className="w-5 h-5 text-purple-600 focus:ring-purple-500 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-800 font-semibold">ঢাকা সিটির বাইরে- ১৩০ টাকা</span>
+                        <span className="text-sm text-gray-800 font-semibold">
+                          ঢাকা সিটির বাইরে- {getShippingCharges().outsideDhaka} টাকা
+                        </span>
                       </label>
                     </div>
                   </div>

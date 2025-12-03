@@ -3,11 +3,75 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import Product from '@/models/Product';
 import Order from '@/models/Order';
+import PromoCode from '@/models/PromoCode';
 
 // Helper function to generate discount codes
 function generateDiscountCode(percentage, prefix = 'LOOK') {
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `${prefix}${percentage}${random}`;
+}
+
+// Helper function to save discount code to database
+async function saveDiscountCodeToDatabase(code, percentage, userId, context = '') {
+  try {
+    // Check if code already exists
+    const existingCode = await PromoCode.findOne({ code: code.toUpperCase() });
+    if (existingCode) {
+      // If exists, return the existing code
+      return existingCode.code;
+    }
+
+    // Calculate expiry date (30 days from now)
+    const validFrom = new Date();
+    const validUntil = new Date();
+    validUntil.setDate(validUntil.getDate() + 30);
+
+    // Create promo code name based on context
+    let codeName = '';
+    let codeDescription = '';
+    
+    if (context.includes('VIP') || context.includes('vip')) {
+      codeName = `VIP ${percentage}% Discount`;
+      codeDescription = `Exclusive VIP discount code for repeat customers`;
+    } else if (context.includes('CART') || context.includes('cart')) {
+      codeName = `Cart Recovery ${percentage}% Discount`;
+      codeDescription = `Special discount for completing your abandoned cart`;
+    } else if (context.includes('WELCOME') || context.includes('welcome')) {
+      codeName = `Welcome ${percentage}% Discount`;
+      codeDescription = `Welcome discount for new customers`;
+    } else if (context.includes('REVIEW') || context.includes('review')) {
+      codeName = `Review ${percentage}% Discount`;
+      codeDescription = `Thank you discount for submitting a review`;
+    } else {
+      codeName = `${percentage}% Discount Code`;
+      codeDescription = `Automated discount code`;
+    }
+
+    // Create new promo code
+    const promoCode = new PromoCode({
+      code: code.toUpperCase(),
+      name: codeName,
+      description: codeDescription,
+      type: 'percentage',
+      value: percentage,
+      minimumOrderAmount: 0,
+      usageLimit: 1, // Single use per code
+      usageLimitPerUser: 1,
+      validFrom: validFrom,
+      validUntil: validUntil,
+      applicableUsers: userId ? [userId] : [], // If userId provided, make it user-specific
+      status: 'active',
+      autoApply: false
+    });
+
+    await promoCode.save();
+    console.log(`✅ Discount code saved to database: ${code.toUpperCase()}`);
+    return promoCode.code;
+  } catch (error) {
+    console.error('Error saving discount code to database:', error);
+    // Return the code anyway, even if save fails
+    return code;
+  }
 }
 
 // Helper function to get personalized greeting
@@ -158,17 +222,25 @@ async function processEvent(eventType, eventData) {
         
         return {
           action: 'recommend_products',
-          message: `${getPersonalizedGreeting(userName)}, I noticed you're interested in ${productData?.name || 'this product'}. Here are some perfect matches for your skincare routine ✨`,
+          message: '', // AI will generate the message
           data: {
+            customer_name: userName,
+            customer_email: userEmail,
             product_id: productId,
             product_name: productData?.name,
+            product_category: productData?.category?.name,
+            product_brand: productData?.brand?.name,
+            view_count: viewCount,
             recommendations: recommendations.map(p => ({
               id: p._id,
               name: p.name,
               price: p.salePrice || p.price,
               image: p.images?.[0]?.url,
-              brand: p.brand?.name
-            }))
+              brand: p.brand?.name,
+              category: p.category?.name
+            })),
+            event_type: 'PRODUCT_VIEW',
+            context: 'multiple_views_recommendation'
           }
         };
       }
@@ -201,13 +273,18 @@ async function processEvent(eventType, eventData) {
       if (isFirstTime && cartValue > 2000) {
         return {
           action: 'send_email',
-          message: `Hi ${userName}! Great choice adding ${productData?.name || 'this product'} to your cart 🛒 Your skincare journey starts here! Complete your order and get glowing skin ✨`,
+          message: '', // AI will generate the message
           data: {
             customer_name: userName,
             customer_email: userEmail,
+            customer_phone: userPhone,
             product_name: productData?.name,
+            product_id: productId,
             cart_value: cartValue,
-            subject: `Your ${productData?.name || 'product'} is waiting in your cart!`
+            cart_items: additionalData?.cartItems || [],
+            event_type: 'ADD_TO_CART',
+            context: 'first_time_high_value_cart',
+            // AI will use this data to generate personalized message
           }
         };
       }
@@ -267,7 +344,6 @@ async function processEvent(eventType, eventData) {
       
       // Always send invoice
       actions.push('send_invoice');
-      messages.push(`Hi ${userName}! 🎉 Your order ${orderData.orderId} has been confirmed! We're preparing your skincare essentials with love. Here's your invoice 📧`);
       
       // Notify admin
       actions.push('notify_admin');
@@ -275,12 +351,13 @@ async function processEvent(eventType, eventData) {
       // If repeat customer, send VIP offer
       if (isRepeatCustomer) {
         const discountCode = generateDiscountCode(15, 'VIP');
+        // Save discount code to database
+        const savedCode = await saveDiscountCodeToDatabase(discountCode, 15, userData._id.toString(), 'VIP');
         actions.push('send_vip_offer');
-        messages.push(`As a valued customer, here's an exclusive 15% off your next order! Use code ${discountCode} ❤️`);
         
         return {
           action: actions.join(','), // Multiple actions
-          message: messages.join(' '),
+          message: '', // AI will generate messages
           data: {
             order_id: orderData.orderId,
             customer_name: userName,
@@ -290,19 +367,23 @@ async function processEvent(eventType, eventData) {
             items: orderData.items.map(item => ({
               name: item.name,
               quantity: item.quantity,
-              price: item.price
+              price: item.price,
+              product_id: item.productId?._id || item.productId
             })),
-            discount_code: discountCode,
+            discount_code: savedCode,
+            discount_percentage: 15,
             is_repeat_customer: true,
             order_count: orderCount,
-            invoice_url: `/orders/${orderData._id}/invoice`
+            invoice_url: `/orders/${orderData._id}/invoice`,
+            event_type: 'ORDER_SUCCESS',
+            context: 'repeat_customer_vip_offer'
           }
         };
       }
       
       return {
         action: actions.join(','),
-        message: messages.join(' '),
+        message: '', // AI will generate messages
         data: {
           order_id: orderData.orderId,
           customer_name: userName,
@@ -312,10 +393,14 @@ async function processEvent(eventType, eventData) {
           items: orderData.items.map(item => ({
             name: item.name,
             quantity: item.quantity,
-            price: item.price
+            price: item.price,
+            product_id: item.productId?._id || item.productId
           })),
           is_repeat_customer: false,
-          invoice_url: `/orders/${orderData._id}/invoice`
+          order_count: orderCount,
+          invoice_url: `/orders/${orderData._id}/invoice`,
+          event_type: 'ORDER_SUCCESS',
+          context: 'new_customer_order'
         }
       };
     }
@@ -331,14 +416,21 @@ async function processEvent(eventType, eventData) {
       
       return {
         action: 'send_email',
-        message: `Hi ${userName}! 🎊 Your order ${orderData.orderId} has been delivered! We hope you love your new skincare products. Share your glow with us by leaving a review ⭐`,
+        message: '', // AI will generate the message
         data: {
           customer_name: userName,
           customer_email: userEmail,
+          customer_phone: userPhone,
           order_id: orderData.orderId,
+          order_total: orderData.pricing?.total || 0,
           delivery_date: new Date().toISOString(),
           review_link: `/reviews?order=${orderData.orderId}`,
-          subject: 'Your Looklify order has been delivered! ✨'
+          items: orderData.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity
+          })),
+          event_type: 'ORDER_DELIVERED',
+          context: 'order_delivered_review_request'
         }
       };
     }
@@ -357,16 +449,25 @@ async function processEvent(eventType, eventData) {
         };
       }
       
+      const reviewDiscountCode = generateDiscountCode(5, 'REVIEW');
+      // Save discount code to database
+      const savedReviewCode = await saveDiscountCodeToDatabase(reviewDiscountCode, 5, userData._id.toString(), 'REVIEW');
+      
       return {
         action: 'send_email',
-        message: `Thank you ${userName} for your review! 💜 Your feedback helps us serve you better. As a token of appreciation, here's a special offer on your next purchase 🎁`,
+        message: '', // AI will generate the message
         data: {
           customer_name: userName,
           customer_email: userEmail,
+          customer_phone: userPhone,
           product_name: productData.name,
+          product_id: productId,
           review_rating: additionalData?.rating || 0,
-          discount_code: generateDiscountCode(5, 'REVIEW'),
-          subject: 'Thank you for your review!'
+          review_text: additionalData?.reviewText || '',
+          discount_code: savedReviewCode,
+          discount_percentage: 5,
+          event_type: 'REVIEW_SUBMITTED',
+          context: 'review_thank_you_discount'
         }
       };
     }
@@ -396,13 +497,18 @@ async function processEvent(eventType, eventData) {
       
       return {
         action: 'low_stock_alert',
-        message: `⚠️ Low Stock Alert: ${productData.name} is running low (${productData.stock} units remaining). Consider restocking soon!`,
+        message: '', // AI will generate the message
         data: {
           product_id: productId,
           product_name: productData.name,
+          product_category: productData.category?.name,
+          product_brand: productData.brand?.name,
           current_stock: productData.stock,
           low_stock_threshold: productData.lowStockThreshold || 20,
-          sku: productData.sku
+          sku: productData.sku,
+          price: productData.salePrice || productData.price,
+          event_type: 'LOW_STOCK',
+          context: 'admin_low_stock_alert'
         }
       };
     }
@@ -422,29 +528,38 @@ async function processEvent(eventType, eventData) {
       if (wishlistUsers.length > 0) {
         return {
           action: 'send_restock_alert',
-          message: `Great news! ${productData.name} is back in stock! 🎉 Get yours before it's gone again ✨`,
+          message: '', // AI will generate the message
           data: {
             product_id: productId,
             product_name: productData.name,
+            product_category: productData.category?.name,
+            product_brand: productData.brand?.name,
+            product_price: productData.salePrice || productData.price,
             new_stock: productData.stock,
             interested_users: wishlistUsers.map(u => ({
               user_id: u._id,
               email: u.email,
-              name: u.name
+              name: u.name,
+              phone: u.phone
             })),
             product_image: productData.images?.[0]?.url,
-            product_url: `/shop/${productId}`
+            product_url: `/shop/${productId}`,
+            event_type: 'RESTOCK',
+            context: 'product_back_in_stock_notification'
           }
         };
       }
       
       return {
         action: 'notify_admin',
-        message: `Product ${productData.name} has been restocked (${productData.stock} units)`,
+        message: '', // AI will generate the message
         data: {
           product_id: productId,
           product_name: productData.name,
-          stock: productData.stock
+          product_category: productData.category?.name,
+          stock: productData.stock,
+          event_type: 'RESTOCK',
+          context: 'admin_restock_notification'
         }
       };
     }
@@ -459,17 +574,21 @@ async function processEvent(eventType, eventData) {
       }
       
       const discountCode = generateDiscountCode(10, 'WELCOME');
+      // Save discount code to database
+      const savedCode = await saveDiscountCodeToDatabase(discountCode, 10, userData._id.toString(), 'WELCOME');
       
       return {
         action: 'send_email',
-        message: `Welcome to Looklify, ${userName}! 🌟 We're so excited to have you join our skincare family. Start your journey to glowing skin with 10% off your first order! Use code ${discountCode} at checkout 💜`,
+        message: '', // AI will generate the message
         data: {
           customer_name: userName,
           customer_email: userEmail,
-          discount_code: discountCode,
+          customer_phone: userPhone,
+          discount_code: savedCode,
           discount_percentage: 10,
           welcome_message: true,
-          subject: 'Welcome to Looklify! Your skincare journey starts here ✨'
+          event_type: 'NEW_USER',
+          context: 'welcome_new_customer'
         }
       };
     }
@@ -485,15 +604,18 @@ async function processEvent(eventType, eventData) {
       
       return {
         action: 'start_return_process',
-        message: `Hi ${userName}, we've received your return request for order ${orderData.orderId}. Our team will review it and get back to you within 24-48 hours. We're here to help! 💜`,
+        message: '', // AI will generate the message
         data: {
           order_id: orderData.orderId,
           customer_name: userName,
           customer_email: userEmail,
           customer_phone: userPhone,
+          order_total: orderData.pricing?.total || 0,
           return_reason: additionalData?.reason || '',
           return_items: additionalData?.items || [],
-          return_request_id: additionalData?.returnRequestId || `RET-${Date.now()}`
+          return_request_id: additionalData?.returnRequestId || `RET-${Date.now()}`,
+          event_type: 'RETURN_REQUEST',
+          context: 'return_request_confirmation'
         }
       };
     }
@@ -509,24 +631,30 @@ async function processEvent(eventType, eventData) {
       }
       
       const discountCode = generateDiscountCode(8, 'CART');
+      // Save discount code to database
+      const savedCartCode = await saveDiscountCodeToDatabase(discountCode, 8, userData._id.toString(), 'CART');
       const cartItems = additionalData?.cartItems || [];
       const cartValue = additionalData?.cartValue || 0;
       
       return {
         action: 'trigger_cart_recovery',
-        message: `Hi ${userName}, you left some amazing products in your cart! 💔 Don't miss out on your skincare essentials. Complete your order now and save 8% with code ${discountCode} ❤️`,
+        message: '', // AI will generate the message
         data: {
           customer_name: userName,
           customer_email: userEmail,
-          discount_code: discountCode,
+          customer_phone: userPhone,
+          discount_code: savedCartCode,
           discount_percentage: 8,
           cart_items: cartItems.map(item => ({
             name: item.name,
             price: item.price,
-            quantity: item.quantity
+            quantity: item.quantity,
+            product_id: item.productId || item.id
           })),
           cart_value: cartValue,
-          cart_url: '/cart'
+          cart_url: '/cart',
+          event_type: 'CART_ABANDONED',
+          context: 'cart_abandonment_recovery'
         }
       };
     }

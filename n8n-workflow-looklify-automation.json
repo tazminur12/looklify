@@ -25,11 +25,11 @@
       "name": "Webhook Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1050, 300]
+      "position": [1450, 300]
     },
     {
       "parameters": {
-        "url": "http://localhost:3000/api/automation/brain",
+        "url": "https://looklifybd.com/api/automation/brain",
         "authentication": "none",
         "sendBody": true,
         "specifyBody": "json",
@@ -161,12 +161,99 @@
     },
     {
       "parameters": {
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are a professional AI marketing assistant for Looklify, a premium skincare e-commerce platform in Bangladesh. Your role is to create highly personalized, engaging, and conversion-focused email and WhatsApp messages that reflect Looklify's brand voice: warm, trustworthy, skincare-focused, and customer-centric.\\n\\n=== TASK ===\\nGenerate TWO professional messages based on the action type and customer data provided.\\n\\nAction: {{ $json.action }}\\nCustomer Data: {{ JSON.stringify($json.data, null, 2) }}\\n\\n=== OUTPUT FORMAT ===\\nReturn your response as a valid JSON object with this EXACT structure (no markdown, no code blocks):\\n{\\n  \\\"email\\\": {\\n    \\\"subject\\\": \\\"Email subject line (max 60 characters, compelling and clear)\\\",\\n    \\\"message\\\": \\\"Complete HTML email body with proper formatting\\\"\\n  },\\n  \\\"whatsapp\\\": {\\n    \\\"message\\\": \\\"Complete WhatsApp message text (max 500 characters)\\\"\\n  }\\n}\\n\\n=== EMAIL MESSAGE GUIDELINES ===\\n1. Format: Professional HTML with inline CSS styling\\n2. Structure: Header greeting → Main content → Call-to-action → Footer\\n3. Length: 150-300 words (concise but complete)\\n4. Tone: Professional yet warm, friendly, and approachable\\n5. Language: Bengali-English mix (Hinglish style) - 70% Bengali, 30% English for technical terms\\n6. Emojis: Use sparingly (2-4 per message) for visual appeal\\n7. Personalization: Always use customer name if available\\n8. Brand Voice: Emphasize skincare expertise, quality products, customer care\\n9. HTML: Use proper tags (<p>, <div>, <strong>, <h2>, <a>) with inline styles\\n10. CTA: Clear, action-oriented button or link with compelling text\\n\\n=== WHATSAPP MESSAGE GUIDELINES ===\\n1. Length: Maximum 500 characters (strict limit)\\n2. Format: Plain text (no HTML, WhatsApp supports basic formatting)\\n3. Tone: Casual, friendly, conversational (more casual than email)\\n4. Language: Bengali-English mix, natural conversation style\\n5. Emojis: Use 3-5 emojis strategically for engagement\\n6. Structure: Greeting → Message → Action/Code → Closing\\n7. Personalization: Use customer name, reference their specific situation\\n8. Urgency: Create gentle urgency when appropriate (limited time offers)\\n9. Formatting: Use *bold* for important text, line breaks for readability\\n10. CTA: Clear next step or action item\\n\\n=== CRITICAL: DISCOUNT CODE HANDLING ===\\nIf discount_code is present in the data, you MUST:\\n\\n1. Include in BOTH email and WhatsApp messages (mandatory)\\n2. Display prominently - customer must see it immediately\\n3. Email Format: Use styled HTML box with large, bold text\\n   Example HTML structure:\\n   <div style='background: #f0f0f0; padding: 20px; text-align: center; border-radius: 8px;'>\\n     <h2 style='color: #333;'>🎁 Your Discount Code</h2>\\n     <div style='background: #fff; padding: 15px; border: 2px dashed #ff6b6b;'>\\n       <p style='font-size: 32px; font-weight: bold; color: #ff6b6b;'>CODE_HERE</p>\\n     </div>\\n     <p><strong>X% OFF</strong> on your purchase!</p>\\n   </div>\\n\\n4. WhatsApp Format: Clear, bold text with emojis\\n   Example: \\\"🎟️ YOUR CODE: *VIP15ABC*\\n   💰 15% OFF - Use at checkout!\\\"\\n\\n5. Always mention discount percentage if available\\n6. Include clear instructions: \\\"Copy this code\\\" or \\\"Use at checkout\\\"\\n7. Make code easy to copy (no special characters that confuse)\\n\\n=== ACTION-SPECIFIC CONTEXT ===\\n\\n• send_email: General customer communication - professional, informative, helpful\\n• send_whatsapp: Quick notification - casual, friendly, direct\\n• trigger_cart_recovery: Abandoned cart reminder - urgent but friendly, highlight discount code prominently, remind of items\\n• send_vip_offer: Exclusive VIP discount - premium feel, emphasize exclusivity, make discount code VERY prominent\\n• send_invoice: Order confirmation - professional, include order details, thank you message, next steps\\n• notify_admin: Admin notification - formal, data-driven, include all relevant details\\n• recommend_products: Product recommendations - personalized, highlight benefits, include product names and links\\n• low_stock_alert: Low stock warning - urgent, include product details, current stock, threshold\\n• send_restock_alert: Back in stock notification - exciting, include product name, link, stock quantity\\n• start_return_process: Return request confirmation - empathetic, professional, include return ID and next steps\\n\\n=== LANGUAGE & CULTURAL GUIDELINES ===\\n1. Bengali-English Mix: Natural Hinglish style (e.g., \\\"আপনার order ready!\\\", \\\"এই product টা perfect আপনার জন্য\\\")\\n2. Respectful Address: Use \\\"আপনি\\\" (formal) for all customers\\n3. Cultural Sensitivity: Understand Bangladeshi skincare concerns and preferences\\n4. Currency: Use ৳ (Taka) symbol for prices\\n5. Local Context: Reference local skincare needs, weather, cultural practices when relevant\\n\\n=== QUALITY STANDARDS ===\\n1. No grammatical errors - proofread your messages\\n2. No placeholder text - use actual data from customer information\\n3. Professional tone - never too casual or unprofessional\\n4. Clear value proposition - customer should understand benefit immediately\\n5. Mobile-friendly - messages should look good on mobile devices\\n6. Actionable - always include clear next step\\n7. Brand consistent - maintain Looklify's premium skincare brand image\\n\\n=== EXAMPLES OF GOOD MESSAGES ===\\n\\nEmail Subject: \\\"🎁 আপনার জন্য Exclusive VIP Offer!\\\"\\nEmail Body: Professional HTML with personalized greeting, discount code in styled box, clear CTA\\n\\nWhatsApp: \\\"Hi [Name]! 🎉 আপনার cart এ কিছু amazing products আছে। Complete করুন এখনই এবং 8% discount পান!\\n\\n🎟️ Code: *CART8ABC*\\n🛒 Checkout: [link]\\\"\\n\\nNow generate the messages based on the provided action and data. Ensure all guidelines are followed, especially discount code display if present.\"\n    }]\n  }],\n  \"generationConfig\": {\n    \"temperature\": 0.7,\n    \"topK\": 40,\n    \"topP\": 0.95,\n    \"maxOutputTokens\": 2048\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "generate-ai-message",
+      "name": "Generate AI Message (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "parse-ai-response",
+              "name": "aiGenerated",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text) }}",
+              "type": "object"
+            },
+            {
+              "id": "get-email-message",
+              "name": "emailMessage",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text).email.message }}",
+              "type": "string"
+            },
+            {
+              "id": "get-email-subject",
+              "name": "emailSubject",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text).email.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "get-whatsapp-message",
+              "name": "whatsappMessage",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text).whatsapp.message }}",
+              "type": "string"
+            },
+            {
+              "id": "preserve-action",
+              "name": "action",
+              "value": "={{ $('Route Actions').item.json.action }}",
+              "type": "string"
+            },
+            {
+              "id": "preserve-data",
+              "name": "data",
+              "value": "={{ $('Route Actions').item.json.data }}",
+              "type": "object"
+            },
+            {
+              "id": "preserve-message",
+              "name": "message",
+              "value": "={{ $('Route Actions').item.json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "parse-ai-response",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
         "resource": "message",
         "operation": "send",
         "toEmail": "={{ $json.data.customer_email || $json.data.email }}",
-        "subject": "={{ $json.data.subject || 'Looklify - Your Skincare Journey' }}",
+        "subject": "={{ $json.emailSubject || $json.data.subject || 'Looklify - Your Skincare Journey' }}",
         "emailType": "html",
-        "message": "={{ $json.message }}",
+        "message": "={{ $json.emailMessage || $json.message }}",
         "options": {
           "attachments": []
         }
@@ -175,7 +262,7 @@
       "name": "Send Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [850, 200],
+      "position": [1050, 200],
       "credentials": {
         "gmailOAuth2": {
           "id": "gmail-credentials",
@@ -188,14 +275,14 @@
         "resource": "message",
         "operation": "sendMessage",
         "to": "={{ $json.data.customer_phone || $json.data.phone }}",
-        "message": "={{ $json.message }}",
+        "message": "={{ $json.whatsappMessage || $json.message }}",
         "options": {}
       },
       "id": "send-whatsapp",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
-      "position": [850, 300],
+      "position": [1050, 300],
       "credentials": {
         "whatsAppApi": {
           "id": "whatsapp-credentials",
@@ -208,14 +295,14 @@
         "resource": "message",
         "operation": "sendMessage",
         "to": "={{ $json.data.customer_phone || $json.data.phone }}",
-        "message": "={{ $json.message }}\n\nDiscount Code: {{ $json.data.discount_code }}\nCart: {{ $json.data.cart_url || '/cart' }}",
+        "message": "={{ $json.whatsappMessage || $json.message }}\n\n━━━━━━━━━━━━━━━━━━━━\n🎟️ YOUR DISCOUNT CODE:\n━━━━━━━━━━━━━━━━━━━━\n\n📝 Code: *{{ $json.data.discount_code }}*\n💰 Discount: {{ $json.data.discount_percentage || 8 }}% OFF\n\n🛒 Complete your order: {{ $json.data.cart_url || '/cart' }}\n\nCopy the code above and use it at checkout!",
         "options": {}
       },
       "id": "cart-recovery-whatsapp",
       "name": "Cart Recovery WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
-      "position": [850, 400],
+      "position": [1050, 400],
       "credentials": {
         "whatsAppApi": {
           "id": "whatsapp-credentials",
@@ -228,16 +315,16 @@
         "resource": "message",
         "operation": "send",
         "toEmail": "={{ $json.data.customer_email }}",
-        "subject": "VIP Offer - Exclusive Discount for You! 🎁",
+        "subject": "={{ $json.emailSubject || 'VIP Offer - Exclusive Discount for You! 🎁' }}",
         "emailType": "html",
-        "message": "={{ $json.message }}\n\nYour VIP Discount Code: <strong>{{ $json.data.discount_code }}</strong>\nDiscount: {{ $json.data.discount_percentage || 15 }}%",
+        "message": "={{ $json.emailMessage || $json.message }}\n\n<div style='background-color: #f0f0f0; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0;'>\n  <h2 style='color: #333; margin-bottom: 10px;'>🎁 Your Exclusive VIP Discount Code</h2>\n  <div style='background-color: #fff; padding: 15px; border: 2px dashed #ff6b6b; border-radius: 8px; margin: 15px 0;'>\n    <p style='font-size: 32px; font-weight: bold; color: #ff6b6b; letter-spacing: 3px; margin: 0;'>{{ $json.data.discount_code || 'N/A' }}</p>\n  </div>\n  <p style='font-size: 18px; color: #555; margin: 10px 0;'><strong>{{ $json.data.discount_percentage || 15 }}% OFF</strong> on your next purchase!</p>\n  <p style='color: #666; font-size: 14px; margin-top: 10px;'>Copy this code and use it at checkout</p>\n</div>",
         "options": {}
       },
       "id": "send-vip-email",
       "name": "Send VIP Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [850, 500],
+      "position": [1050, 500],
       "credentials": {
         "gmailOAuth2": {
           "id": "gmail-credentials",
@@ -250,9 +337,9 @@
         "resource": "message",
         "operation": "send",
         "toEmail": "={{ $json.data.customer_email }}",
-        "subject": "Invoice for Order {{ $json.data.order_id }}",
+        "subject": "={{ $json.emailSubject || 'Invoice for Order ' + $json.data.order_id }}",
         "emailType": "html",
-        "message": "={{ $json.message }}\n\nOrder ID: {{ $json.data.order_id }}\nTotal: ৳{{ $json.data.order_total }}\n\nView Invoice: {{ $json.data.invoice_url }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nOrder ID: {{ $json.data.order_id }}\nTotal: ৳{{ $json.data.order_total }}\n\nView Invoice: {{ $json.data.invoice_url }}",
         "options": {
           "attachments": []
         }
@@ -261,7 +348,7 @@
       "name": "Send Invoice Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [850, 600],
+      "position": [1050, 600],
       "credentials": {
         "gmailOAuth2": {
           "id": "gmail-credentials",
@@ -274,16 +361,16 @@
         "resource": "message",
         "operation": "send",
         "toEmail": "admin@yourstore.com",
-        "subject": "Admin Notification: {{ $json.message }}",
+        "subject": "={{ $json.emailSubject || 'Admin Notification: ' + ($json.message || '') }}",
         "emailType": "html",
-        "message": "={{ $json.message }}\n\nDetails:\n{{ JSON.stringify($json.data, null, 2) }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nDetails:\n{{ JSON.stringify($json.data, null, 2) }}",
         "options": {}
       },
       "id": "notify-admin-email",
       "name": "Notify Admin Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [850, 700],
+      "position": [1050, 700],
       "credentials": {
         "gmailOAuth2": {
           "id": "gmail-credentials",
@@ -296,16 +383,16 @@
         "resource": "message",
         "operation": "send",
         "toEmail": "={{ $json.data.customer_email }}",
-        "subject": "Product Recommendations for You ✨",
+        "subject": "={{ $json.emailSubject || 'Product Recommendations for You ✨' }}",
         "emailType": "html",
-        "message": "={{ $json.message }}\n\nRecommended Products:\n{{ $json.data.recommendations.map(r => `- ${r.name} (৳${r.price})`).join('\\n') }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nRecommended Products:\n{{ $json.data.recommendations.map(r => `- ${r.name} (৳${r.price})`).join('\\n') }}",
         "options": {}
       },
       "id": "send-recommendations-email",
       "name": "Send Recommendations Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [850, 800],
+      "position": [1050, 800],
       "credentials": {
         "gmailOAuth2": {
           "id": "gmail-credentials",
@@ -318,16 +405,16 @@
         "resource": "message",
         "operation": "send",
         "toEmail": "admin@yourstore.com",
-        "subject": "⚠️ Low Stock Alert: {{ $json.data.product_name }}",
+        "subject": "={{ $json.emailSubject || '⚠️ Low Stock Alert: ' + ($json.data.product_name || '') }}",
         "emailType": "html",
-        "message": "={{ $json.message }}\n\nProduct: {{ $json.data.product_name }}\nCurrent Stock: {{ $json.data.current_stock }}\nThreshold: {{ $json.data.low_stock_threshold }}\nSKU: {{ $json.data.sku }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nProduct: {{ $json.data.product_name }}\nCurrent Stock: {{ $json.data.current_stock }}\nThreshold: {{ $json.data.low_stock_threshold }}\nSKU: {{ $json.data.sku }}",
         "options": {}
       },
       "id": "low-stock-alert-email",
       "name": "Low Stock Alert Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [850, 900],
+      "position": [1050, 900],
       "credentials": {
         "gmailOAuth2": {
           "id": "gmail-credentials",
@@ -340,16 +427,16 @@
         "resource": "message",
         "operation": "send",
         "toEmail": "={{ $json.data.interested_users.map(u => u.email).join(',') }}",
-        "subject": "🎉 {{ $json.data.product_name }} is Back in Stock!",
+        "subject": "={{ $json.emailSubject || '🎉 ' + ($json.data.product_name || '') + ' is Back in Stock!' }}",
         "emailType": "html",
-        "message": "={{ $json.message }}\n\nProduct: {{ $json.data.product_name }}\nStock: {{ $json.data.new_stock }} units\n\nView Product: {{ $json.data.product_url }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nProduct: {{ $json.data.product_name }}\nStock: {{ $json.data.new_stock }} units\n\nView Product: {{ $json.data.product_url }}",
         "options": {}
       },
       "id": "restock-alert-email",
       "name": "Restock Alert Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [850, 1000],
+      "position": [1050, 1000],
       "credentials": {
         "gmailOAuth2": {
           "id": "gmail-credentials",
@@ -362,16 +449,16 @@
         "resource": "message",
         "operation": "send",
         "toEmail": "={{ $json.data.customer_email }}",
-        "subject": "Return Request Received - Order {{ $json.data.order_id }}",
+        "subject": "={{ $json.emailSubject || 'Return Request Received - Order ' + ($json.data.order_id || '') }}",
         "emailType": "html",
-        "message": "={{ $json.message }}\n\nReturn Request ID: {{ $json.data.return_request_id }}\nOrder ID: {{ $json.data.order_id }}\nReason: {{ $json.data.return_reason }}",
+        "message": "={{ $json.emailMessage || $json.message }}\n\nReturn Request ID: {{ $json.data.return_request_id }}\nOrder ID: {{ $json.data.order_id }}\nReason: {{ $json.data.return_reason }}",
         "options": {}
       },
       "id": "return-process-email",
       "name": "Return Process Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [850, 1100],
+      "position": [1050, 1100],
       "credentials": {
         "gmailOAuth2": {
           "id": "gmail-credentials",
@@ -389,7 +476,54 @@
       "name": "Merge Results",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2,
-      "position": [1050, 300]
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "User List",
+          "mode": "list",
+          "cachedResultName": "User List"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toISO() }}",
+            "User Name": "={{ $json.data.customer_name || $json.data.name || 'N/A' }}",
+            "Email": "={{ $json.data.customer_email || $json.data.email || 'N/A' }}",
+            "Phone": "={{ $json.data.customer_phone || $json.data.phone || 'N/A' }}",
+            "User ID": "={{ $json.data.user_id || $json.data.userId || 'N/A' }}",
+            "Event Type": "={{ $json.data.event_type || $json.data.event || $('Webhook Trigger').item.json.body.event || 'N/A' }}",
+            "Action": "={{ $json.action || 'N/A' }}",
+            "Order ID": "={{ $json.data.order_id || $json.data.orderId || 'N/A' }}",
+            "Product ID": "={{ $json.data.product_id || $json.data.productId || 'N/A' }}",
+            "Product Name": "={{ $json.data.product_name || 'N/A' }}",
+            "Order Total": "={{ $json.data.order_total || $json.data.cart_value || 'N/A' }}",
+            "Discount Code": "={{ $json.data.discount_code || 'N/A' }}",
+            "Context": "={{ $json.data.context || 'N/A' }}",
+            "Status": "={{ $json.data.status || 'Active' }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "save-to-google-sheets",
+      "name": "Save User to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [950, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-credentials",
+          "name": "Google Sheets Account"
+        }
+      }
     }
   ],
   "connections": {
@@ -411,11 +545,38 @@
             "node": "Route Actions",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Save User to Google Sheets",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
     },
     "Route Actions": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Message (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Message (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
       "main": [
         [
           {
@@ -571,6 +732,17 @@
       ]
     },
     "Return Process Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save User to Google Sheets": {
       "main": [
         [
           {
