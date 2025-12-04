@@ -139,16 +139,20 @@ export default function CheckoutPage() {
 
   // Calculate shipping charges for both locations
   const getShippingCharges = () => {
-    // Check if any cart item has free delivery enabled
-    const hasFreeDelivery = cartItems.some(item => item.freeDelivery === true);
-    if (hasFreeDelivery) {
+    // Filter out items that have free delivery enabled
+    // Only calculate shipping for items that don't have free delivery
+    const itemsWithoutFreeDelivery = cartItems.filter(item => item.freeDelivery !== true);
+    
+    // If all items have free delivery, return 0
+    if (itemsWithoutFreeDelivery.length === 0) {
       return { insideDhaka: 0, outsideDhaka: 0 };
     }
     
     let maxInsideDhaka = 0;
     let maxOutsideDhaka = 0;
     
-    cartItems.forEach(item => {
+    // Calculate shipping only for items without free delivery
+    itemsWithoutFreeDelivery.forEach(item => {
       if (item.shippingCharges) {
         const insideCharge = item.shippingCharges.insideDhaka || 0;
         const outsideCharge = item.shippingCharges.outsideDhaka || 0;
@@ -179,7 +183,11 @@ export default function CheckoutPage() {
   };
   
   const hasFreeDelivery = () => {
-    return cartItems.some(item => item.freeDelivery === true);
+    // Check if ALL items have free delivery enabled
+    // If all items have free delivery, return true
+    // Otherwise, return false (even if some items have free delivery)
+    if (cartItems.length === 0) return false;
+    return cartItems.every(item => item.freeDelivery === true);
   };
 
   const calculatePromoDiscount = () => {
@@ -439,14 +447,87 @@ export default function CheckoutPage() {
           }
         });
       } else {
-        throw new Error(result.error || 'Failed to create order');
+        // Check if it's a stock error
+        const errorMessage = result.error || 'Failed to create order';
+        if (errorMessage.includes('Insufficient stock')) {
+          // Extract product name and stock info from error message
+          const stockMatch = errorMessage.match(/Insufficient stock for (.+?)\. Available: (\d+), Requested: (\d+)/);
+          if (stockMatch) {
+            const [, productName, available, requested] = stockMatch;
+            Swal.fire({
+              title: 'Stock Unavailable',
+              html: `
+                <div class="text-center">
+                  <p class="mb-3 text-gray-700">
+                    <strong>${productName}</strong> is currently out of stock or has insufficient quantity.
+                  </p>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Available: <strong>${available}</strong> | Requested: <strong>${requested}</strong>
+                  </p>
+                  <p class="text-sm text-gray-600">
+                    Please update your cart and try again.
+                  </p>
+                </div>
+              `,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Go to Cart',
+              cancelButtonText: 'Stay Here',
+              confirmButtonColor: '#7c3aed',
+              cancelButtonColor: '#6b7280'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                router.push('/cart');
+              }
+            });
+            return;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
     } catch (error) {
       console.error('Error placing order:', error);
+      const errorMessage = error.message || 'Failed to place order. Please try again.';
+      
+      // Check if it's a stock error in catch block too
+      if (errorMessage.includes('Insufficient stock')) {
+        const stockMatch = errorMessage.match(/Insufficient stock for (.+?)\. Available: (\d+), Requested: (\d+)/);
+        if (stockMatch) {
+          const [, productName, available, requested] = stockMatch;
+          Swal.fire({
+            title: 'Stock Unavailable',
+            html: `
+              <div class="text-center">
+                <p class="mb-3 text-gray-700">
+                  <strong>${productName}</strong> is currently out of stock or has insufficient quantity.
+                </p>
+                <p class="text-sm text-gray-600 mb-2">
+                  Available: <strong>${available}</strong> | Requested: <strong>${requested}</strong>
+                </p>
+                <p class="text-sm text-gray-600">
+                  Please update your cart and try again.
+                </p>
+              </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Go to Cart',
+            cancelButtonText: 'Stay Here',
+            confirmButtonColor: '#7c3aed',
+            cancelButtonColor: '#6b7280'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              router.push('/cart');
+            }
+          });
+          return;
+        }
+      }
+      
       Swal.fire({
         title: 'Error',
-        text: error.message || 'Failed to place order. Please try again.',
+        text: errorMessage,
         icon: 'error',
         confirmButtonText: 'OK',
         confirmButtonColor: '#7c3aed'
@@ -1114,10 +1195,8 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-xs bg-blue-50 px-2 py-1.5 rounded-lg">
                   <span className="text-blue-700 font-medium">Shipping</span>
                   <span className="font-semibold">
-                    {hasFreeDelivery() ? (
+                    {calculateShipping() === 0 ? (
                       <span className="text-green-600">Free Delivery</span>
-                    ) : calculateShipping() === 0 ? (
-                      <span className="text-green-600">Free</span>
                     ) : (
                       <span className="text-blue-900">৳{calculateShipping().toLocaleString()}</span>
                     )}

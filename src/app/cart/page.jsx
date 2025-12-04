@@ -99,16 +99,21 @@ export default function CartPage() {
 
   // Calculate shipping charges for both locations
   const getShippingCharges = () => {
-    // Check if any selected item has free delivery enabled
-    const hasFreeDelivery = getSelectedItems().some(item => item.freeDelivery === true);
-    if (hasFreeDelivery) {
+    // Filter out items that have free delivery enabled
+    // Only calculate shipping for items that don't have free delivery
+    const selectedItems = getSelectedItems();
+    const itemsWithoutFreeDelivery = selectedItems.filter(item => item.freeDelivery !== true);
+    
+    // If all items have free delivery, return 0
+    if (itemsWithoutFreeDelivery.length === 0) {
       return { insideDhaka: 0, outsideDhaka: 0 };
     }
     
     let maxInsideDhaka = 0;
     let maxOutsideDhaka = 0;
     
-    getSelectedItems().forEach(item => {
+    // Calculate shipping only for items without free delivery
+    itemsWithoutFreeDelivery.forEach(item => {
       if (item.shippingCharges) {
         const insideCharge = item.shippingCharges.insideDhaka || 0;
         const outsideCharge = item.shippingCharges.outsideDhaka || 0;
@@ -139,7 +144,12 @@ export default function CartPage() {
   };
   
   const hasFreeDelivery = () => {
-    return getSelectedItems().some(item => item.freeDelivery === true);
+    // Check if ALL selected items have free delivery enabled
+    // If all items have free delivery, return true
+    // Otherwise, return false (even if some items have free delivery)
+    const selectedItems = getSelectedItems();
+    if (selectedItems.length === 0) return false;
+    return selectedItems.every(item => item.freeDelivery === true);
   };
 
   const calculatePromoDiscount = () => {
@@ -164,10 +174,11 @@ export default function CartPage() {
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
     const tax = calculateTax();
+    const shipping = calculateShipping();
     const promoDiscount = calculatePromoDiscount();
     
-    // Total doesn't include shipping - shipping is shown separately
-    return subtotal + tax - promoDiscount;
+    // Total includes shipping
+    return subtotal + tax + shipping - promoDiscount;
   };
 
   const getTotalQuantity = () => {
@@ -467,7 +478,7 @@ export default function CartPage() {
                     <div className="flex justify-between mb-1">
                       <span className="text-gray-700">Delivery Charge:</span>
                     </div>
-                    {hasFreeDelivery() ? (
+                    {calculateShipping() === 0 ? (
                       <div className="flex justify-between items-center text-green-700 font-semibold">
                         <span>Free Delivery</span>
                         <span className="text-green-600">৳ 0</span>

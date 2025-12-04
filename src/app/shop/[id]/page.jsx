@@ -210,8 +210,64 @@ export default function DynamicShopPage() {
         }
       }}
       handleAddToCart={() => {
-        addToCart(product);
-        alert(`${product.name} added to cart!`);
+        // Check stock before adding to cart
+        if (product.inventory?.trackInventory !== false) {
+          if (product.stock === 0 || product.stock < 1) {
+            Swal.fire({
+              title: 'Out of Stock',
+              html: `
+                <div class="text-center">
+                  <p class="mb-2 text-gray-700">
+                    <strong>${product.name}</strong> is currently out of stock.
+                  </p>
+                  <p class="text-sm text-gray-600">
+                    Please check back later or browse other products.
+                  </p>
+                </div>
+              `,
+              icon: 'warning',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#7c3aed',
+              background: '#f8fafc',
+              color: '#1f2937'
+            });
+            return;
+          }
+        }
+        
+        const result = addToCart(product);
+        
+        if (!result.success) {
+          Swal.fire({
+            title: 'Cannot Add to Cart',
+            html: `
+              <div class="text-center">
+                <p class="mb-2 text-gray-700">
+                  ${result.message || 'Unable to add this product to cart.'}
+                </p>
+              </div>
+            `,
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#7c3aed',
+            background: '#f8fafc',
+            color: '#1f2937'
+          });
+          return;
+        }
+        
+        Swal.fire({
+          title: 'Added to Cart!',
+          text: `${product.name} has been added to your cart`,
+          icon: 'success',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+          background: '#f8fafc',
+          color: '#1f2937'
+        });
       }}
       handleBuyNow={() => {
         if (product) {
@@ -991,7 +1047,52 @@ function CategoryView({ category, products, loading, error, addToCart, filters, 
   };
 
   const handleAddToCartProduct = (product) => {
-    addToCart(product);
+    // Check stock before adding to cart
+    if (product.inventory?.trackInventory !== false) {
+      if (product.stock === 0 || product.stock < 1) {
+        Swal.fire({
+          title: 'Out of Stock',
+          html: `
+            <div class="text-center">
+              <p class="mb-2 text-gray-700">
+                <strong>${product.name}</strong> is currently out of stock.
+              </p>
+              <p class="text-sm text-gray-600">
+                Please check back later or browse other products.
+              </p>
+            </div>
+          `,
+          icon: 'warning',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#7c3aed',
+          background: '#f8fafc',
+          color: '#1f2937'
+        });
+        return;
+      }
+    }
+    
+    const result = addToCart(product);
+    
+    if (!result.success) {
+      Swal.fire({
+        title: 'Cannot Add to Cart',
+        html: `
+          <div class="text-center">
+            <p class="mb-2 text-gray-700">
+              ${result.message || 'Unable to add this product to cart.'}
+            </p>
+          </div>
+        `,
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#7c3aed',
+        background: '#f8fafc',
+        color: '#1f2937'
+      });
+      return;
+    }
+    
     Swal.fire({
       title: 'Added to Cart!',
       text: `${product.name} has been added to your cart`,

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useWishlist } from '../contexts/WishlistContext';
 import { useCart } from '../contexts/CartContext';
 import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 // Custom Image Component with better error handling
 function ProductImage({ src, alt, className, onError }) {
@@ -265,7 +266,64 @@ export default function PopularProductsOnOffer() {
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          addToCart(product);
+                          // Check stock before adding to cart
+                          if (product.inventory?.trackInventory !== false) {
+                            if (product.stock === 0 || product.stock < 1) {
+                              Swal.fire({
+                                title: 'Out of Stock',
+                                html: `
+                                  <div class="text-center">
+                                    <p class="mb-2 text-gray-700">
+                                      <strong>${product.name}</strong> is currently out of stock.
+                                    </p>
+                                    <p class="text-sm text-gray-600">
+                                      Please check back later or browse other products.
+                                    </p>
+                                  </div>
+                                `,
+                                icon: 'warning',
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#7c3aed',
+                                background: '#f8fafc',
+                                color: '#1f2937'
+                              });
+                              return;
+                            }
+                          }
+                          
+                          const result = addToCart(product);
+                          
+                          if (!result.success) {
+                            Swal.fire({
+                              title: 'Cannot Add to Cart',
+                              html: `
+                                <div class="text-center">
+                                  <p class="mb-2 text-gray-700">
+                                    ${result.message || 'Unable to add this product to cart.'}
+                                  </p>
+                                </div>
+                              `,
+                              icon: 'warning',
+                              confirmButtonText: 'OK',
+                              confirmButtonColor: '#7c3aed',
+                              background: '#f8fafc',
+                              color: '#1f2937'
+                            });
+                            return;
+                          }
+                          
+                          Swal.fire({
+                            title: 'Added to Cart!',
+                            text: `${product.name} has been added to your cart`,
+                            icon: 'success',
+                            timer: 2000,
+                            timerProgressBar: true,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end',
+                            background: '#f8fafc',
+                            color: '#1f2937'
+                          });
                         }}
                         className="flex-1 py-2 sm:py-2.5 lg:py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-xs"
                       >
@@ -274,7 +332,52 @@ export default function PopularProductsOnOffer() {
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          addToCart(product);
+                          // Check stock before adding to cart
+                          if (product.inventory?.trackInventory !== false) {
+                            if (product.stock === 0 || product.stock < 1) {
+                              Swal.fire({
+                                title: 'Out of Stock',
+                                html: `
+                                  <div class="text-center">
+                                    <p class="mb-2 text-gray-700">
+                                      <strong>${product.name}</strong> is currently out of stock.
+                                    </p>
+                                    <p class="text-sm text-gray-600">
+                                      Please check back later or browse other products.
+                                    </p>
+                                  </div>
+                                `,
+                                icon: 'warning',
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#7c3aed',
+                                background: '#f8fafc',
+                                color: '#1f2937'
+                              });
+                              return;
+                            }
+                          }
+                          
+                          const result = addToCart(product);
+                          
+                          if (!result.success) {
+                            Swal.fire({
+                              title: 'Cannot Add to Cart',
+                              html: `
+                                <div class="text-center">
+                                  <p class="mb-2 text-gray-700">
+                                    ${result.message || 'Unable to add this product to cart.'}
+                                  </p>
+                                </div>
+                              `,
+                              icon: 'warning',
+                              confirmButtonText: 'OK',
+                              confirmButtonColor: '#7c3aed',
+                              background: '#f8fafc',
+                              color: '#1f2937'
+                            });
+                            return;
+                          }
+                          
                           router.push('/checkout');
                         }}
                         className="flex-1 py-2 sm:py-2.5 lg:py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-colors text-xs sm:text-sm lg:text-xs"

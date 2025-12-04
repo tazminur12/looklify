@@ -35,6 +35,26 @@ export function CartProvider({ children }) {
   };
 
   const addToCart = (product) => {
+    // Check stock availability before adding to cart
+    if (product.inventory?.trackInventory !== false) {
+      // If inventory tracking is enabled (default), check stock
+      if (product.stock === 0 || product.stock < 1) {
+        return { success: false, error: 'out_of_stock', message: `${product.name} is currently out of stock.` };
+      }
+      
+      // Check if adding this item would exceed available stock
+      const existingItem = cartItems.find(item => item.productId === product._id);
+      const requestedQuantity = existingItem ? existingItem.quantity + 1 : 1;
+      
+      if (product.stock < requestedQuantity) {
+        return { 
+          success: false, 
+          error: 'insufficient_stock', 
+          message: `Only ${product.stock} item(s) available for ${product.name}.` 
+        };
+      }
+    }
+    
     const existingItem = cartItems.find(item => item.productId === product._id);
     
     // Get the correct display price and original price
@@ -109,6 +129,8 @@ export function CartProvider({ children }) {
     
     setCartItems(updatedItems);
     saveCartItems(updatedItems);
+    
+    return { success: true };
   };
 
   const removeFromCart = (productId) => {
