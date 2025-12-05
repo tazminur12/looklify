@@ -27,14 +27,33 @@ export async function GET(request) {
     // Get time period from query params
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || 'monthly'; // daily, weekly, monthly, yearly
+    const customStartDate = searchParams.get('startDate');
+    const customEndDate = searchParams.get('endDate');
 
-    // Get date range based on period
+    // Get date range based on period or custom date range
     const now = new Date();
     now.setHours(23, 59, 59, 999); // End of today
     
     let startDate, endDate, previousStartDate, previousEndDate;
     
-    switch (period) {
+    // If custom date range is provided, use it
+    if (customStartDate && customEndDate) {
+      startDate = new Date(customStartDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(customEndDate);
+      endDate.setHours(23, 59, 59, 999);
+      
+      // For comparison, use the same duration before the start date
+      const duration = endDate.getTime() - startDate.getTime();
+      previousEndDate = new Date(startDate);
+      previousEndDate.setTime(previousEndDate.getTime() - 1);
+      previousEndDate.setHours(23, 59, 59, 999);
+      previousStartDate = new Date(previousEndDate);
+      previousStartDate.setTime(previousStartDate.getTime() - duration);
+      previousStartDate.setHours(0, 0, 0, 0);
+    } else {
+      // Use period-based date range
+      switch (period) {
       case 'daily':
         // Today
         startDate = new Date(now);
@@ -97,6 +116,7 @@ export async function GET(request) {
         previousStartDate.setHours(0, 0, 0, 0);
         previousEndDate = new Date(now.getFullYear(), now.getMonth(), 0);
         previousEndDate.setHours(23, 59, 59, 999);
+      }
     }
 
     // Calculate total revenue and orders
@@ -396,7 +416,6 @@ export async function GET(request) {
         topProducts
       }
     });
-
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
     return NextResponse.json(

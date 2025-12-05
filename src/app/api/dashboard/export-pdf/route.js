@@ -27,14 +27,33 @@ export async function GET(request) {
     // Get time period from query params
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || 'monthly'; // daily, weekly, monthly, yearly
+    const customStartDate = searchParams.get('startDate');
+    const customEndDate = searchParams.get('endDate');
 
-    // Get date range based on period (same logic as stats route)
+    // Get date range based on period or custom date range
     const now = new Date();
     now.setHours(23, 59, 59, 999);
     
     let startDate, endDate, previousStartDate, previousEndDate;
     
-    switch (period) {
+    // If custom date range is provided, use it
+    if (customStartDate && customEndDate) {
+      startDate = new Date(customStartDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(customEndDate);
+      endDate.setHours(23, 59, 59, 999);
+      
+      // For comparison, use the same duration before the start date
+      const duration = endDate.getTime() - startDate.getTime();
+      previousEndDate = new Date(startDate);
+      previousEndDate.setTime(previousEndDate.getTime() - 1);
+      previousEndDate.setHours(23, 59, 59, 999);
+      previousStartDate = new Date(previousEndDate);
+      previousStartDate.setTime(previousStartDate.getTime() - duration);
+      previousStartDate.setHours(0, 0, 0, 0);
+    } else {
+      // Use period-based date range
+      switch (period) {
       case 'daily':
         startDate = new Date(now);
         startDate.setHours(0, 0, 0, 0);
@@ -83,6 +102,7 @@ export async function GET(request) {
         previousStartDate.setHours(0, 0, 0, 0);
         previousEndDate = new Date(now.getFullYear(), now.getMonth(), 0);
         previousEndDate.setHours(23, 59, 59, 999);
+      }
     }
 
     // Fetch comprehensive dashboard data

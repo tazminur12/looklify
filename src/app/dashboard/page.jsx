@@ -20,6 +20,10 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [timePeriod, setTimePeriod] = useState('monthly'); // daily, weekly, monthly, yearly
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [useCustomDateRange, setUseCustomDateRange] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const pdfComponentRef = useRef(null);
 
   useEffect(() => {
@@ -31,12 +35,18 @@ export default function DashboardPage() {
     if (mounted && status === 'authenticated') {
       fetchDashboardData();
     }
-  }, [mounted, status, timePeriod]);
+  }, [mounted, status, timePeriod, useCustomDateRange, customStartDate, customEndDate]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/dashboard/stats?period=${timePeriod}`);
+      // Build query params
+      let queryParams = `period=${timePeriod}`;
+      if (useCustomDateRange && customStartDate && customEndDate) {
+        queryParams += `&startDate=${customStartDate}&endDate=${customEndDate}`;
+      }
+      
+      const response = await fetch(`/api/dashboard/stats?${queryParams}`);
       const json = await response.json();
       
       if (json.success) {
@@ -51,8 +61,14 @@ export default function DashboardPage() {
 
   const handleExportPDF = async () => {
     try {
-      // Fetch comprehensive data for PDF with current time period
-      const response = await fetch(`/api/dashboard/export-pdf?period=${timePeriod}`);
+      // Build query params
+      let queryParams = `period=${timePeriod}`;
+      if (useCustomDateRange && customStartDate && customEndDate) {
+        queryParams += `&startDate=${customStartDate}&endDate=${customEndDate}`;
+      }
+      
+      // Fetch comprehensive data for PDF with current time period or custom date range
+      const response = await fetch(`/api/dashboard/export-pdf?${queryParams}`);
       const json = await response.json();
       
       if (!json.success) {
@@ -90,8 +106,14 @@ export default function DashboardPage() {
         duration: 3000,
       });
   
-      // Fetch comprehensive data for Excel with current time period
-      const response = await fetch(`/api/dashboard/export-pdf?period=${timePeriod}`);
+      // Build query params
+      let queryParams = `period=${timePeriod}`;
+      if (useCustomDateRange && customStartDate && customEndDate) {
+        queryParams += `&startDate=${customStartDate}&endDate=${customEndDate}`;
+      }
+      
+      // Fetch comprehensive data for Excel with current time period or custom date range
+      const response = await fetch(`/api/dashboard/export-pdf?${queryParams}`);
       const json = await response.json();
       
       if (!json.success) {
@@ -887,9 +909,12 @@ export default function DashboardPage() {
             {['daily', 'weekly', 'monthly', 'yearly'].map((period) => (
               <button
                 key={period}
-                onClick={() => setTimePeriod(period)}
+                onClick={() => {
+                  setTimePeriod(period);
+                  setUseCustomDateRange(false);
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  timePeriod === period
+                  timePeriod === period && !useCustomDateRange
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
@@ -897,6 +922,115 @@ export default function DashboardPage() {
                 {period.charAt(0).toUpperCase() + period.slice(1)}
               </button>
             ))}
+          </div>
+          
+          {/* Custom Date Range Picker */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowDateRangePicker(!showDateRangePicker);
+                if (!showDateRangePicker && !useCustomDateRange) {
+                  // Set default dates (today)
+                  const today = new Date();
+                  const todayStr = today.toISOString().split('T')[0];
+                  setCustomStartDate(todayStr);
+                  setCustomEndDate(todayStr);
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl transition-all duration-200 text-sm font-medium ${
+                useCustomDateRange
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-lg'
+                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Custom Date
+              <svg className={`w-4 h-4 transition-transform ${showDateRangePicker ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* Date Range Picker Dropdown */}
+            {showDateRangePicker && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setShowDateRangePicker(false)}
+                ></div>
+                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-20 p-4">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Start Date (শুরু তারিখ)
+                      </label>
+                      <input
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => {
+                          setCustomStartDate(e.target.value);
+                          setUseCustomDateRange(true);
+                          setTimePeriod('custom');
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        End Date (শেষ তারিখ)
+                      </label>
+                      <input
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => {
+                          setCustomEndDate(e.target.value);
+                          setUseCustomDateRange(true);
+                          setTimePeriod('custom');
+                        }}
+                        min={customStartDate}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (customStartDate && customEndDate) {
+                            setUseCustomDateRange(true);
+                            setTimePeriod('custom');
+                            setShowDateRangePicker(false);
+                            fetchDashboardData();
+                          } else {
+                            alert('Please select both start and end dates');
+                          }
+                        }}
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all text-sm font-medium"
+                      >
+                        Apply
+                      </button>
+                      <button
+                        onClick={() => {
+                          setUseCustomDateRange(false);
+                          setCustomStartDate('');
+                          setCustomEndDate('');
+                          setTimePeriod('monthly');
+                          setShowDateRangePicker(false);
+                          fetchDashboardData();
+                        }}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    {useCustomDateRange && customStartDate && customEndDate && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        Selected: {new Date(customStartDate).toLocaleDateString()} to {new Date(customEndDate).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           
           {/* Export Dropdown Menu */}
@@ -1196,6 +1330,8 @@ export default function DashboardPage() {
             data={dashboardData}
             period={timePeriod}
             showButton={false}
+            customStartDate={useCustomDateRange ? customStartDate : null}
+            customEndDate={useCustomDateRange ? customEndDate : null}
           />
         </div>
       )}
