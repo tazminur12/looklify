@@ -887,162 +887,267 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Dashboard Overview
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-2">
-            <span>Welcome back,</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {session.user?.name || session.user?.email}
-            </span>
-            <span className="text-green-500">●</span>
-            <span className="text-sm">Online</span>
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Time Period Selector */}
-          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl p-1">
-            {['daily', 'weekly', 'monthly', 'yearly'].map((period) => (
-              <button
-                key={period}
-                onClick={() => {
-                  setTimePeriod(period);
-                  setUseCustomDateRange(false);
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  timePeriod === period && !useCustomDateRange
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {period.charAt(0).toUpperCase() + period.slice(1)}
-              </button>
-            ))}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Dashboard Overview
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2 flex flex-wrap items-center gap-2 text-sm sm:text-base">
+              <span>Welcome back,</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                {session.user?.name || session.user?.email}
+              </span>
+              <span className="text-green-500">●</span>
+              <span className="text-sm">Online</span>
+            </p>
           </div>
-          
-          {/* Custom Date Range Picker */}
-          <div className="relative">
-            <button
-              onClick={() => {
-                setShowDateRangePicker(!showDateRangePicker);
-                if (!showDateRangePicker && !useCustomDateRange) {
-                  // Set default dates (today)
-                  const today = new Date();
-                  const todayStr = today.toISOString().split('T')[0];
-                  setCustomStartDate(todayStr);
-                  setCustomEndDate(todayStr);
+          <button
+            onClick={() => signOut({ callbackUrl: '/' })}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-red-500/25 whitespace-nowrap"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span className="hidden sm:inline">Sign Out</span>
+            <span className="sm:hidden">Out</span>
+          </button>
+        </div>
+        
+        {/* Controls Row */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Time Period Dropdown */}
+          <div className="relative flex-1 sm:flex-initial sm:min-w-[160px]">
+            <select
+              value={useCustomDateRange ? 'custom' : timePeriod}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === 'custom') {
+                  setUseCustomDateRange(true);
+                  setShowDateRangePicker(true);
+                  if (!customStartDate || !customEndDate) {
+                    const today = new Date();
+                    const todayStr = today.toISOString().split('T')[0];
+                    setCustomStartDate(todayStr);
+                    setCustomEndDate(todayStr);
+                  }
+                } else {
+                  setTimePeriod(value);
+                  setUseCustomDateRange(false);
+                  setShowDateRangePicker(false);
                 }
               }}
-              className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl transition-all duration-200 text-sm font-medium ${
-                useCustomDateRange
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-lg'
-                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
+              className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 0.75rem center',
+                backgroundSize: '1rem',
+                paddingRight: '2.5rem'
+              }}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Custom Date
-              <svg className={`w-4 h-4 transition-transform ${showDateRangePicker ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            
-            {/* Date Range Picker Dropdown */}
-            {showDateRangePicker && (
-              <>
-                <div 
-                  className="fixed inset-0 z-10" 
-                  onClick={() => setShowDateRangePicker(false)}
-                ></div>
-                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-20 p-4">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Start Date (শুরু তারিখ)
-                      </label>
-                      <input
-                        type="date"
-                        value={customStartDate}
-                        onChange={(e) => {
-                          setCustomStartDate(e.target.value);
-                          setUseCustomDateRange(true);
-                          setTimePeriod('custom');
-                        }}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        End Date (শেষ তারিখ)
-                      </label>
-                      <input
-                        type="date"
-                        value={customEndDate}
-                        onChange={(e) => {
-                          setCustomEndDate(e.target.value);
-                          setUseCustomDateRange(true);
-                          setTimePeriod('custom');
-                        }}
-                        min={customStartDate}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          if (customStartDate && customEndDate) {
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="custom">Custom Date</option>
+            </select>
+          </div>
+          
+          {/* Custom Date Range Picker - Show when custom is selected */}
+          {useCustomDateRange && (
+            <div className="relative">
+              <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="hidden sm:inline truncate">
+                  {customStartDate && customEndDate 
+                    ? `${new Date(customStartDate).toLocaleDateString()} - ${new Date(customEndDate).toLocaleDateString()}`
+                    : 'Select dates'
+                  }
+                </span>
+                <span className="sm:hidden truncate">
+                  {customStartDate && customEndDate 
+                    ? `${new Date(customStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(customEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                    : 'Dates'
+                  }
+                </span>
+                <button
+                  onClick={() => setShowDateRangePicker(!showDateRangePicker)}
+                  className="ml-auto flex-shrink-0 text-purple-600 hover:text-purple-700"
+                >
+                  <svg className={`w-4 h-4 transition-transform ${showDateRangePicker ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Date Range Picker Dropdown */}
+              {showDateRangePicker && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setShowDateRangePicker(false)}
+                  ></div>
+                  <div className="absolute left-0 sm:right-0 mt-2 w-full sm:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-20 p-4">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Start Date (শুরু তারিখ)
+                        </label>
+                        <input
+                          type="date"
+                          value={customStartDate}
+                          onChange={(e) => {
+                            setCustomStartDate(e.target.value);
                             setUseCustomDateRange(true);
                             setTimePeriod('custom');
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          End Date (শেষ তারিখ)
+                        </label>
+                        <input
+                          type="date"
+                          value={customEndDate}
+                          onChange={(e) => {
+                            setCustomEndDate(e.target.value);
+                            setUseCustomDateRange(true);
+                            setTimePeriod('custom');
+                          }}
+                          min={customStartDate}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            if (customStartDate && customEndDate) {
+                              setUseCustomDateRange(true);
+                              setTimePeriod('custom');
+                              setShowDateRangePicker(false);
+                              fetchDashboardData();
+                            } else {
+                              alert('Please select both start and end dates');
+                            }
+                          }}
+                          className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all text-sm font-medium"
+                        >
+                          Apply
+                        </button>
+                        <button
+                          onClick={() => {
+                            setUseCustomDateRange(false);
+                            setCustomStartDate('');
+                            setCustomEndDate('');
+                            setTimePeriod('monthly');
                             setShowDateRangePicker(false);
                             fetchDashboardData();
-                          } else {
-                            alert('Please select both start and end dates');
-                          }
-                        }}
-                        className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all text-sm font-medium"
-                      >
-                        Apply
-                      </button>
-                      <button
-                        onClick={() => {
-                          setUseCustomDateRange(false);
-                          setCustomStartDate('');
-                          setCustomEndDate('');
-                          setTimePeriod('monthly');
+                          }}
+                          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          
+          {/* Date Range Picker - Show when dropdown custom is selected but dates not set yet */}
+          {showDateRangePicker && !useCustomDateRange && (
+            <div className="relative">
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setShowDateRangePicker(false)}
+              ></div>
+              <div className="absolute left-0 sm:right-0 mt-2 w-full sm:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-20 p-4">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Start Date (শুরু তারিখ)
+                    </label>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => {
+                        setCustomStartDate(e.target.value);
+                        setUseCustomDateRange(true);
+                        setTimePeriod('custom');
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      End Date (শেষ তারিখ)
+                    </label>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => {
+                        setCustomEndDate(e.target.value);
+                        setUseCustomDateRange(true);
+                        setTimePeriod('custom');
+                      }}
+                      min={customStartDate}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        if (customStartDate && customEndDate) {
+                          setUseCustomDateRange(true);
+                          setTimePeriod('custom');
                           setShowDateRangePicker(false);
                           fetchDashboardData();
-                        }}
-                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm font-medium text-gray-700 dark:text-gray-300"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                    {useCustomDateRange && customStartDate && customEndDate && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        Selected: {new Date(customStartDate).toLocaleDateString()} to {new Date(customEndDate).toLocaleDateString()}
-                      </div>
-                    )}
+                        } else {
+                          alert('Please select both start and end dates');
+                        }
+                      }}
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all text-sm font-medium"
+                    >
+                      Apply
+                    </button>
+                    <button
+                      onClick={() => {
+                        setUseCustomDateRange(false);
+                        setCustomStartDate('');
+                        setCustomEndDate('');
+                        setTimePeriod('monthly');
+                        setShowDateRangePicker(false);
+                        fetchDashboardData();
+                      }}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Clear
+                    </button>
                   </div>
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
           
           {/* Export Dropdown Menu */}
           <div className="relative">
             <button 
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Export Report
+              <span className="hidden sm:inline">Export Report</span>
+              <span className="sm:hidden">Export</span>
               <svg className={`w-4 h-4 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -1055,7 +1160,7 @@ export default function DashboardPage() {
                   className="fixed inset-0 z-10" 
                   onClick={() => setShowExportMenu(false)}
                 ></div>
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-20 overflow-hidden">
+                <div className="absolute left-0 sm:right-0 mt-2 w-full sm:w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-20 overflow-hidden">
                   <button
                     onClick={() => {
                       setShowExportMenu(false);
@@ -1084,39 +1189,35 @@ export default function DashboardPage() {
               </>
             )}
           </div>
-          <button
-            onClick={() => signOut({ callbackUrl: '/' })}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-red-500/25"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Sign Out
-          </button>
         </div>
       </div>
 
       {/* Period Indicator */}
-      <div className="flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Showing statistics for</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-gray-100 capitalize">{timePeriod} Period</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Showing statistics for</p>
+            <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 capitalize">
+              {useCustomDateRange && customStartDate && customEndDate
+                ? `${new Date(customStartDate).toLocaleDateString()} - ${new Date(customEndDate).toLocaleDateString()}`
+                : `${timePeriod} Period`
+              }
+            </p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-left sm:text-right">
           <p className="text-xs text-gray-500 dark:text-gray-400">Comparing with previous period</p>
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">+/- Change shown in cards</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">+/- Change shown in cards</p>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {stats.map((stat, index) => (
           <div
             key={stat.name}
@@ -1145,7 +1246,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts and Tables Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent Orders */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
           <div className="flex items-center justify-between mb-6">
@@ -1232,9 +1333,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Financial Details Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Financial Breakdown</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 shadow-sm">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Financial Breakdown</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Product Cost</p>
             <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
@@ -1275,7 +1376,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
