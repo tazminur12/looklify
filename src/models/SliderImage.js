@@ -40,6 +40,11 @@ const SliderImageSchema = new mongoose.Schema({
     trim: true,
     default: '/shop'
   },
+  placement: {
+    type: String,
+    enum: ['primary', 'secondary', 'both'],
+    default: 'primary'
+  },
   status: {
     type: String,
     enum: ['active', 'inactive'],

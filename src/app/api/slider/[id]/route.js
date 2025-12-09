@@ -65,7 +65,7 @@ export async function PUT(request, { params }) {
     const resolvedParams = await params;
     const { id } = resolvedParams;
     const body = await request.json();
-    const { image, title, description, buttonText, buttonLink, status, sortOrder } = body;
+    const { image, title, description, buttonText, buttonLink, status, sortOrder, placement } = body;
 
     const sliderImage = await SliderImage.findById(id);
 
@@ -82,6 +82,7 @@ export async function PUT(request, { params }) {
     if (buttonText !== undefined) sliderImage.buttonText = buttonText;
     if (buttonLink !== undefined) sliderImage.buttonLink = buttonLink;
     if (status !== undefined) sliderImage.status = status;
+    if (placement !== undefined) sliderImage.placement = placement;
     if (sortOrder !== undefined) sliderImage.sortOrder = sortOrder;
     sliderImage.updatedBy = session.user.id;
 

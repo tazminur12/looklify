@@ -6,6 +6,7 @@ import FeaturedProducts from "./components/FeaturedProducts";
 import FeaturedBlogs from "./components/FeaturedBlogs";
 import StatsSection from "./components/StatsSection";
 import PopularProductsOnOffer from "./components/PopularProductsOnOffer";
+import ImageSlider2 from "./components/ImageSlider2";
 
 export default function Home() {
 
@@ -32,6 +33,22 @@ export default function Home() {
 
       {/* Featured Products */}
       <FeaturedProducts />
+
+      {/* Secondary Slider */}
+      <section className="relative w-full overflow-x-hidden">
+        <div 
+          className="relative w-full"
+          style={{
+            paddingBottom: '42%',
+            minHeight: '180px',
+            maxHeight: '340px'
+          }}
+        >
+          <div className="absolute inset-0">
+            <ImageSlider2 />
+          </div>
+        </div>
+      </section>
       
       {/* Popular Products on Offer */}
       <PopularProductsOnOffer />

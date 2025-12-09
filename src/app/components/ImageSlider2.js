@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
-export default function ImageSlider() {
+export default function ImageSlider2() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -18,51 +18,37 @@ export default function ImageSlider() {
     fetchSliderImages();
   }, []);
 
+  const fallbackImages = [
+    {
+      image: { url: '/slider/2.jpg', alt: 'Mid-page promotion' },
+      title: 'Discover New Arrivals',
+      description: 'Fresh picks curated for you',
+      buttonText: 'Shop Now',
+      buttonLink: '/shop'
+    },
+    {
+      image: { url: '/slider/3.jpg', alt: 'Limited offers' },
+      title: 'Limited Time Offers',
+      description: 'Grab exclusive deals before they are gone',
+      buttonText: 'View Offers',
+      buttonLink: '/offers'
+    }
+  ];
+
   const fetchSliderImages = async () => {
     try {
-      const response = await fetch('/api/slider?status=active&placement=primary&sortBy=sortOrder');
+      const response = await fetch('/api/slider?status=active&placement=secondary&sortBy=sortOrder');
       const data = await response.json();
       
       if (data.success && data.data && data.data.length > 0) {
         setSliderImages(data.data);
       } else {
-        // Fallback to default images if no slider images found
-        setSliderImages([
-          {
-            image: { url: '/slider/1.webp', alt: 'Premium Beauty Products' },
-            title: 'Premium Beauty Products',
-            description: 'Discover our curated selection of premium beauty products',
-            buttonText: 'Shop Now',
-            buttonLink: '/shop'
-          },
-          {
-            image: { url: '/slider/2.jpg', alt: 'Natural Skincare Collection' },
-            title: 'Natural Skincare Collection',
-            description: 'Experience the power of natural ingredients',
-            buttonText: 'Shop Now',
-            buttonLink: '/shop'
-          },
-          {
-            image: { url: '/slider/3.jpg', alt: 'Luxury Beauty Essentials' },
-            title: 'Luxury Beauty Essentials',
-            description: 'Indulge in luxury beauty essentials',
-            buttonText: 'Shop Now',
-            buttonLink: '/shop'
-          }
-        ]);
+        // Fallback to defaults so the section is always visible
+        setSliderImages(fallbackImages);
       }
     } catch (error) {
       console.error('Error fetching slider images:', error);
-      // Fallback to default images on error
-      setSliderImages([
-        {
-          image: { url: '/slider/1.webp', alt: 'Premium Beauty Products' },
-          title: 'Premium Beauty Products',
-          description: 'Discover our curated selection of premium beauty products',
-          buttonText: 'Shop Now',
-          buttonLink: '/shop'
-        }
-      ]);
+      setSliderImages(fallbackImages);
     } finally {
       setLoading(false);
     }

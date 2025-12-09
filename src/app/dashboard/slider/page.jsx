@@ -21,6 +21,7 @@ export default function SliderManagementPage() {
     description: '',
     buttonText: 'Shop Now',
     buttonLink: '/shop',
+    placement: 'primary',
     status: 'active',
     sortOrder: 0
   });
@@ -147,6 +148,7 @@ export default function SliderManagementPage() {
       description: slider.description || '',
       buttonText: slider.buttonText || 'Shop Now',
       buttonLink: slider.buttonLink || '/shop',
+      placement: slider.placement || 'primary',
       status: slider.status || 'active',
       sortOrder: slider.sortOrder || 0
     });
@@ -164,6 +166,7 @@ export default function SliderManagementPage() {
       description: '',
       buttonText: 'Shop Now',
       buttonLink: '/shop',
+      placement: 'primary',
       status: 'active',
       sortOrder: 0
     });
@@ -591,8 +594,22 @@ export default function SliderManagementPage() {
               </div>
             </div>
 
-            {/* Status & Sort Order */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Placement, Status & Sort Order */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Display In
+                </label>
+                <select
+                  value={formData.placement}
+                  onChange={(e) => setFormData(prev => ({ ...prev, placement: e.target.value }))}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                >
+                  <option value="primary">Slider 1 (Hero)</option>
+                  <option value="secondary">Slider 2 (Mid-page)</option>
+                  <option value="both">Both sliders</option>
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Status
@@ -686,13 +703,22 @@ export default function SliderManagementPage() {
                             </p>
                           )}
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                          slider.status === 'active'
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                        }`}>
-                          {slider.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            slider.status === 'active'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                          }`}>
+                            {slider.status}
+                          </span>
+                          <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
+                            {slider.placement === 'secondary'
+                              ? 'Slider 2'
+                              : slider.placement === 'both'
+                                ? 'Slider 1 & 2'
+                                : 'Slider 1'}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap mt-3">

@@ -11,11 +11,30 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const placement = searchParams.get('placement');
     const sortBy = searchParams.get('sortBy') || 'sortOrder';
 
     const query = {};
     if (status) {
       query.status = status;
+    }
+    if (placement) {
+      // Treat documents without placement as primary for backward compatibility
+      if (placement === 'primary') {
+        query.$or = [
+          { placement: 'primary' },
+          { placement: 'both' },
+          { placement: { $exists: false } },
+          { placement: null }
+        ];
+      } else if (placement === 'secondary') {
+        query.$or = [
+          { placement: 'secondary' },
+          { placement: 'both' }
+        ];
+      } else {
+        query.placement = placement;
+      }
     }
 
     const sortOptions = {};
@@ -70,7 +89,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { image, title, description, buttonText, buttonLink, status, sortOrder } = body;
+    const { image, title, description, buttonText, buttonLink, status, sortOrder, placement } = body;
 
     if (!image || !image.url) {
       return NextResponse.json(
@@ -86,6 +105,7 @@ export async function POST(request) {
       buttonText: buttonText || 'Shop Now',
       buttonLink: buttonLink || '/shop',
       status: status || 'active',
+      placement: placement || 'primary',
       sortOrder: sortOrder || 0,
       createdBy: session.user.id,
       updatedBy: session.user.id
