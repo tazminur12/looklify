@@ -21,6 +21,60 @@ export default function DynamicShopPage() {
   
   // State for product details page
   const [product, setProduct] = useState(null);
+
+  // Prevent image download protection
+  useEffect(() => {
+    // Disable right-click context menu
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable common keyboard shortcuts
+    const handleKeyDown = (e) => {
+      // Disable Ctrl+S, Ctrl+P, Ctrl+A, F12, etc.
+      if (
+        (e.ctrlKey || e.metaKey) && 
+        (e.key === 's' || e.key === 'p' || e.key === 'a' || e.key === 'u' || e.key === 'i')
+      ) {
+        e.preventDefault();
+        return false;
+      }
+      // Disable F12 (Developer Tools)
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Disable drag start
+    const handleDragStart = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable select start
+    const handleSelectStart = (e) => {
+      if (e.target.tagName === 'IMG') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('selectstart', handleSelectStart);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('selectstart', handleSelectStart);
+    };
+  }, []);
   
   // State for category page
   const [products, setProducts] = useState([]);
@@ -670,7 +724,12 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
   const displayRegularPrice = regularPrice;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen bg-gray-50"
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+    >
       <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 py-6">
         {/* Compact Breadcrumb */}
         <nav className="flex items-center space-x-1.5 text-xs text-gray-500 mb-4">
@@ -685,13 +744,27 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
           {/* Product Images - More Compact */}
           <div className="bg-white rounded-lg p-4">
             <div className="relative mb-3">
-              <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+              <div 
+                className="aspect-square rounded-lg overflow-hidden bg-gray-100"
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+              >
                 <Image
                   src={imageUrl}
                   alt={activeImage?.alt || product.name}
                   width={500}
                   height={500}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover select-none"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  style={{
+                    userSelect: 'none',
+                    WebkitUserDrag: 'none',
+                    WebkitUserSelect: 'none',
+                    pointerEvents: 'none',
+                    touchAction: 'none'
+                  }}
                 />
               </div>
               
@@ -713,13 +786,25 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
                     className={`w-14 h-14 rounded overflow-hidden border-2 ${
                       activeImageIndex === index ? 'border-purple-600' : 'border-gray-200'
                     }`}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
                   >
                     <Image
                       src={image.url}
                       alt={image.alt || product.name}
                       width={56}
                       height={56}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover select-none"
+                      draggable={false}
+                      onContextMenu={(e) => e.preventDefault()}
+                      onDragStart={(e) => e.preventDefault()}
+                      style={{
+                        userSelect: 'none',
+                        WebkitUserDrag: 'none',
+                        WebkitUserSelect: 'none',
+                        pointerEvents: 'none',
+                        touchAction: 'none'
+                      }}
                     />
                   </button>
                 ))}
@@ -895,7 +980,17 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
                         alt={relatedProduct.name}
                         width={50}
                         height={50}
-                        className="w-12 h-12 object-cover rounded"
+                        className="w-12 h-12 object-cover rounded select-none"
+                        draggable={false}
+                        onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
+                        style={{
+                          userSelect: 'none',
+                          WebkitUserDrag: 'none',
+                          WebkitUserSelect: 'none',
+                          pointerEvents: 'none',
+                          touchAction: 'none'
+                        }}
                       />
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 text-xs line-clamp-1">
@@ -1162,7 +1257,12 @@ function CategoryView({ category, products, loading, error, addToCart, filters, 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen bg-gray-50"
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+    >
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-20 py-8">
         {/* Header */}
         <div className="mb-6">
@@ -1360,7 +1460,17 @@ function CategoryView({ category, products, loading, error, addToCart, filters, 
                             alt={primaryImage?.alt || product.name}
                             width={400}
                             height={400}
-                            className="w-full h-40 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-40 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-300 select-none"
+                            draggable={false}
+                            onContextMenu={(e) => e.preventDefault()}
+                            onDragStart={(e) => e.preventDefault()}
+                            style={{
+                              userSelect: 'none',
+                              WebkitUserDrag: 'none',
+                              WebkitUserSelect: 'none',
+                              pointerEvents: 'none',
+                              touchAction: 'none'
+                            }}
                           />
                         </Link>
                         

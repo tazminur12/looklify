@@ -8,6 +8,60 @@ export default function FeaturedBlogs() {
   const [featuredBlogs, setFeaturedBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Prevent image download protection
+  useEffect(() => {
+    // Disable right-click context menu
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable common keyboard shortcuts
+    const handleKeyDown = (e) => {
+      // Disable Ctrl+S, Ctrl+P, Ctrl+A, F12, etc.
+      if (
+        (e.ctrlKey || e.metaKey) && 
+        (e.key === 's' || e.key === 'p' || e.key === 'a' || e.key === 'u' || e.key === 'i')
+      ) {
+        e.preventDefault();
+        return false;
+      }
+      // Disable F12 (Developer Tools)
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Disable drag start
+    const handleDragStart = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable select start
+    const handleSelectStart = (e) => {
+      if (e.target.tagName === 'IMG') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('selectstart', handleSelectStart);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('selectstart', handleSelectStart);
+    };
+  }, []);
+
   useEffect(() => {
     const fetchFeaturedBlogs = async () => {
       try {
@@ -93,7 +147,12 @@ export default function FeaturedBlogs() {
   };
 
   return (
-    <section className="py-12 sm:py-16 bg-gray-50">
+    <section 
+      className="py-12 sm:py-16 bg-gray-50"
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
         {/* Header - centered like FeaturedProducts */}
         <div className="text-center mb-8 sm:mb-12">
@@ -112,15 +171,29 @@ export default function FeaturedBlogs() {
               className="group bg-white rounded-xl border border-[#7c52c5] hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
             >
               {/* Featured Image */}
-              <div className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden">
+              <div 
+                className="relative w-full h-32 sm:h-40 lg:h-48 overflow-hidden"
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+              >
                 {blog.featuredImage?.url ? (
                   <Image
                     src={blog.featuredImage.url}
                     alt={blog.featuredImage.alt || blog.title}
                     fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="object-cover group-hover:scale-110 transition-transform duration-500 select-none"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     unoptimized={blog.featuredImage.url.includes('cloudinary')}
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    style={{
+                      userSelect: 'none',
+                      WebkitUserDrag: 'none',
+                      WebkitUserSelect: 'none',
+                      pointerEvents: 'none',
+                      touchAction: 'none'
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">

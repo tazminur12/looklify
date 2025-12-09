@@ -178,6 +178,60 @@ export default function ImageSlider() {
     }
   };
 
+  // Prevent image download protection
+  useEffect(() => {
+    // Disable right-click context menu
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable common keyboard shortcuts
+    const handleKeyDown = (e) => {
+      // Disable Ctrl+S, Ctrl+P, Ctrl+A, F12, etc.
+      if (
+        (e.ctrlKey || e.metaKey) && 
+        (e.key === 's' || e.key === 'p' || e.key === 'a' || e.key === 'u' || e.key === 'i')
+      ) {
+        e.preventDefault();
+        return false;
+      }
+      // Disable F12 (Developer Tools)
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Disable drag start
+    const handleDragStart = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable select start
+    const handleSelectStart = (e) => {
+      if (e.target.tagName === 'IMG') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('selectstart', handleSelectStart);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('selectstart', handleSelectStart);
+    };
+  }, []);
+
   // Show loading state
   if (loading) {
     return (
@@ -216,7 +270,7 @@ export default function ImageSlider() {
     <div 
       ref={sliderRef}
       className="relative w-full h-full overflow-hidden select-none touch-pan-y"
-      style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      style={{ cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none', WebkitUserSelect: 'none' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -230,6 +284,8 @@ export default function ImageSlider() {
           setCurrentX(0);
         }
       }}
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
     >
       {/* Main Image Container */}
       <div 
@@ -255,22 +311,34 @@ export default function ImageSlider() {
           return (
             <div
               key={slider._id || index}
-              className="absolute inset-0 transition-opacity duration-300 overflow-hidden"
+              className="absolute inset-0 transition-opacity duration-300 overflow-hidden bg-white"
               style={{
                 opacity: isDragging ? opacity : (index === currentSlide ? 1 : 0),
                 zIndex: index === currentSlide ? 10 : 5
               }}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
             >
             <Image
               src={slider.image.url}
               alt={slider.image.alt || slider.title || 'Slider Image'}
               fill
-              className="object-cover object-center"
+              className="object-cover object-center select-none"
               priority={index === 0}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              style={{ 
+                userSelect: 'none', 
+                WebkitUserDrag: 'none', 
+                WebkitUserSelect: 'none',
+                pointerEvents: 'none',
+                touchAction: 'none'
+              }}
             />
             {/* Overlay for better text readability */}
-            <div className="absolute inset-0 bg-black/20"></div>
+            <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
             
             {/* Content Overlay */}
             <div className="absolute inset-0 flex items-center justify-center px-4 sm:px-8">

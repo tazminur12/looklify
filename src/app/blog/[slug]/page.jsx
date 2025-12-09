@@ -15,6 +15,100 @@ export default function BlogDetailPage() {
   const [error, setError] = useState(null);
   const [relatedBlogs, setRelatedBlogs] = useState([]);
 
+  // Prevent image download protection
+  useEffect(() => {
+    // Disable right-click context menu
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable common keyboard shortcuts
+    const handleKeyDown = (e) => {
+      // Disable Ctrl+S, Ctrl+P, Ctrl+A, F12, etc.
+      if (
+        (e.ctrlKey || e.metaKey) && 
+        (e.key === 's' || e.key === 'p' || e.key === 'a' || e.key === 'u' || e.key === 'i')
+      ) {
+        e.preventDefault();
+        return false;
+      }
+      // Disable F12 (Developer Tools)
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Disable drag start
+    const handleDragStart = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable select start
+    const handleSelectStart = (e) => {
+      if (e.target.tagName === 'IMG') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('selectstart', handleSelectStart);
+
+    // Protect images in blog content (dangerouslySetInnerHTML)
+    const protectBlogContentImages = () => {
+      const blogContent = document.querySelector('.blog-content');
+      if (blogContent) {
+        const images = blogContent.querySelectorAll('img');
+        images.forEach(img => {
+          img.addEventListener('contextmenu', (e) => e.preventDefault());
+          img.addEventListener('dragstart', (e) => e.preventDefault());
+          img.setAttribute('draggable', 'false');
+          img.style.userSelect = 'none';
+          img.style.webkitUserDrag = 'none';
+          img.style.webkitUserSelect = 'none';
+          img.style.pointerEvents = 'none';
+          img.style.touchAction = 'none';
+        });
+      }
+    };
+
+    // Run after content is loaded - check multiple times for dynamic content
+    const timer1 = setTimeout(protectBlogContentImages, 500);
+    const timer2 = setTimeout(protectBlogContentImages, 1000);
+    const timer3 = setTimeout(protectBlogContentImages, 2000);
+
+    // Also use MutationObserver to protect images added dynamically
+    const observer = new MutationObserver(() => {
+      protectBlogContentImages();
+    });
+
+    const blogContent = document.querySelector('.blog-content');
+    if (blogContent) {
+      observer.observe(blogContent, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('selectstart', handleSelectStart);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      if (observer) observer.disconnect();
+    };
+  }, [blog]);
+
   useEffect(() => {
     if (slug) {
       fetchBlog();
@@ -108,7 +202,12 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen bg-gray-50"
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+    >
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -176,15 +275,29 @@ export default function BlogDetailPage() {
 
         {/* Featured Image */}
         {blog.featuredImage?.url && (
-          <div className="relative w-full h-64 sm:h-96 lg:h-[500px] rounded-xl overflow-hidden mb-8">
+          <div 
+            className="relative w-full h-64 sm:h-96 lg:h-[500px] rounded-xl overflow-hidden mb-8"
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+          >
             <Image
               src={blog.featuredImage.url}
               alt={blog.featuredImage.alt || blog.title}
               fill
-              className="object-cover"
+              className="object-cover select-none"
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 90vw, 896px"
               priority
               unoptimized={blog.featuredImage.url.includes('cloudinary')}
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              style={{
+                userSelect: 'none',
+                WebkitUserDrag: 'none',
+                WebkitUserSelect: 'none',
+                pointerEvents: 'none',
+                touchAction: 'none'
+              }}
             />
           </div>
         )}
@@ -198,8 +311,18 @@ export default function BlogDetailPage() {
 
         {/* Content */}
         <div 
-          className="blog-content blog-content-mobile mb-12 overflow-x-hidden [&_img]:w-full [&_img]:max-w-full [&_img]:h-auto [&_img]:sm:h-auto [&_img]:md:h-96 [&_img]:lg:h-[500px] [&_img]:object-contain [&_img]:sm:object-cover [&_img]:rounded-xl [&_img]:mt-0 [&_img]:sm:mt-3 [&_img]:mb-0 [&_img]:sm:mb-4 [&_img]:shadow-[0_20px_45px_-20px_rgba(139,92,246,0.35)] [&_img]:block [&_img]:box-border"
+          className="blog-content blog-content-mobile mb-12 overflow-x-hidden [&_img]:w-full [&_img]:max-w-full [&_img]:h-auto [&_img]:sm:h-auto [&_img]:md:h-96 [&_img]:lg:h-[500px] [&_img]:object-contain [&_img]:sm:object-cover [&_img]:rounded-xl [&_img]:mt-0 [&_img]:sm:mt-3 [&_img]:mb-0 [&_img]:sm:mb-4 [&_img]:shadow-[0_20px_45px_-20px_rgba(139,92,246,0.35)] [&_img]:block [&_img]:box-border [&_img]:select-none [&_img]:pointer-events-none [&_img]:touch-action-none"
           dangerouslySetInnerHTML={{ __html: blog.content }}
+          onContextMenu={(e) => {
+            if (e.target.tagName === 'IMG') {
+              e.preventDefault();
+            }
+          }}
+          onDragStart={(e) => {
+            if (e.target.tagName === 'IMG') {
+              e.preventDefault();
+            }
+          }}
         />
 
         {/* Share Section */}
@@ -233,14 +356,28 @@ export default function BlogDetailPage() {
                   className="group bg-white rounded-xl border border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all duration-300 overflow-hidden"
                 >
                   {relatedBlog.featuredImage?.url && (
-                    <div className="relative w-full h-40 overflow-hidden">
+                    <div 
+                      className="relative w-full h-40 overflow-hidden"
+                      onContextMenu={(e) => e.preventDefault()}
+                      onDragStart={(e) => e.preventDefault()}
+                    >
                       <Image
                         src={relatedBlog.featuredImage.url}
                         alt={relatedBlog.featuredImage.alt || relatedBlog.title}
                         fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="object-cover group-hover:scale-110 transition-transform duration-500 select-none"
                         sizes="(max-width: 768px) 100vw, 33vw"
                         unoptimized={relatedBlog.featuredImage.url.includes('cloudinary')}
+                        draggable={false}
+                        onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
+                        style={{
+                          userSelect: 'none',
+                          WebkitUserDrag: 'none',
+                          WebkitUserSelect: 'none',
+                          pointerEvents: 'none',
+                          touchAction: 'none'
+                        }}
                       />
                     </div>
                   )}

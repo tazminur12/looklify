@@ -164,6 +164,60 @@ export default function ImageSlider2() {
     }
   };
 
+  // Prevent image download protection
+  useEffect(() => {
+    // Disable right-click context menu
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable common keyboard shortcuts
+    const handleKeyDown = (e) => {
+      // Disable Ctrl+S, Ctrl+P, Ctrl+A, F12, etc.
+      if (
+        (e.ctrlKey || e.metaKey) && 
+        (e.key === 's' || e.key === 'p' || e.key === 'a' || e.key === 'u' || e.key === 'i')
+      ) {
+        e.preventDefault();
+        return false;
+      }
+      // Disable F12 (Developer Tools)
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Disable drag start
+    const handleDragStart = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Disable select start
+    const handleSelectStart = (e) => {
+      if (e.target.tagName === 'IMG') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('selectstart', handleSelectStart);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('selectstart', handleSelectStart);
+    };
+  }, []);
+
   // Show loading state
   if (loading) {
     return (
@@ -208,7 +262,9 @@ export default function ImageSlider2() {
             cursor: isDragging ? 'grabbing' : 'grab',
             aspectRatio: '21/9',
             minHeight: '180px',
-            maxHeight: '400px'
+            maxHeight: '400px',
+            userSelect: 'none',
+            WebkitUserSelect: 'none'
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -223,6 +279,8 @@ export default function ImageSlider2() {
               setCurrentX(0);
             }
           }}
+          onContextMenu={(e) => e.preventDefault()}
+          onDragStart={(e) => e.preventDefault()}
         >
           {/* Main Image Container */}
           <div 
@@ -253,15 +311,27 @@ export default function ImageSlider2() {
                 opacity: isDragging ? opacity : (index === currentSlide ? 1 : 0),
                 zIndex: index === currentSlide ? 10 : 5
               }}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
             >
             <Image
               src={slider.image.url}
               alt={slider.image.alt || slider.title || 'Slider Image'}
               fill
-              className="object-contain object-center w-full h-full"
+              className="object-contain object-center w-full h-full select-none"
               priority={index === 0}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-              style={{ objectFit: 'contain' }}
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              style={{ 
+                objectFit: 'contain',
+                userSelect: 'none',
+                WebkitUserDrag: 'none',
+                WebkitUserSelect: 'none',
+                pointerEvents: 'none',
+                touchAction: 'none'
+              }}
             />
             </div>
           );
