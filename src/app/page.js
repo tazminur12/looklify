@@ -35,20 +35,7 @@ export default function Home() {
       <FeaturedProducts />
 
       {/* Secondary Slider */}
-      <section className="relative w-full overflow-x-hidden">
-        <div 
-          className="relative w-full"
-          style={{
-            paddingBottom: '42%',
-            minHeight: '180px',
-            maxHeight: '340px'
-          }}
-        >
-          <div className="absolute inset-0">
-            <ImageSlider2 />
-          </div>
-        </div>
-      </section>
+      <ImageSlider2 />
       
       {/* Popular Products on Offer */}
       <PopularProductsOnOffer />
