@@ -30,7 +30,7 @@ export default function CheckoutPage() {
   });
 
   const [formErrors, setFormErrors] = useState({});
-  const [paymentMethod, setPaymentMethod] = useState('cod'); // cod, online, bkash_api
+  const [paymentMethod, setPaymentMethod] = useState('cod'); // cod, online, bkash_api, sslcommerz
   const [mobileBankingProvider, setMobileBankingProvider] = useState(null); // bikash, nogod, rocket, bkash, etc.
   const [paymentPhoneNumber, setPaymentPhoneNumber] = useState('');
   const [transactionId, setTransactionId] = useState('');
@@ -39,6 +39,8 @@ export default function CheckoutPage() {
   const bkashPaymentLoading = false;
   // const [bkashPaymentLoading, setBkashPaymentLoading] = useState(false);
   // const [tempOrderId, setTempOrderId] = useState(null);
+  // SSL Commerz Payment
+  const [sslCommerzLoading, setSslCommerzLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -119,6 +121,11 @@ export default function CheckoutPage() {
     // if (paymentMethod === 'bkash_api') {
     //   // No additional validation needed - payment will be initiated via API
     // }
+    
+    // SSL Commerz payment doesn't need validation here as it will be handled in the payment flow
+    if (paymentMethod === 'sslcommerz') {
+      // No additional validation needed - payment will be initiated via API
+    }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -361,7 +368,143 @@ export default function CheckoutPage() {
   //   }
   // };
 
+  const handleSslCommerzPayment = async () => {
+    if (!validateForm()) {
+      setCurrentStep(1);
+      return;
+    }
+
+    setSslCommerzLoading(true);
+
+    try {
+      // First, create order with pending payment status
+      const orderData = {
+        items: cartItems.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+          sku: item.sku || ''
+        })),
+        shipping: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          location: shippingLocation
+        },
+        payment: {
+          method: 'sslcommerz',
+          status: 'processing',
+          provider: 'sslcommerz'
+        },
+        pricing: {
+          subtotal: calculateSubtotal(),
+          tax: calculateTax(),
+          shipping: calculateShipping(),
+          discount: calculatePromoDiscount(),
+          total: calculateTotal()
+        },
+        promoCode: appliedPromoCode?.code || null
+      };
+
+      // Create order first
+      const orderResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+
+      const orderResult = await orderResponse.json();
+
+      if (!orderResult.success) {
+        throw new Error(orderResult.error || 'Failed to create order');
+      }
+
+      const orderId = orderResult.data.orderId;
+
+      // Initiate SSL Commerz payment
+      const paymentResponse = await fetch('/api/payments/sslcommerz/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: calculateTotal(),
+          orderId: orderId,
+          customerInfo: {
+            name: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            city: shippingLocation === 'insideDhaka' ? 'Dhaka' : 'Outside Dhaka',
+            state: 'Dhaka',
+            country: 'Bangladesh'
+          }
+        })
+      });
+
+      const paymentResult = await paymentResponse.json();
+
+      console.log('Payment initiation response:', paymentResult);
+
+      if (paymentResult.success && paymentResult.data?.gatewayPageURL) {
+        // Redirect to SSL Commerz payment page
+        window.location.href = paymentResult.data.gatewayPageURL;
+      } else {
+        // Show detailed error message
+        const errorMessage = paymentResult.error || 
+                           paymentResult.details?.statusMessage ||
+                           paymentResult.details?.failedreason ||
+                           'Failed to initiate SSL Commerz payment';
+        
+        const errorDetails = paymentResult.details 
+          ? `\n\nDetails: ${JSON.stringify(paymentResult.details, null, 2)}` 
+          : '';
+        
+        throw new Error(errorMessage + errorDetails);
+      }
+
+    } catch (error) {
+      console.error('Error initiating SSL Commerz payment:', error);
+      
+      // Extract error message
+      let errorMessage = error.message || 'Failed to initiate payment. Please try again.';
+      
+      // Try to parse if it's a JSON string
+      try {
+        if (error.message.includes('Details:')) {
+          const parts = error.message.split('Details:');
+          errorMessage = parts[0].trim();
+        }
+      } catch (e) {
+        // Keep original error message
+      }
+
+      Swal.fire({
+        title: 'Payment Error',
+        html: `
+          <div class="text-left">
+            <p class="mb-2">${errorMessage}</p>
+            ${error.response?.status ? `<p class="text-sm text-gray-600">Status: ${error.response.status}</p>` : ''}
+            <p class="text-xs text-gray-500 mt-2">Please check your SSL Commerz credentials and try again.</p>
+          </div>
+        `,
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#7c3aed',
+        width: '500px'
+      });
+      setSslCommerzLoading(false);
+    }
+  };
+
   const handlePlaceOrder = async () => {
+    // Handle SSL Commerz payment separately
+    if (paymentMethod === 'sslcommerz') {
+      await handleSslCommerzPayment();
+      return;
+    }
+
     // Handle Bkash API payment separately
     // if (paymentMethod === 'bkash_api') {
     //   await handleBkashPayment();
@@ -784,6 +927,37 @@ export default function CheckoutPage() {
                     </div>
                   </button>
 
+                  {/* SSL Commerz Payment */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod('sslcommerz');
+                      setMobileBankingProvider(null);
+                    }}
+                    className={`w-full p-3 border-2 rounded-lg text-left transition-all ${
+                      paymentMethod === 'sslcommerz'
+                        ? 'border-purple-600 bg-purple-50 shadow-md'
+                        : 'border-purple-200 hover:border-purple-400'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                          paymentMethod === 'sslcommerz' ? 'border-purple-600' : 'border-gray-300'
+                        }`}>
+                          {paymentMethod === 'sslcommerz' && (
+                            <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900 text-sm">SSL Commerz Payment</h3>
+                          <p className="text-xs text-gray-600 mt-0.5">Pay securely with Card, Mobile Banking & More</p>
+                        </div>
+                      </div>
+                      <div className="text-lg">💳</div>
+                    </div>
+                  </button>
+
                   {/* Bkash API Payment */}
                   {/* <button
                     type="button"
@@ -844,6 +1018,24 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   </button>
+
+                  {/* SSL Commerz Payment Info */}
+                  {paymentMethod === 'sslcommerz' && (
+                    <div className="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-start space-x-2">
+                        <svg className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <h4 className="font-semibold text-blue-900 text-xs">Secure SSL Commerz Payment</h4>
+                          <p className="text-[10px] text-blue-700 mt-0.5">
+                            You will be redirected to SSL Commerz Payment Gateway to complete your payment securely using Card, Mobile Banking (Bkash, Nagad, Rocket), or Bank Transfer. 
+                            After successful payment, you will be redirected back to our website.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Bkash API Payment Info */}
                   {/* {paymentMethod === 'bkash_api' && (
@@ -1071,16 +1263,16 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 onClick={handleNextStep}
-                disabled={submitting}
+                disabled={submitting || sslCommerzLoading}
                 className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 font-semibold text-sm transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {submitting ? (
+                {(submitting || sslCommerzLoading) ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span className="text-xs">Processing...</span>
                   </>
                 ) : currentStep === 2 ? (
-                  'Place Order'
+                  paymentMethod === 'sslcommerz' ? 'Pay with SSL Commerz' : 'Place Order'
                 ) : (
                   'Continue to Payment →'
                 )}

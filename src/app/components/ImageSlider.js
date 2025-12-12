@@ -18,6 +18,23 @@ export default function ImageSlider() {
     fetchSliderImages();
   }, []);
 
+  const fallbackImages = [
+    {
+      image: { url: '/slider/2.jpg', alt: 'Mid-page promotion' },
+      title: 'Discover New Arrivals',
+      description: 'Fresh picks curated for you',
+      buttonText: 'Shop Now',
+      buttonLink: '/shop'
+    },
+    {
+      image: { url: '/slider/3.jpg', alt: 'Limited offers' },
+      title: 'Limited Time Offers',
+      description: 'Grab exclusive deals before they are gone',
+      buttonText: 'View Offers',
+      buttonLink: '/offers'
+    }
+  ];
+
   const fetchSliderImages = async () => {
     try {
       const response = await fetch('/api/slider?status=active&placement=primary&sortBy=sortOrder');
@@ -26,43 +43,12 @@ export default function ImageSlider() {
       if (data.success && data.data && data.data.length > 0) {
         setSliderImages(data.data);
       } else {
-        // Fallback to default images if no slider images found
-        setSliderImages([
-          {
-            image: { url: '/slider/1.webp', alt: 'Premium Beauty Products' },
-            title: 'Premium Beauty Products',
-            description: 'Discover our curated selection of premium beauty products',
-            buttonText: 'Shop Now',
-            buttonLink: '/shop'
-          },
-          {
-            image: { url: '/slider/2.jpg', alt: 'Natural Skincare Collection' },
-            title: 'Natural Skincare Collection',
-            description: 'Experience the power of natural ingredients',
-            buttonText: 'Shop Now',
-            buttonLink: '/shop'
-          },
-          {
-            image: { url: '/slider/3.jpg', alt: 'Luxury Beauty Essentials' },
-            title: 'Luxury Beauty Essentials',
-            description: 'Indulge in luxury beauty essentials',
-            buttonText: 'Shop Now',
-            buttonLink: '/shop'
-          }
-        ]);
+        // Fallback to defaults so the section is always visible
+        setSliderImages(fallbackImages);
       }
     } catch (error) {
       console.error('Error fetching slider images:', error);
-      // Fallback to default images on error
-      setSliderImages([
-        {
-          image: { url: '/slider/1.webp', alt: 'Premium Beauty Products' },
-          title: 'Premium Beauty Products',
-          description: 'Discover our curated selection of premium beauty products',
-          buttonText: 'Shop Now',
-          buttonLink: '/shop'
-        }
-      ]);
+      setSliderImages(fallbackImages);
     } finally {
       setLoading(false);
     }
@@ -269,32 +255,39 @@ export default function ImageSlider() {
   return (
     <div 
       ref={sliderRef}
-      className="relative w-full h-full overflow-hidden select-none touch-pan-y"
-      style={{ cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none', WebkitUserSelect: 'none' }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => {
-        if (isDragging) {
-          setIsDragging(false);
-          setCurrentX(0);
-        }
+      className="relative w-full overflow-hidden select-none touch-pan-y"
+      style={{ 
+        cursor: isDragging ? 'grabbing' : 'grab',
+        aspectRatio: '21/9',
+        minHeight: '180px',
+        maxHeight: '400px',
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
       }}
-      onContextMenu={(e) => e.preventDefault()}
-      onDragStart={(e) => e.preventDefault()}
-    >
-      {/* Main Image Container */}
-      <div 
-        className="relative w-full h-full"
-        style={{
-          transform: dragOffset !== 0 ? `translateX(${dragOffset}px)` : 'none',
-          transition: isDragging ? 'none' : 'transform 0.3s ease-out'
-        }}
-      >
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={() => {
+            if (isDragging) {
+              setIsDragging(false);
+              setCurrentX(0);
+            }
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+          onDragStart={(e) => e.preventDefault()}
+        >
+          {/* Main Image Container */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              transform: dragOffset !== 0 ? `translateX(${dragOffset}px)` : 'none',
+              transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+            }}
+          >
         {sliderImages.map((slider, index) => {
           // Calculate opacity based on current slide and drag
           let opacity = 0;
@@ -323,38 +316,21 @@ export default function ImageSlider() {
               src={slider.image.url}
               alt={slider.image.alt || slider.title || 'Slider Image'}
               fill
-              className="object-cover object-center select-none"
+              className="object-cover object-center w-full h-full select-none"
               priority={index === 0}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+              sizes="100vw"
               draggable={false}
               onContextMenu={(e) => e.preventDefault()}
               onDragStart={(e) => e.preventDefault()}
               style={{ 
-                userSelect: 'none', 
-                WebkitUserDrag: 'none', 
+                objectFit: 'cover',
+                userSelect: 'none',
+                WebkitUserDrag: 'none',
                 WebkitUserSelect: 'none',
                 pointerEvents: 'none',
                 touchAction: 'none'
               }}
             />
-            {/* Overlay for better text readability */}
-            <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
-            
-            {/* Content Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center px-4 sm:px-8">
-              <div className="text-center text-white max-w-lg">
-                {slider.title && (
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 drop-shadow-lg">
-                    {slider.title}
-                  </h1>
-                )}
-                {slider.description && (
-                  <p className="text-sm sm:text-base lg:text-lg mb-6 drop-shadow-md opacity-90">
-                    {slider.description}
-                  </p>
-                )}
-              </div>
-            </div>
             </div>
           );
         })}

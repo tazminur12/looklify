@@ -91,17 +91,17 @@ const OrderSchema = new mongoose.Schema({
   payment: {
     method: {
       type: String,
-      enum: ['cod', 'online', 'bank_transfer'],
+      enum: ['cod', 'online', 'bank_transfer', 'sslcommerz'],
       required: true
     },
     status: {
       type: String,
-      enum: ['pending', 'processing', 'completed', 'failed', 'refunded'],
+      enum: ['pending', 'processing', 'completed', 'failed', 'refunded', 'cancelled'],
       default: 'pending'
     },
     provider: {
       type: String,
-      enum: ['bikash', 'nogod', 'rocket', 'bkash'],
+      enum: ['bikash', 'nogod', 'rocket', 'bkash', 'sslcommerz'],
       default: null
     },
     phoneNumber: {
@@ -123,6 +123,25 @@ const OrderSchema = new mongoose.Schema({
       default: null
     },
     paymentID: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    valId: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    gatewaySessionKey: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    gatewayResponse: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+    },
+    gatewayError: {
       type: String,
       default: null,
       trim: true
@@ -271,5 +290,10 @@ OrderSchema.methods.updateStatus = function(newStatus, notes = '') {
   return this.save();
 };
 
-export default mongoose.models.Order || mongoose.model('Order', OrderSchema);
+// Clear model cache if it exists to ensure schema updates are applied
+if (mongoose.models.Order) {
+  delete mongoose.models.Order;
+}
+
+export default mongoose.model('Order', OrderSchema);
 

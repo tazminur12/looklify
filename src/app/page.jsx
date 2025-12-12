@@ -9,24 +9,10 @@ import PopularProductsOnOffer from "./components/PopularProductsOnOffer";
 import ImageSlider2 from "./components/ImageSlider2";
 
 export default function Home() {
-
   return (
     <div className="min-h-screen w-full overflow-x-hidden">
-      {/* Hero Section - Image Background */}
-      <section className="relative w-full overflow-x-hidden">
-        <div 
-          className="relative w-full"
-          style={{
-            paddingBottom: '42%',
-            minHeight: '180px',
-            maxHeight: '340px'
-          }}
-        >
-          <div className="absolute inset-0">
-            <ImageSlider />
-          </div>
-        </div>
-      </section>
+      {/* Hero Section - Primary Image Slider */}
+      <ImageSlider />
 
       {/* Featured Categories */}
       <FeaturedCategories />
@@ -36,26 +22,21 @@ export default function Home() {
 
       {/* Secondary Slider */}
       <ImageSlider2 />
-      
+
       {/* Popular Products on Offer */}
       <PopularProductsOnOffer />
-      
+
       {/* Featured Blogs */}
-      <FeaturedBlogs/>
+      <FeaturedBlogs />
 
-
-    {/* Featured Brands */}
+      {/* Featured Brands */}
       <FeaturedBrands />
 
-      
-
-         {/* Features Section */}
-         <FeaturesSection />
+      {/* Features Section */}
+      <FeaturesSection />
 
       {/* Stats Section */}
       <StatsSection />
-
-     
     </div>
   );
 }
