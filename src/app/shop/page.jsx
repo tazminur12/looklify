@@ -152,7 +152,7 @@ function ShopContent() {
     if (!filtersLoading) {
       fetchProducts();
     }
-  }, [filters, filtersLoading]);
+  }, [filters, filtersLoading, pagination.currentPage]);
 
   const fetchFilterOptions = async () => {
     try {
@@ -194,7 +194,7 @@ function ShopContent() {
       
       const params = new URLSearchParams({
         page: pagination.currentPage.toString(),
-        limit: '12',
+        limit: '24',
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder
       });
