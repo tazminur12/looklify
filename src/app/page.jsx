@@ -10,7 +10,7 @@ import ImageSlider2 from "./components/ImageSlider2";
 
 export default function Home() {
   return (
-    <div className="min-h-screen w-full overflow-x-hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden m-0 p-0">
       {/* Hero Section - Primary Image Slider */}
       <ImageSlider />
 

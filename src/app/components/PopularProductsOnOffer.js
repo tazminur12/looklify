@@ -140,19 +140,15 @@ export default function PopularProductsOnOffer() {
     const fetchProductsOnOffer = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/products?limit=8&status=active');
+        // Fetch all products with isOfferProduct=true, no limit restriction
+        const response = await fetch('/api/products?limit=100&status=active&isOfferProduct=true');
         
         if (response.ok) {
           const data = await response.json();
           const allProducts = data.data?.products || [];
           
-          // Filter products that have isOfferProduct flag set to true
-          const productsWithOffers = allProducts.filter(product => {
-            return Boolean(product.isOfferProduct) === true;
-          });
-          
-          // Sort by discount percentage (highest first) and take top 8
-          const sortedProducts = productsWithOffers
+          // Sort by discount percentage (highest first) - show all offer products
+          const sortedProducts = allProducts
             .map(product => {
               let discount = 0;
               if (product.regularPrice && product.salePrice) {
@@ -162,8 +158,7 @@ export default function PopularProductsOnOffer() {
               }
               return { ...product, discount };
             })
-            .sort((a, b) => b.discount - a.discount)
-            .slice(0, 8);
+            .sort((a, b) => b.discount - a.discount);
           
           setProducts(sortedProducts);
         } else {

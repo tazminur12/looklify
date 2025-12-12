@@ -29,10 +29,11 @@ export default function OffersPage() {
       setLoading(true);
       setError(null);
       
+      // Fetch all offer products at once, then paginate client-side
       const params = new URLSearchParams({
-        page: pagination.currentPage.toString(),
-        limit: '12',
-        status: 'active'
+        limit: '100', // Fetch enough to get all offer products
+        status: 'active',
+        isOfferProduct: 'true' // Use API filter instead of client-side filtering
       });
 
       const response = await fetch(`/api/products?${params}`);
@@ -41,13 +42,8 @@ export default function OffersPage() {
       if (result.success) {
         const allProducts = result.data.products || [];
         
-        // Filter products that have isOfferProduct flag set to true
-        const productsWithOffers = allProducts.filter(product => {
-          return Boolean(product.isOfferProduct) === true;
-        });
-        
         // Calculate discount and sort
-        const sortedProducts = productsWithOffers
+        const sortedProducts = allProducts
           .map(product => {
             let discount = 0;
             if (product.regularPrice && product.salePrice) {

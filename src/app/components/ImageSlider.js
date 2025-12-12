@@ -255,14 +255,21 @@ export default function ImageSlider() {
   return (
     <div 
       ref={sliderRef}
-      className="relative w-full overflow-hidden select-none touch-pan-y"
+      className="relative w-full max-w-full overflow-hidden select-none touch-pan-y m-0"
       style={{ 
         cursor: isDragging ? 'grabbing' : 'grab',
         aspectRatio: '21/9',
         minHeight: '180px',
         maxHeight: '400px',
         userSelect: 'none',
-        WebkitUserSelect: 'none'
+        WebkitUserSelect: 'none',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        margin: 0,
+        padding: 0,
+        position: 'relative',
+        zIndex: 0
       }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -282,10 +289,14 @@ export default function ImageSlider() {
         >
           {/* Main Image Container */}
           <div 
-            className="absolute inset-0"
+            className="absolute inset-0 w-full h-full"
             style={{
               transform: dragOffset !== 0 ? `translateX(${dragOffset}px)` : 'none',
-              transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+              transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+              width: '100%',
+              height: '100%',
+              overflow: 'hidden',
+              boxSizing: 'border-box'
             }}
           >
         {sliderImages.map((slider, index) => {
@@ -304,10 +315,17 @@ export default function ImageSlider() {
           return (
             <div
               key={slider._id || index}
-              className="absolute inset-0 transition-opacity duration-300 overflow-hidden bg-white"
+              className="absolute inset-0 transition-opacity duration-300 overflow-hidden bg-white w-full h-full"
               style={{
                 opacity: isDragging ? opacity : (index === currentSlide ? 1 : 0),
-                zIndex: index === currentSlide ? 10 : 5
+                zIndex: index === currentSlide ? 10 : 5,
+                width: '100%',
+                height: '100%',
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                boxSizing: 'border-box'
               }}
               onContextMenu={(e) => e.preventDefault()}
               onDragStart={(e) => e.preventDefault()}
@@ -316,7 +334,7 @@ export default function ImageSlider() {
               src={slider.image.url}
               alt={slider.image.alt || slider.title || 'Slider Image'}
               fill
-              className="object-cover object-center w-full h-full select-none"
+              className="object-cover object-center select-none"
               priority={index === 0}
               sizes="100vw"
               draggable={false}
@@ -324,11 +342,16 @@ export default function ImageSlider() {
               onDragStart={(e) => e.preventDefault()}
               style={{ 
                 objectFit: 'cover',
+                objectPosition: 'center',
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
                 WebkitUserSelect: 'none',
                 pointerEvents: 'none',
-                touchAction: 'none'
+                touchAction: 'none',
+                width: '100%',
+                height: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box'
               }}
             />
             </div>

@@ -28,6 +28,7 @@ export async function GET(request) {
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const featured = searchParams.get('featured');
+    const isOfferProduct = searchParams.get('isOfferProduct');
 
     // Build filter object
     const filter = {};
@@ -114,6 +115,10 @@ export async function GET(request) {
     
     if (featured === 'true') {
       filter.isFeatured = true;
+    }
+    
+    if (isOfferProduct === 'true') {
+      filter.isOfferProduct = true;
     }
     
     // Brand filter
