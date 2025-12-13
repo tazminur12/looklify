@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { Image } from '@unpic/react';
 
 export default function ImageSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -18,23 +18,6 @@ export default function ImageSlider() {
     fetchSliderImages();
   }, []);
 
-  const fallbackImages = [
-    {
-      image: { url: '/slider/2.jpg', alt: 'Mid-page promotion' },
-      title: 'Discover New Arrivals',
-      description: 'Fresh picks curated for you',
-      buttonText: 'Shop Now',
-      buttonLink: '/shop'
-    },
-    {
-      image: { url: '/slider/3.jpg', alt: 'Limited offers' },
-      title: 'Limited Time Offers',
-      description: 'Grab exclusive deals before they are gone',
-      buttonText: 'View Offers',
-      buttonLink: '/offers'
-    }
-  ];
-
   const fetchSliderImages = async () => {
     try {
       const response = await fetch('/api/slider?status=active&placement=primary&sortBy=sortOrder');
@@ -43,12 +26,11 @@ export default function ImageSlider() {
       if (data.success && data.data && data.data.length > 0) {
         setSliderImages(data.data);
       } else {
-        // Fallback to defaults so the section is always visible
-        setSliderImages(fallbackImages);
+        setSliderImages([]);
       }
     } catch (error) {
       console.error('Error fetching slider images:', error);
-      setSliderImages(fallbackImages);
+      setSliderImages([]);
     } finally {
       setLoading(false);
     }
@@ -333,9 +315,10 @@ export default function ImageSlider() {
             <Image
               src={slider.image.url}
               alt={slider.image.alt || slider.title || 'Slider Image'}
-              fill
+              width={1920}
+              height={810}
               className="object-cover object-center select-none"
-              priority={index === 0}
+              loading={index === 0 ? 'eager' : 'lazy'}
               sizes="100vw"
               draggable={false}
               onContextMenu={(e) => e.preventDefault()}
