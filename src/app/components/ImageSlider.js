@@ -242,7 +242,7 @@ export default function ImageSlider() {
         cursor: isDragging ? 'grabbing' : 'grab',
         aspectRatio: '21/9',
         minHeight: '180px',
-        maxHeight: '400px',
+        maxHeight: '500px',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         width: '100%',
