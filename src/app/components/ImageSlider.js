@@ -12,10 +12,20 @@ export default function ImageSlider() {
   const [loading, setLoading] = useState(true);
   const sliderRef = useRef(null);
   const touchStartTime = useRef(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Fetch slider images from API
   useEffect(() => {
     fetchSliderImages();
+  }, []);
+
+  useEffect(() => {
+    const updateIsMobile = () => {
+      setIsMobile(typeof window !== 'undefined' && window.innerWidth < 768);
+    };
+    updateIsMobile();
+    window.addEventListener('resize', updateIsMobile);
+    return () => window.removeEventListener('resize', updateIsMobile);
   }, []);
 
   const fetchSliderImages = async () => {
@@ -237,12 +247,9 @@ export default function ImageSlider() {
   return (
     <div 
       ref={sliderRef}
-      className="relative w-full max-w-full overflow-hidden select-none touch-pan-y m-0"
+      className="relative w-full max-w-full overflow-hidden select-none touch-pan-y m-0 h-[180px] sm:h-[240px] md:h-[320px] lg:h-[420px] xl:h-[500px]"
       style={{ 
         cursor: isDragging ? 'grabbing' : 'grab',
-        aspectRatio: '21/9',
-        minHeight: '180px',
-        maxHeight: '500px',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         width: '100%',
@@ -324,7 +331,7 @@ export default function ImageSlider() {
               onContextMenu={(e) => e.preventDefault()}
               onDragStart={(e) => e.preventDefault()}
               style={{ 
-                objectFit: 'cover',
+                objectFit: isMobile ? 'contain' : 'cover',
                 objectPosition: 'center',
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
