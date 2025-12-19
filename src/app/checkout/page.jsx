@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Copy, Check } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import Swal from 'sweetalert2';
@@ -41,6 +42,16 @@ export default function CheckoutPage() {
   // const [tempOrderId, setTempOrderId] = useState(null);
   // SSL Commerz Payment
   const [sslCommerzLoading, setSslCommerzLoading] = useState(false);
+  
+  // Copy state
+  const [copiedProvider, setCopiedProvider] = useState(null);
+
+  const handleCopyNumber = (e, number, provider) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(number);
+    setCopiedProvider(provider);
+    setTimeout(() => setCopiedProvider(null), 2000);
+  };
 
   useEffect(() => {
     if (!authLoading) {
@@ -928,7 +939,7 @@ export default function CheckoutPage() {
                   </button>
 
                   {/* SSL Commerz Payment */}
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => {
                       setPaymentMethod('sslcommerz');
@@ -956,7 +967,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="text-lg">💳</div>
                     </div>
-                  </button>
+                  </button> */}
 
                   {/* Bkash API Payment */}
                   {/* <button
@@ -1020,7 +1031,7 @@ export default function CheckoutPage() {
                   </button>
 
                   {/* SSL Commerz Payment Info */}
-                  {paymentMethod === 'sslcommerz' && (
+                  {/* {paymentMethod === 'sslcommerz' && (
                     <div className="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-lg">
                       <div className="flex items-start space-x-2">
                         <svg className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1035,7 +1046,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                     </div>
-                  )}
+                  )} */}
 
                   {/* Bkash API Payment Info */}
                   {/* {paymentMethod === 'bkash_api' && (
@@ -1060,43 +1071,50 @@ export default function CheckoutPage() {
                     <div className="mt-3 space-y-2 pl-2 border-l-4 border-purple-300">
                       <h4 className="text-sm font-semibold text-gray-800 mb-2">Select Mobile Banking</h4>
                       
-                      {/* Payment Number Info */}
-                      <div className="mb-3 p-2.5 bg-purple-50 border border-purple-200 rounded-lg">
-                        <div className="flex items-start space-x-2">
-                          <svg className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <div>
-                            <h4 className="font-semibold text-purple-900 text-xs mb-1">Send Payment To:</h4>
-                            <p className="text-xs text-purple-700 font-medium">
-                              Bikash, Nogod, Rocket: <span className="font-bold">01778644419</span>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-3">
                         {/* Bikash */}
                         <button
                           type="button"
                           onClick={() => setMobileBankingProvider('bikash')}
-                          className={`p-2.5 border-2 rounded-lg text-left transition-all ${
+                          className={`w-full p-4 border rounded-xl flex items-center justify-between transition-all ${
                             mobileBankingProvider === 'bikash'
-                              ? 'border-purple-600 bg-purple-50 shadow-md'
-                              : 'border-purple-200 hover:border-purple-400'
+                              ? 'border-pink-500 bg-white shadow-md ring-1 ring-pink-500'
+                              : 'border-gray-200 hover:border-gray-300 bg-white'
                           }`}
                         >
-                          <div className="flex items-center space-x-2">
-                            <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
-                              mobileBankingProvider === 'bikash' ? 'border-purple-600' : 'border-gray-300'
-                            }`}>
-                              {mobileBankingProvider === 'bikash' && (
-                                <div className="w-1.5 h-1.5 bg-purple-600 rounded-full"></div>
-                              )}
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 relative rounded-lg overflow-hidden border border-gray-100 flex-shrink-0">
+                              <Image 
+                                src="/logo/bkash.jpg" 
+                                alt="bKash" 
+                                fill 
+                                className="object-cover" 
+                              />
                             </div>
-                            <div>
-                              <h5 className="font-bold text-gray-900 text-xs">Bikash</h5>
+                            <div className="text-left">
+                              <h5 className="font-bold text-gray-900 text-base">bKash</h5>
+                              <div className="flex items-center space-x-2">
+                                <p className="text-gray-500 text-sm tracking-wide">01778644419</p>
+                                <div 
+                                  onClick={(e) => handleCopyNumber(e, '01778644419', 'bikash')}
+                                  className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer group"
+                                  title="Copy number"
+                                >
+                                  {copiedProvider === 'bikash' ? (
+                                    <Check className="w-3.5 h-3.5 text-green-500" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
+                                  )}
+                                </div>
+                              </div>
                             </div>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                            mobileBankingProvider === 'bikash' ? 'border-pink-500' : 'border-gray-300'
+                          }`}>
+                            {mobileBankingProvider === 'bikash' && (
+                              <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
+                            )}
                           </div>
                         </button>
 
@@ -1104,47 +1122,45 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={() => setMobileBankingProvider('nogod')}
-                          className={`p-2.5 border-2 rounded-lg text-left transition-all ${
+                          className={`w-full p-4 border rounded-xl flex items-center justify-between transition-all ${
                             mobileBankingProvider === 'nogod'
-                              ? 'border-purple-600 bg-purple-50 shadow-md'
-                              : 'border-purple-200 hover:border-purple-400'
+                              ? 'border-orange-500 bg-white shadow-md ring-1 ring-orange-500'
+                              : 'border-gray-200 hover:border-gray-300 bg-white'
                           }`}
                         >
-                          <div className="flex items-center space-x-2">
-                            <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
-                              mobileBankingProvider === 'nogod' ? 'border-purple-600' : 'border-gray-300'
-                            }`}>
-                              {mobileBankingProvider === 'nogod' && (
-                                <div className="w-1.5 h-1.5 bg-purple-600 rounded-full"></div>
-                              )}
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 relative rounded-lg overflow-hidden border border-gray-100 flex-shrink-0">
+                              <Image 
+                                src="/logo/nogod.webp" 
+                                alt="Nagad" 
+                                fill 
+                                className="object-cover" 
+                              />
                             </div>
-                            <div>
-                              <h5 className="font-bold text-gray-900 text-xs">Nogod</h5>
+                            <div className="text-left">
+                              <h5 className="font-bold text-gray-900 text-base">Nagad</h5>
+                              <div className="flex items-center space-x-2">
+                                <p className="text-gray-500 text-sm tracking-wide">01778644419</p>
+                                <div 
+                                  onClick={(e) => handleCopyNumber(e, '01778644419', 'nogod')}
+                                  className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer group"
+                                  title="Copy number"
+                                >
+                                  {copiedProvider === 'nogod' ? (
+                                    <Check className="w-3.5 h-3.5 text-green-500" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </button>
-
-                        {/* Rocket */}
-                        <button
-                          type="button"
-                          onClick={() => setMobileBankingProvider('rocket')}
-                          className={`p-2.5 border-2 rounded-lg text-left transition-all ${
-                            mobileBankingProvider === 'rocket'
-                              ? 'border-purple-600 bg-purple-50 shadow-md'
-                              : 'border-purple-200 hover:border-purple-400'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2">
-                            <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
-                              mobileBankingProvider === 'rocket' ? 'border-purple-600' : 'border-gray-300'
-                            }`}>
-                              {mobileBankingProvider === 'rocket' && (
-                                <div className="w-1.5 h-1.5 bg-purple-600 rounded-full"></div>
-                              )}
-                            </div>
-                            <div>
-                              <h5 className="font-bold text-gray-900 text-xs">Rocket</h5>
-                            </div>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                            mobileBankingProvider === 'nogod' ? 'border-orange-500' : 'border-gray-300'
+                          }`}>
+                            {mobileBankingProvider === 'nogod' && (
+                              <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                            )}
                           </div>
                         </button>
                       </div>
