@@ -18,23 +18,6 @@ export default function ImageSlider2() {
     fetchSliderImages();
   }, []);
 
-  const fallbackImages = [
-    {
-      image: { url: '/slider/2.jpg', alt: 'Mid-page promotion' },
-      title: 'Discover New Arrivals',
-      description: 'Fresh picks curated for you',
-      buttonText: 'Shop Now',
-      buttonLink: '/shop'
-    },
-    {
-      image: { url: '/slider/3.jpg', alt: 'Limited offers' },
-      title: 'Limited Time Offers',
-      description: 'Grab exclusive deals before they are gone',
-      buttonText: 'View Offers',
-      buttonLink: '/offers'
-    }
-  ];
-
   const fetchSliderImages = async () => {
     try {
       const response = await fetch('/api/slider?status=active&placement=secondary&sortBy=sortOrder');

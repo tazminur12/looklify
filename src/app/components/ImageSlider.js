@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Image } from '@unpic/react';
+import Image from 'next/image';
 
 export default function ImageSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -12,20 +12,10 @@ export default function ImageSlider() {
   const [loading, setLoading] = useState(true);
   const sliderRef = useRef(null);
   const touchStartTime = useRef(0);
-  const [isMobile, setIsMobile] = useState(false);
 
   // Fetch slider images from API
   useEffect(() => {
     fetchSliderImages();
-  }, []);
-
-  useEffect(() => {
-    const updateIsMobile = () => {
-      setIsMobile(typeof window !== 'undefined' && window.innerWidth < 768);
-    };
-    updateIsMobile();
-    window.addEventListener('resize', updateIsMobile);
-    return () => window.removeEventListener('resize', updateIsMobile);
   }, []);
 
   const fetchSliderImages = async () => {
@@ -247,7 +237,7 @@ export default function ImageSlider() {
   return (
     <div 
       ref={sliderRef}
-      className="relative w-full max-w-full overflow-hidden select-none touch-pan-y m-0 h-[180px] sm:h-[240px] md:h-[320px] lg:h-[420px] xl:h-[500px]"
+      className="relative w-full overflow-hidden select-none touch-pan-y m-0"
       style={{ 
         cursor: isDragging ? 'grabbing' : 'grab',
         userSelect: 'none',
@@ -276,6 +266,23 @@ export default function ImageSlider() {
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
         >
+          {/* Spacer Image to maintain aspect ratio based on the first image */}
+          {sliderImages.length > 0 && (
+            <img 
+              src={sliderImages[0].image.url} 
+              alt="" 
+              className="w-full h-auto invisible pointer-events-none select-none block"
+              aria-hidden="true"
+              style={{
+                display: 'block',
+                width: '100%',
+                height: 'auto',
+                opacity: 0,
+                pointerEvents: 'none'
+              }}
+            />
+          )}
+
           {/* Main Image Container */}
           <div 
             className="absolute inset-0 w-full h-full"
@@ -322,26 +329,21 @@ export default function ImageSlider() {
             <Image
               src={slider.image.url}
               alt={slider.image.alt || slider.title || 'Slider Image'}
-              width={1920}
-              height={810}
-              className="object-cover object-center select-none"
-              loading={index === 0 ? 'eager' : 'lazy'}
+              fill
+              className="object-contain object-center select-none"
+              priority={index === 0}
               sizes="100vw"
               draggable={false}
               onContextMenu={(e) => e.preventDefault()}
               onDragStart={(e) => e.preventDefault()}
               style={{ 
-                objectFit: isMobile ? 'contain' : 'cover',
+                objectFit: 'contain',
                 objectPosition: 'center',
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
                 WebkitUserSelect: 'none',
                 pointerEvents: 'none',
-                touchAction: 'none',
-                width: '100%',
-                height: '100%',
-                maxWidth: '100%',
-                boxSizing: 'border-box'
+                touchAction: 'none'
               }}
             />
             </div>
