@@ -36,7 +36,7 @@ export default function Home() {
       <FeaturesSection />
 
       {/* Stats Section */}
-      <StatsSection />
+      {/* <StatsSection /> */}
     </div>
   );
 }

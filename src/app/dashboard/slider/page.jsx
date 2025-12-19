@@ -459,15 +459,13 @@ export default function SliderManagementPage() {
                   📐 Recommended Image Size
                 </p>
                 <p className="text-xs text-blue-700 dark:text-blue-400">
-                  For best results, use <span className="font-semibold">1920 × 600 px</span> (3:1 ratio) or{" "}
-                  <span className="font-semibold">1920 × 800 px</span> (12:5 ratio) so the banner looks good on all devices.
+                  For the best full-width display without cropping, use <span className="font-semibold">1920 × 820 px</span> (21:9 ratio).
                 </p>
                 <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">
-                  Minimum size: <span className="font-semibold">1200 × 400 px</span> | Maximum file size:{" "}
-                  <span className="font-semibold">5 MB</span>
+                  <span className="font-bold">Important:</span> All slider images must have the <span className="font-semibold">same dimensions</span> for smooth transitions.
                 </p>
                 <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">
-                  Supported formats: <span className="font-semibold">PNG, JPG, WEBP</span>
+                  Supported formats: <span className="font-semibold">PNG, JPG, WEBP</span> | Max size: <span className="font-semibold">5 MB</span>
                 </p>
               </div>
               
@@ -525,7 +523,7 @@ export default function SliderManagementPage() {
                             PNG, JPG, WEBP up to 5MB
                           </p>
                           <p className="text-gray-400 dark:text-gray-500 text-xs">
-                            Recommended: 1920 x 600px (3:1 ratio)
+                            Recommended: 1920 x 820px (21:9 ratio)
                           </p>
                         </div>
                       </>
