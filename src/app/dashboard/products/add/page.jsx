@@ -635,13 +635,9 @@ export default function AddProductPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Caption *
               </label>
-              <textarea
+              <RichTextEditor
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                rows="3"
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm ${
-                  errors.description ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
-                }`}
+                onChange={(content) => handleInputChange('description', content)}
                 placeholder="Enter product caption"
               />
               {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description}</p>}
@@ -651,13 +647,46 @@ export default function AddProductPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Description (Bengali)
               </label>
-              <textarea
+              <RichTextEditor
                 value={formData.bengaliDescription}
-                onChange={(e) => handleInputChange('bengaliDescription', e.target.value)}
-                rows="3"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm"
+                onChange={(content) => handleInputChange('bengaliDescription', content)}
                 placeholder="Enter Bengali product description"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Ingredients & Usage Instructions */}
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
+            <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+            Ingredients & Usage
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Ingredients */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Ingredients
+              </label>
+              <RichTextEditor
+                value={typeof formData.ingredients === 'string' ? formData.ingredients : (Array.isArray(formData.ingredients) ? formData.ingredients.join('<br>') : '')}
+                onChange={(html) => setFormData(prev => ({ ...prev, ingredients: html }))}
+                placeholder="Enter product ingredients with formatting..."
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Use the editor toolbar to format ingredients list</p>
+            </div>
+
+            {/* Usage Instructions */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                How to Use (Usage Instructions)
+              </label>
+              <RichTextEditor
+                value={typeof formData.features === 'string' ? formData.features : (Array.isArray(formData.features) ? formData.features.join('<br>') : '')}
+                onChange={(html) => setFormData(prev => ({ ...prev, features: html }))}
+                placeholder="Enter usage instructions with formatting..."
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Use the editor toolbar to format usage instructions</p>
             </div>
           </div>
         </div>
@@ -1087,40 +1116,7 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        {/* Ingredients & Usage Instructions */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
-            <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-            Ingredients & Usage
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Ingredients */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Ingredients
-              </label>
-              <RichTextEditor
-                value={typeof formData.ingredients === 'string' ? formData.ingredients : (Array.isArray(formData.ingredients) ? formData.ingredients.join('<br>') : '')}
-                onChange={(html) => setFormData(prev => ({ ...prev, ingredients: html }))}
-                placeholder="Enter product ingredients with formatting..."
-              />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Use the editor toolbar to format ingredients list</p>
-            </div>
 
-            {/* Usage Instructions */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                How to Use (Usage Instructions)
-              </label>
-              <RichTextEditor
-                value={typeof formData.features === 'string' ? formData.features : (Array.isArray(formData.features) ? formData.features.join('<br>') : '')}
-                onChange={(html) => setFormData(prev => ({ ...prev, features: html }))}
-                placeholder="Enter usage instructions with formatting..."
-              />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Use the editor toolbar to format usage instructions</p>
-            </div>
-          </div>
-        </div>
 
         {/* Skin Type & Concerns */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">

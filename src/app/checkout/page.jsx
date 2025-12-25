@@ -1021,7 +1021,7 @@ export default function CheckoutPage() {
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-900 text-sm">Manual Mobile Banking</h3>
-                          <p className="text-xs text-gray-600 mt-0.5">Pay with manual mobile banking (Bikash, Nogod, Rocket)</p>
+                          <p className="text-xs text-gray-600 mt-0.5">Pay with manual mobile banking (Bikash, Nogod)</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
