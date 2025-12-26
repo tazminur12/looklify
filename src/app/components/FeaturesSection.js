@@ -33,8 +33,12 @@ export default function FeaturesSection() {
 
   return (
     <section className="pt-4 pb-1 sm:py-10 bg-white mb-1 sm:mb-8 border-t border-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-8 sm:gap-6 lg:gap-0">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Why Choose Looklify?</h2>
+          <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto rounded-full"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-3 gap-y-4 sm:gap-6 lg:gap-0">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (

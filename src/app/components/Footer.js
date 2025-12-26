@@ -20,8 +20,6 @@ export default function Footer() {
             <div className="space-y-0.5 text-xs sm:text-sm text-white">
               <p>Beauty Redefined</p>
               <p>Glow Up with Confidence.</p>
-              <p>100% Authentic Skincare</p>
-              <p>& Beauty Products.</p>
             </div>
           </div>
 
