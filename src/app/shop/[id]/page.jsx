@@ -995,9 +995,10 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
               {/* Caption - Display below buttons */}
               {product.description && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                    {product.description}
-                  </p>
+                  <div 
+                    className="text-sm text-gray-700 leading-relaxed whitespace-pre-line"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
                 </div>
               )}
             </div>
@@ -1083,7 +1084,10 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1.5 text-sm">Description:</h4>
                   {product.bengaliDescription ? (
-                    <p className="text-gray-700 whitespace-pre-line text-xs leading-relaxed">{product.bengaliDescription}</p>
+                    <div 
+                      className="text-gray-700 whitespace-pre-line text-xs leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: product.bengaliDescription }}
+                    />
                   ) : (
                     <p className="text-gray-500 text-xs italic">No Bengali description available</p>
                   )}
