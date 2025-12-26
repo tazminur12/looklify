@@ -731,6 +731,44 @@ function ProductDetailsView({ product, productId, loading, error, quantity, setQ
       style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
     >
       <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 py-6">
+        {product && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Product",
+                "name": product.name,
+                "image": imageUrl,
+                "description": product.description || product.bengaliDescription || "",
+                "sku": product.sku || product.productCode || "",
+                "brand": {
+                  "@type": "Brand",
+                  "name": product.brand?.name || product.brand || "Looklify"
+                },
+                ...(product.rating?.average
+                  ? {
+                      "aggregateRating": {
+                        "@type": "AggregateRating",
+                        "ratingValue": Number(product.rating.average).toFixed(1),
+                        "reviewCount": product.rating.count || 0
+                      }
+                    }
+                  : {}),
+                "offers": {
+                  "@type": "Offer",
+                  "url": `https://looklify.com/shop/${productId}`,
+                  "priceCurrency": "BDT",
+                  "price": displayPrice,
+                  "availability":
+                    product.stock > 0
+                      ? "https://schema.org/InStock"
+                      : "https://schema.org/OutOfStock"
+                }
+              })
+            }}
+          />
+        )}
         {/* Compact Breadcrumb */}
         <nav className="flex items-center space-x-1.5 text-xs text-gray-500 mb-4">
           <Link href="/" className="hover:text-purple-600">Home</Link>
