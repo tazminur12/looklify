@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -7,16 +8,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
           {/* Logo and Tagline Section */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-white">
-                LOOKLIFY
-              </span>
-            </div>
+            <Link href="/" className="flex items-center">
+              <Image 
+                src="/logo/looklify.png" 
+                alt="Looklify Logo" 
+                width={150} 
+                height={50}
+                className="h-10 sm:h-12 w-auto hover:scale-105 transition-transform duration-300"
+              />
+            </Link>
             <div className="space-y-0.5 text-xs sm:text-sm text-white">
               <p>Beauty Redefined</p>
               <p>Glow Up with Confidence.</p>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import dynamic from 'next/dynamic';
@@ -169,7 +170,14 @@ export default function SignupPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/" className="flex items-center justify-center">
-              <span className="text-xl font-bold text-gray-900">LOOKLIFY</span>
+              <Image 
+                src="/logo/looklify.png" 
+                alt="Looklify Logo" 
+                width={150} 
+                height={50}
+                className="h-12 w-auto hover:scale-105 transition-transform duration-300"
+                priority
+              />
             </Link>
           </div>
 
