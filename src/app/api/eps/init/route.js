@@ -1,146 +1,119 @@
-/**
- * EPS Payment Gateway - Initialize Payment
- * POST /api/eps/init
- * 
- * This endpoint initializes a payment with EPS
- * Returns a redirect URL for the customer to complete payment
- */
-
 import { NextResponse } from 'next/server';
-import { generateXHash, getEPSConfig, generateMerchantTransactionId } from '@/lib/eps';
+import { generateHash, generateMerchantTransactionId } from '@/lib/epsHash';
+
+export const runtime = 'nodejs';
 
 export async function POST(request) {
   try {
-    // Get EPS configuration
-    const config = getEPSConfig();
-
-    // Parse request body
     const body = await request.json();
     const {
       token,
-      amount,
+      merchantTransactionId,
+      totalAmount,
       customerName,
       customerEmail,
+      customerAddress,
+      customerCity,
+      customerCountry,
       customerPhone,
-      orderId,
+      productName,
+      productProfile,
       successUrl,
       failUrl,
       cancelUrl
     } = body;
 
-    // Validate required fields
-    if (!token) {
+    if (!token || !totalAmount) {
       return NextResponse.json(
-        { success: false, error: 'Token is required' },
+        { error: 'Token and totalAmount required' },
         { status: 400 }
       );
     }
 
-    if (!amount || amount <= 0) {
+    const merchantId = process.env.EPS_MERCHANT_ID;
+    const storeId = process.env.EPS_STORE_ID;
+    const apiBase = process.env.EPS_API_BASE;
+
+    if (!merchantId || !storeId || !apiBase) {
       return NextResponse.json(
-        { success: false, error: 'Valid amount is required' },
-        { status: 400 }
+        { error: 'EPS merchant configuration missing' },
+        { status: 500 }
       );
     }
 
-    // Generate unique merchant transaction ID
-    const merchantTransactionId = orderId || generateMerchantTransactionId();
+    const txnId = merchantTransactionId || generateMerchantTransactionId();
+    
+    // Hash input for InitializeEPS is merchantTransactionId
+    const xHash = generateHash(txnId);
 
-    // Generate x-hash using merchantTransactionId
-    const xHash = generateXHash(merchantTransactionId);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-    // Get base URL for callbacks
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-                    'http://localhost:3000';
-
-    // Prepare EPS payment request
-    const paymentRequest = {
-      MerchantId: config.merchantId,
-      StoreId: config.storeId,
-      MerchantTransactionId: merchantTransactionId,
-      OrderId: merchantTransactionId, // EPS requires OrderId field
-      Amount: parseFloat(amount).toFixed(2),
-      Currency: 'BDT',
-      CustomerName: customerName || 'Customer',
-      CustomerEmail: customerEmail || 'customer@example.com',
-      CustomerPhone: customerPhone || '01700000000',
-      SuccessUrl: successUrl || `${baseUrl}/api/eps/callback/success`,
-      FailUrl: failUrl || `${baseUrl}/api/eps/callback/fail`,
-      CancelUrl: cancelUrl || `${baseUrl}/api/eps/callback/cancel`,
-      OrderDetails: `Order #${merchantTransactionId}`,
-      ProductDetails: `Order #${merchantTransactionId}` // Some gateways need this
+    // EPS API exact field requirements
+    const payload = {
+      merchantId,
+      storeId,
+      merchantTransactionId: txnId,
+      OrderId: txnId, // EPS needs this separate field
+      transactionTypeId: 1, // Required by spec
+      totalAmount: parseFloat(totalAmount).toFixed(2),
+      successUrl: successUrl || `${baseUrl}/api/eps/callback/success`,
+      failUrl: failUrl || `${baseUrl}/api/eps/callback/fail`,
+      cancelUrl: cancelUrl || `${baseUrl}/api/eps/callback/cancel`,
+      customerName: customerName || 'Customer',
+      customerEmail: customerEmail || 'customer@example.com',
+      customerAddress: customerAddress || 'Bangladesh',
+      customerCity: customerCity || 'Dhaka',
+      customerCountry: customerCountry || 'Bangladesh',
+      customerPhone: customerPhone || '01700000000',
+      productName: productName || 'Product',
+      productProfile: productProfile || 'general' // Required by spec
     };
 
-    console.log('💳 EPS Init Request:', {
-      url: `${config.apiBase}/v1/EPSEngine/InitializeEPS`,
-      merchantTransactionId,
-      amount: paymentRequest.Amount,
-      xHash: xHash.substring(0, 20) + '...'
+    console.log('💳 EPS Init Request (New Spec):', {
+      url: `${apiBase}/v1/EPSEngine/InitializeEPS`,
+      merchantTransactionId: txnId,
+      totalAmount: payload.totalAmount,
+      transactionTypeId: payload.transactionTypeId,
+      hasOrderId: !!payload.OrderId, // Check if OrderId exists
+      xHash: xHash.substring(0, 20) + '...',
+      payload
     });
 
-    // Call EPS API to initialize payment
-    const response = await fetch(`${config.apiBase}/v1/EPSEngine/InitializeEPS`, {
+    const response = await fetch(`${apiBase}/v1/EPSEngine/InitializeEPS`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'x-hash': xHash
+        'x-hash': xHash,
+        'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(paymentRequest)
+      body: JSON.stringify(payload)
     });
 
     const data = await response.json();
 
-    // EPS API may return fields with different casing
-    const redirectUrl = data.redirectUrl || data.RedirectURL || data.redirectURL;
-    const transactionId = data.transactionId || data.TransactionId;
-    const responseMessage = data.responseMessage || data.ResponseMessage;
-    const responseCode = data.responseCode || data.ResponseCode;
-
     console.log('💳 EPS Init Response:', {
       status: response.status,
-      responseCode: responseCode,
-      hasRedirectUrl: !!redirectUrl,
+      hasRedirectURL: !!data.RedirectURL,
       fullResponse: data
     });
 
-    if (!response.ok || !redirectUrl) {
-      console.error('❌ EPS Init Error:', data);
-      
-      // Get error message from different possible fields
-      const errorMessage = data.errorMessage || data.ErrorMessage || 
-                          responseMessage || 
-                          'Failed to initialize EPS payment';
-      
+    if (!response.ok || !data.RedirectURL) {
+      console.error('❌ Init Error:', data);
       return NextResponse.json(
-        {
-          success: false,
-          error: errorMessage,
-          errorCode: data.errorCode || data.ErrorCode,
-          details: data
-        },
-        { status: response.status || 500 }
+        { error: 'Payment initialization failed', details: data },
+        { status: response.status }
       );
     }
 
-    // Return payment initialization data
     return NextResponse.json({
       success: true,
-      redirectUrl: redirectUrl,
-      merchantTransactionId: merchantTransactionId,
-      transactionId: transactionId,
-      message: 'Payment initialized successfully'
+      redirectUrl: data.RedirectURL,
+      merchantTransactionId: txnId
     });
-
   } catch (error) {
-    console.error('❌ EPS Init Exception:', error);
+    console.error('❌ Init Exception:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error while initializing EPS payment',
-        message: error.message
-      },
+      { error: 'Server error', message: error.message },
       { status: 500 }
     );
   }

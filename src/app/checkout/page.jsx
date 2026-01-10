@@ -247,7 +247,7 @@ export default function CheckoutPage() {
     setEpsPaymentLoading(true);
 
     try {
-      console.log('💳 Starting EPS payment flow...');
+      console.log('💳 Starting EPS payment flow (New Spec)...');
 
       // Step 1: Get authentication token
       const tokenResponse = await fetch('/api/eps/token', {
@@ -257,7 +257,7 @@ export default function CheckoutPage() {
 
       const tokenData = await tokenResponse.json();
 
-      if (!tokenData.success || !tokenData.token) {
+      if (!tokenData.token) {
         throw new Error(tokenData.error || 'Failed to get payment token');
       }
 
@@ -311,17 +311,22 @@ export default function CheckoutPage() {
       const orderId = orderResult.data.orderId;
       console.log('✅ Order created:', orderId);
 
-      // Step 3: Initialize EPS payment
+      // Step 3: Initialize EPS payment with correct spec
       const initResponse = await fetch('/api/eps/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: tokenData.token,
-          amount: calculateTotal(),
+          merchantTransactionId: orderId,
+          totalAmount: calculateTotal(),
           customerName: formData.fullName,
           customerEmail: formData.email,
           customerPhone: formData.phone,
-          orderId: orderId
+          customerAddress: formData.address,
+          customerCity: shippingLocation === 'insideDhaka' ? 'Dhaka' : 'Outside Dhaka',
+          customerCountry: 'Bangladesh',
+          productName: `Order ${orderId}`,
+          productProfile: 'general'
         })
       });
 
