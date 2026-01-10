@@ -91,7 +91,7 @@ const OrderSchema = new mongoose.Schema({
   payment: {
     method: {
       type: String,
-      enum: ['cod', 'online', 'bank_transfer', 'sslcommerz'],
+      enum: ['cod', 'online', 'bank_transfer', 'sslcommerz', 'eps'],
       required: true
     },
     status: {
@@ -101,7 +101,7 @@ const OrderSchema = new mongoose.Schema({
     },
     provider: {
       type: String,
-      enum: ['bikash', 'nogod', 'rocket', 'bkash', 'sslcommerz'],
+      enum: ['bikash', 'nogod', 'rocket', 'bkash', 'sslcommerz', 'eps'],
       default: null
     },
     phoneNumber: {
@@ -145,6 +145,21 @@ const OrderSchema = new mongoose.Schema({
       type: String,
       default: null,
       trim: true
+    },
+    // EPS Payment Gateway fields
+    epsTransactionId: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    epsMerchantTransactionId: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    epsData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
     }
   },
   pricing: {
