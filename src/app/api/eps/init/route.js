@@ -9,15 +9,20 @@ export async function POST(request) {
     const {
       token,
       merchantTransactionId,
+      customerOrderId,
       totalAmount,
       customerName,
       customerEmail,
       customerAddress,
+      customerAddress2,
       customerCity,
+      customerState,
+      customerPostcode,
       customerCountry,
       customerPhone,
       productName,
       productProfile,
+      productCategory,
       successUrl,
       failUrl,
       cancelUrl
@@ -42,39 +47,59 @@ export async function POST(request) {
     }
 
     const txnId = merchantTransactionId || generateMerchantTransactionId();
+    const orderId = customerOrderId || `ORDER-${Date.now()}`;
     
-    // Hash input for InitializeEPS is merchantTransactionId
+    // Hash input for InitializeEPS is merchantTransactionId (per documentation)
     const xHash = generateHash(txnId);
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-    // EPS API exact field requirements
+    // EPS API exact field requirements from documentation
     const payload = {
       merchantId,
       storeId,
-      merchantTransactionId: txnId,
-      OrderId: txnId, // EPS needs this separate field
-      transactionTypeId: 1, // Required by spec
+      CustomerOrderId: orderId, // ← This is the "OrderId" field!
+      merchantTransactionId: txnId, // Note: typo in doc says "merchantTransactonId"
+      TransactionTypeId: 1, // 1 = Web
       totalAmount: parseFloat(totalAmount).toFixed(2),
       successUrl: successUrl || `${baseUrl}/api/eps/callback/success`,
       failUrl: failUrl || `${baseUrl}/api/eps/callback/fail`,
       cancelUrl: cancelUrl || `${baseUrl}/api/eps/callback/cancel`,
       customerName: customerName || 'Customer',
       customerEmail: customerEmail || 'customer@example.com',
-      customerAddress: customerAddress || 'Bangladesh',
-      customerCity: customerCity || 'Dhaka',
-      customerCountry: customerCountry || 'Bangladesh',
-      customerPhone: customerPhone || '01700000000',
-      productName: productName || 'Product',
-      productProfile: productProfile || 'general' // Required by spec
+      CustomerAddress: customerAddress || 'Bangladesh', // Capital C per doc
+      CustomerAddress2: customerAddress2 || '', // Optional
+      CustomerCity: customerCity || 'Dhaka', // Capital C
+      CustomerState: customerState || 'Dhaka', // Mandatory!
+      CustomerPostcode: customerPostcode || '1000', // Mandatory!
+      CustomerCountry: customerCountry || 'BD', // Capital C
+      CustomerPhone: customerPhone || '01700000000', // Capital C
+      // Optional shipping fields
+      ShipmentName: '',
+      ShipmentAddress: '',
+      ShipmentAddress2: '',
+      ShipmentCity: '',
+      ShipmentState: '',
+      ShipmentPostcode: '',
+      ShipmentCountry: '',
+      // Optional value fields
+      ValueA: '',
+      ValueB: '',
+      ValueC: '',
+      ValueD: '',
+      ShippingMethod: 'NO',
+      NoOfItem: '1',
+      ProductName: productName || 'Product',
+      ProductProfile: productProfile || 'general',
+      ProductCategory: productCategory || 'General'
     };
 
-    console.log('💳 EPS Init Request (New Spec):', {
+    console.log('💳 EPS Init Request (Correct Spec):', {
       url: `${apiBase}/v1/EPSEngine/InitializeEPS`,
+      CustomerOrderId: orderId,
       merchantTransactionId: txnId,
       totalAmount: payload.totalAmount,
-      transactionTypeId: payload.transactionTypeId,
-      hasOrderId: !!payload.OrderId, // Check if OrderId exists
+      TransactionTypeId: payload.TransactionTypeId,
       xHash: xHash.substring(0, 20) + '...',
       payload
     });
@@ -100,7 +125,11 @@ export async function POST(request) {
     if (!response.ok || !data.RedirectURL) {
       console.error('❌ Init Error:', data);
       return NextResponse.json(
-        { error: 'Payment initialization failed', details: data },
+        { 
+          success: false,
+          error: data.ErrorMessage || 'Payment initialization failed', 
+          details: data 
+        },
         { status: response.status }
       );
     }
@@ -108,12 +137,18 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       redirectUrl: data.RedirectURL,
-      merchantTransactionId: txnId
+      transactionId: data.TransactionId,
+      merchantTransactionId: txnId,
+      customerOrderId: orderId
     });
   } catch (error) {
     console.error('❌ Init Exception:', error);
     return NextResponse.json(
-      { error: 'Server error', message: error.message },
+      { 
+        success: false,
+        error: 'Server error', 
+        message: error.message 
+      },
       { status: 500 }
     );
   }

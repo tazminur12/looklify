@@ -318,15 +318,19 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           token: tokenData.token,
           merchantTransactionId: orderId,
+          customerOrderId: orderId, // This is the "OrderId" field
           totalAmount: calculateTotal(),
           customerName: formData.fullName,
           customerEmail: formData.email,
           customerPhone: formData.phone,
           customerAddress: formData.address,
           customerCity: shippingLocation === 'insideDhaka' ? 'Dhaka' : 'Outside Dhaka',
-          customerCountry: 'Bangladesh',
+          customerState: shippingLocation === 'insideDhaka' ? 'Dhaka' : 'Bangladesh',
+          customerPostcode: '1000',
+          customerCountry: 'BD',
           productName: `Order ${orderId}`,
-          productProfile: 'general'
+          productProfile: 'general',
+          productCategory: 'General'
         })
       });
 
