@@ -14,13 +14,12 @@
 :root {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-roboto-slab: var(--font-roboto-slab);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-roboto-slab), serif;
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;

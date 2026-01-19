@@ -1,4 +1,3 @@
-import { Roboto_Slab } from "next/font/google";
 import "./globals.css";
 import AuthSessionProvider from "./providers/SessionProvider";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -7,11 +6,6 @@ import { WishlistProvider } from "./contexts/WishlistContext";
 import LayoutWrapper from "./components/LayoutWrapper";
 import ChatWidget from "./components/ChatWidget";
 import { Toaster } from "react-hot-toast";
-
-const robotoSlab = Roboto_Slab({
-  variable: "--font-roboto-slab",
-  subsets: ["latin"],
-});
 
 export const metadata = {
   metadataBase: new URL("https://looklify.com"),
@@ -122,7 +116,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body
-        className={`${robotoSlab.variable} antialiased bg-white text-gray-900 transition-colors duration-300`}
+        className="antialiased bg-white text-gray-900 transition-colors duration-300"
       >
         <AuthSessionProvider>
           <AuthProvider>

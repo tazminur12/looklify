@@ -149,3 +149,59 @@ export async function PUT(request, { params }) {
   }
 }
 
+// DELETE /api/users/[id] - Delete user
+export async function DELETE(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await dbConnect();
+
+    const { id } = await params;
+
+    // Only admins can delete users
+    const currentUser = await User.findById(session.user.id);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const isAdmin = ['Super Admin', 'Admin'].includes(currentUser.role);
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Forbidden: Only admins can delete users' }, { status: 403 });
+    }
+
+    // Prevent self-deletion
+    if (id === session.user.id) {
+      return NextResponse.json({ error: 'You cannot delete your own account' }, { status: 400 });
+    }
+
+    // Find user to delete
+    const userToDelete = await User.findById(id);
+    if (!userToDelete) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Prevent deleting Super Admin
+    if (userToDelete.role === 'Super Admin') {
+      return NextResponse.json({ error: 'Cannot delete Super Admin account' }, { status: 400 });
+    }
+
+    // Delete user
+    await User.findByIdAndDelete(id);
+
+    return NextResponse.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+

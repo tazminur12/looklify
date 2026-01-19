@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function RoleManagement() {
-  const { user, isAdmin } = useAuth();
+  const { user: currentUser, isAdmin } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,6 +18,19 @@ export default function RoleManagement() {
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [userToUpdate, setUserToUpdate] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newUserData, setNewUserData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    role: 'Staff',
+    isActive: true
+  });
+  const [creating, setCreating] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const roles = [
     { 
@@ -47,13 +60,6 @@ export default function RoleManagement() {
       color: 'bg-gradient-to-r from-green-500 to-green-600 text-white border-green-500',
       icon: '🛠️',
       description: 'Customer support'
-    },
-    { 
-      value: 'Customer', 
-      label: 'Customer', 
-      color: 'bg-gradient-to-r from-purple-500 to-purple-600 text-white border-purple-500',
-      icon: '🛒',
-      description: 'Basic user access'
     },
     { 
       value: 'User', 
@@ -173,6 +179,78 @@ export default function RoleManagement() {
     }
   };
 
+  const openDeleteModal = (userData) => {
+    setUserToDelete(userData);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setDeleting(true);
+      setError(null);
+
+      const response = await fetch(`/api/users/${userToDelete._id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user');
+      }
+
+      // Remove user from local state
+      setUsers(users.filter(user => user._id !== userToDelete._id));
+      setSelectedUsers(selectedUsers.filter(id => id !== userToDelete._id));
+
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+      setSuccess(`User "${userToDelete.name}" deleted successfully!`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) return;
+
+    try {
+      setDeleting(true);
+      setError(null);
+
+      const promises = selectedUsers.map(userId => 
+        fetch(`/api/users/${userId}`, {
+          method: 'DELETE',
+        })
+      );
+
+      const responses = await Promise.all(promises);
+      const failed = responses.filter(r => !r.ok);
+      
+      if (failed.length > 0) {
+        throw new Error(`${failed.length} users failed to delete`);
+      }
+
+      // Remove deleted users from local state
+      setUsers(users.filter(user => !selectedUsers.includes(user._id)));
+      const deletedCount = selectedUsers.length;
+      setSelectedUsers([]);
+      setShowBulkActions(false);
+      setSuccess(`Successfully deleted ${deletedCount} user(s)!`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const toggleUserSelection = (userId) => {
     setSelectedUsers(prev => 
       prev.includes(userId) 
@@ -186,6 +264,9 @@ export default function RoleManagement() {
   };
 
   const filteredUsers = users.filter(user => {
+    // Exclude Customer role from display
+    if (user.role === 'Customer') return false;
+    
     const matchesSearch = (user.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                          (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
@@ -228,9 +309,18 @@ export default function RoleManagement() {
               </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-xl font-bold">{users.length}</div>
-            <div className="text-purple-100 text-xs">Total Users</div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-xl font-bold">{filteredUsers.length}</div>
+              <div className="text-purple-100 text-xs">Staff Users</div>
+            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+            >
+              <span>➕</span>
+              Create Account
+            </button>
           </div>
         </div>
       </div>
@@ -306,19 +396,32 @@ export default function RoleManagement() {
                   Clear Selection
                 </button>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-purple-600 dark:text-purple-400">Bulk assign role:</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-purple-600 dark:text-purple-400">Bulk actions:</span>
                 <select
-                  onChange={(e) => handleBulkRoleChange(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleBulkRoleChange(e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
                   className="px-2 py-1 border border-purple-300 dark:border-purple-600 rounded-lg bg-white dark:bg-gray-700 text-xs"
                 >
-                  <option value="">Select Role</option>
+                  <option value="">Assign Role</option>
                   {roles.map(role => (
                     <option key={role.value} value={role.value}>
                       {role.icon} {role.label}
                     </option>
                   ))}
                 </select>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={deleting}
+                  className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50 text-white px-3 py-1 rounded-lg font-semibold text-xs shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1"
+                >
+                  <span>🗑️</span>
+                  {deleting ? 'Deleting...' : 'Delete Selected'}
+                </button>
               </div>
             </div>
           </div>
@@ -471,10 +574,19 @@ export default function RoleManagement() {
                         Change
                       </button>
                       <button
-                        className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-2 py-1 rounded-lg font-semibold text-xs shadow-md hover:shadow-lg transition-all duration-200"
-                        title="View Details"
+                        onClick={() => openDeleteModal(user)}
+                        disabled={user._id === currentUser?._id || user.role === 'Super Admin'}
+                        className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-2 py-1 rounded-lg font-semibold text-xs shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1"
+                        title={
+                          user.role === 'Super Admin' 
+                            ? 'Cannot delete Super Admin' 
+                            : user._id === currentUser?._id 
+                            ? 'Cannot delete yourself' 
+                            : 'Delete User'
+                        }
                       >
-                        👁️
+                        <span>🗑️</span>
+                        Delete
                       </button>
                     </div>
                   </td>
@@ -542,7 +654,6 @@ export default function RoleManagement() {
             </div>
             <div className="space-y-1">
               <p><strong className="text-green-600 dark:text-green-400">Support:</strong> Can handle customer support and basic order management</p>
-              <p><strong className="text-purple-600 dark:text-purple-400">Customer:</strong> Basic user access to shop and profile</p>
               <p><strong className="text-gray-600 dark:text-gray-400">User:</strong> Limited access with basic functionality</p>
             </div>
           </div>
@@ -634,6 +745,279 @@ export default function RoleManagement() {
                   setNewRole('');
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create New Account Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                <span className="text-lg">➕</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Create New Account
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  Create a new staff/admin account
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newUserData.name}
+                  onChange={(e) => setNewUserData({...newUserData, name: e.target.value})}
+                  placeholder="Enter full name"
+                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:bg-gray-700 dark:text-white transition-all duration-200 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={newUserData.email}
+                  onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
+                  placeholder="Enter email address"
+                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:bg-gray-700 dark:text-white transition-all duration-200 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={newUserData.phone}
+                  onChange={(e) => setNewUserData({...newUserData, phone: e.target.value})}
+                  placeholder="01XXXXXXXXX"
+                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:bg-gray-700 dark:text-white transition-all duration-200 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  value={newUserData.password}
+                  onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
+                  placeholder="Enter password (min 6 characters)"
+                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:bg-gray-700 dark:text-white transition-all duration-200 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Role <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={newUserData.role}
+                  onChange={(e) => setNewUserData({...newUserData, role: e.target.value})}
+                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:bg-gray-700 dark:text-white transition-all duration-200 text-sm"
+                >
+                  {roles.map(role => (
+                    <option key={role.value} value={role.value}>
+                      {role.icon} {role.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={newUserData.isActive}
+                  onChange={(e) => setNewUserData({...newUserData, isActive: e.target.checked})}
+                  className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+                />
+                <label htmlFor="isActive" className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Account Active
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-6">
+              <button
+                onClick={async () => {
+                  if (!newUserData.name || !newUserData.email || !newUserData.password) {
+                    setError('Please fill all required fields');
+                    setTimeout(() => setError(null), 3000);
+                    return;
+                  }
+
+                  setCreating(true);
+                  setError(null);
+
+                  try {
+                    const response = await fetch('/api/auth/register', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        name: newUserData.name,
+                        email: newUserData.email,
+                        phone: newUserData.phone || '',
+                        password: newUserData.password,
+                        role: newUserData.role,
+                        isActive: newUserData.isActive
+                      }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                      throw new Error(data.error || 'Failed to create account');
+                    }
+
+                    setSuccess('Account created successfully!');
+                    setShowCreateModal(false);
+                    setNewUserData({
+                      name: '',
+                      email: '',
+                      phone: '',
+                      password: '',
+                      role: 'Staff',
+                      isActive: true
+                    });
+                    fetchUsers();
+                    setTimeout(() => setSuccess(null), 3000);
+                  } catch (err) {
+                    setError(err.message);
+                    setTimeout(() => setError(null), 5000);
+                  } finally {
+                    setCreating(false);
+                  }
+                }}
+                disabled={creating}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-200 disabled:cursor-not-allowed"
+              >
+                <span className="flex items-center justify-center gap-1">
+                  {creating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>✅</span>
+                      <span>Create Account</span>
+                    </>
+                  )}
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewUserData({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    password: '',
+                    role: 'Staff',
+                    isActive: true
+                  });
+                }}
+                disabled={creating}
+                className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && userToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">⚠️</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Delete User Account
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                  {userToDelete.name?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-bold text-gray-900 dark:text-white mb-1">
+                    {userToDelete.name}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                    {userToDelete.email}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-lg ${getRoleColor(userToDelete.role)}`}>
+                      <span className="text-sm">{roles.find(r => r.value === userToDelete.role)?.icon}</span>
+                      {userToDelete.role}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
+              <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                <strong>Warning:</strong> Deleting this user will permanently remove their account and all associated data. This action cannot be reversed.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDeleteUser}
+                disabled={deleting}
+                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🗑️</span>
+                    <span>Delete User</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setUserToDelete(null);
+                }}
+                disabled={deleting}
+                className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
               >
                 Cancel
               </button>

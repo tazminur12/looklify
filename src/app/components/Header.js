@@ -244,7 +244,7 @@ export default function Header() {
 
           {/* Mobile Search Bar - inline with header - Only visible on mobile */}
           <div className="flex lg:hidden items-center gap-1.5 sm:gap-2 ml-auto">
-            <div ref={mobileSearchRef} className="relative w-[55vw] max-w-[220px]">
+            <div ref={mobileSearchRef} className="relative w-[55vw] max-w-[200px]">
               <form onSubmit={handleSearch} className="w-full">
                 <div className="flex items-stretch w-full border border-[#6e33a6] rounded-full overflow-hidden bg-white shadow-sm">
                   <input
@@ -262,13 +262,13 @@ export default function Header() {
                       }
                     }}
                     placeholder="Search"
-                    className="flex-1 px-3 sm:px-3.5 py-1.5 text-[11px] sm:text-xs text-[#4b4f68] placeholder-[#9fa3b8] focus:outline-none font-medium bg-white"
+                    className="flex-1 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs text-[#4b4f68] placeholder-[#9fa3b8] focus:outline-none font-medium bg-white"
                   />
                   <button
                     type="submit"
-                    className="bg-[#6e33a6] text-white px-3.5 py-1.5 flex items-center justify-center flex-shrink-0 hover:bg-[#5a2a8a] transition-colors min-w-[40px]"
+                    className="bg-[#6e33a6] text-white px-3 py-1 flex items-center justify-center flex-shrink-0 hover:bg-[#5a2a8a] transition-colors min-w-[36px]"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
@@ -386,7 +386,7 @@ export default function Header() {
                 <select 
                   value={selectedSubcategory}
                   onChange={(e) => setSelectedSubcategory(e.target.value)}
-                  className="bg-gray-50 border-r border-purple-200 px-4 py-3.5 text-sm text-gray-700 focus:outline-none focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[180px] cursor-pointer font-medium"
+                  className="bg-gray-50 border-r border-purple-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[160px] cursor-pointer font-medium"
                 >
                   <option value="">All Categories</option>
                   {loadingSubcategories ? (
@@ -414,13 +414,13 @@ export default function Header() {
                     }
                   }}
                   placeholder="Search for products..." 
-                  className="flex-1 px-4 py-3.5 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium"
+                  className="flex-1 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium"
                 />
                 <button 
                   type="submit"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3.5 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center justify-center hover:shadow-lg"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center justify-center hover:shadow-lg"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </button>

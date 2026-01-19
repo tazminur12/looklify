@@ -13,8 +13,8 @@ module.exports = {
         foreground: 'var(--foreground)',
       },
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'monospace'],
+        sans: ['Arial', 'Helvetica Neue', 'Helvetica', 'sans-serif'],
+        mono: ['Courier New', 'Courier', 'monospace'],
       },
       fontSize: {
         'xs-custom': ['0.625rem', { lineHeight: '0.875rem' }],
