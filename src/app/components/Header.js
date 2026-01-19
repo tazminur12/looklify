@@ -234,9 +234,9 @@ export default function Header() {
               <Image 
                 src="/logo/looklify.png" 
                 alt="Looklify Logo" 
-                width={150} 
-                height={50}
-                className="h-8 sm:h-10 lg:h-12 w-auto hover:scale-105 transition-transform duration-300"
+                width={160} 
+                height={55}
+                className="h-9 sm:h-11 lg:h-14 xl:h-16 w-auto hover:scale-105 transition-transform duration-300"
                 priority
               />
             </Link>
