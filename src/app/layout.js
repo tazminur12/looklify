@@ -62,15 +62,16 @@ export const metadata = {
     canonical: "https://looklify.com",
   },
   themeColor: "#ffffff",
-  viewport: {
-    width: "device-width",
-    initialScale: 1.0,
-    maximumScale: 5.0,
-  },
   icons: {
     icon: '/favicon/face-mask.png',
     apple: '/favicon/face-mask.png',
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1.0,
+  maximumScale: 5.0,
 };
 
 export default function RootLayout({ children }) {
@@ -81,7 +82,6 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/favicon/face-mask.png" />
         <link rel="canonical" href="https://looklify.com" />
         <meta name="theme-color" content="#ffffff" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

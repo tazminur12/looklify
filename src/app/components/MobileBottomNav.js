@@ -51,7 +51,7 @@ const navItemsConfig = [
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session, status, update: updateSession } = useSession();
+  const { data: session, status } = useSession();
   const { user, isAdmin: userIsAdmin, loading: authLoading } = useAuth();
   const { getCartCount } = useCart();
   const { getWishlistCount } = useWishlist();
@@ -62,26 +62,16 @@ export default function MobileBottomNav() {
                   (userIsAdmin || (session?.user?.role && ['Super Admin', 'Admin'].includes(session?.user?.role)));
 
   // Handle dashboard click with proper authentication check
-  const handleDashboardClick = async (e) => {
+  const handleDashboardClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Refresh session first to ensure we have latest data
-    try {
-      await updateSession();
-    } catch (error) {
-      console.error('Session update error:', error);
-    }
-
-    // Wait a moment for session to update
-    await new Promise(resolve => setTimeout(resolve, 200));
-
     // Wait for session if still loading
     if (status === 'loading' || authLoading) {
       // Wait a moment and try again
       setTimeout(() => {
         handleDashboardClick(e);
-      }, 500);
+      }, 300);
       return;
     }
 
@@ -90,13 +80,16 @@ export default function MobileBottomNav() {
     const userRole = session?.user?.role || user?.role;
     const hasAdminRole = userRole && ['Super Admin', 'Admin'].includes(userRole);
 
-    console.log('Dashboard navigation:', {
-      status,
-      hasSession: !!session,
-      hasUser: !!user,
-      userRole,
-      hasAdminRole
-    });
+    // Debug logging (properly stringified)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Dashboard navigation:', JSON.stringify({
+        status,
+        hasSession: !!session,
+        hasUser: !!user,
+        userRole,
+        hasAdminRole
+      }, null, 2));
+    }
 
     // If not authenticated, redirect to login with callback
     if (!isAuthenticated || status === 'unauthenticated') {
@@ -112,7 +105,7 @@ export default function MobileBottomNav() {
     }
 
     // If admin, go to dashboard - use window.location.href for mobile reliability
-    // This ensures middleware gets proper session token
+    // Middleware will handle authentication check on server side
     window.location.href = '/dashboard';
   };
 
