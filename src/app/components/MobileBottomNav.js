@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const navItemsConfig = [
   {
@@ -49,12 +50,44 @@ const navItemsConfig = [
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const { user, isAdmin: userIsAdmin, loading: authLoading } = useAuth();
   const { getCartCount } = useCart();
   const { getWishlistCount } = useWishlist();
 
-  // Check if user is admin or super admin
-  const isAdmin = session?.user?.role && ['Super Admin', 'Admin'].includes(session?.user?.role);
+  // Check if user is admin or super admin - use both session and AuthContext
+  const isAdmin = userIsAdmin || (session?.user?.role && ['Super Admin', 'Admin'].includes(session?.user?.role));
+
+  // Handle dashboard click with proper authentication check
+  const handleDashboardClick = (e) => {
+    e.preventDefault();
+    
+    // If session is still loading, wait
+    if (status === 'loading' || authLoading) {
+      return;
+    }
+
+    // Check authentication from both sources
+    const isAuthenticated = !!session || !!user;
+    const userRole = session?.user?.role || user?.role;
+    const hasAdminRole = userRole && ['Super Admin', 'Admin'].includes(userRole);
+
+    // If not authenticated, redirect to login
+    if (!isAuthenticated) {
+      router.push('/login?callbackUrl=/dashboard');
+      return;
+    }
+
+    // If authenticated but not admin, show unauthorized
+    if (!hasAdminRole) {
+      router.push('/unauthorized');
+      return;
+    }
+
+    // If admin, go to dashboard
+    router.push('/dashboard');
+  };
 
   // Dashboard nav item (only for admins)
   const dashboardNavItem = isAdmin ? {
@@ -65,6 +98,7 @@ export default function MobileBottomNav() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
       </svg>
     ),
+    onClick: handleDashboardClick,
   } : null;
 
   const userNavItem = {
@@ -104,28 +138,53 @@ export default function MobileBottomNav() {
 
           return (
             <li key={item.label} className="flex-1">
-              <Link
-                href={item.href}
-                className={`group flex flex-col items-center gap-1 rounded-xl px-1 py-1 text-[11px] font-semibold transition-all ${
-                  isActive ? 'text-purple-600' : 'text-gray-600'
-                }`}
-              >
-                <span
-                  className={`relative flex h-10 w-10 items-center justify-center rounded-full border ${
-                    isActive
-                      ? 'border-purple-200 bg-purple-50 text-purple-600'
-                      : 'border-transparent bg-gray-50 text-gray-600'
+              {item.onClick ? (
+                <button
+                  onClick={item.onClick}
+                  className={`group flex flex-col items-center gap-1 rounded-xl px-1 py-1 text-[11px] font-semibold transition-all w-full ${
+                    isActive ? 'text-purple-600' : 'text-gray-600'
                   }`}
                 >
-                  {item.icon}
-                  {badgeValue > 0 && (
-                    <span className="absolute -top-1 -right-1 rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-none text-white">
-                      {badgeValue}
-                    </span>
-                  )}
-                </span>
-                <span>{item.label}</span>
-              </Link>
+                  <span
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-full border ${
+                      isActive
+                        ? 'border-purple-200 bg-purple-50 text-purple-600'
+                        : 'border-transparent bg-gray-50 text-gray-600'
+                    }`}
+                  >
+                    {item.icon}
+                    {badgeValue > 0 && (
+                      <span className="absolute -top-1 -right-1 rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-none text-white">
+                        {badgeValue}
+                      </span>
+                    )}
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              ) : (
+                <Link
+                  href={item.href}
+                  className={`group flex flex-col items-center gap-1 rounded-xl px-1 py-1 text-[11px] font-semibold transition-all ${
+                    isActive ? 'text-purple-600' : 'text-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-full border ${
+                      isActive
+                        ? 'border-purple-200 bg-purple-50 text-purple-600'
+                        : 'border-transparent bg-gray-50 text-gray-600'
+                    }`}
+                  >
+                    {item.icon}
+                    {badgeValue > 0 && (
+                      <span className="absolute -top-1 -right-1 rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-none text-white">
+                        {badgeValue}
+                      </span>
+                    )}
+                  </span>
+                  <span>{item.label}</span>
+                </Link>
+              )}
             </li>
           );
         })}
