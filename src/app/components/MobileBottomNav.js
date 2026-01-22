@@ -51,31 +51,57 @@ const navItemsConfig = [
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const { user, isAdmin: userIsAdmin, loading: authLoading } = useAuth();
   const { getCartCount } = useCart();
   const { getWishlistCount } = useWishlist();
 
   // Check if user is admin or super admin - use both session and AuthContext
-  const isAdmin = userIsAdmin || (session?.user?.role && ['Super Admin', 'Admin'].includes(session?.user?.role));
+  // Only show dashboard button if session is authenticated (not loading)
+  const isAdmin = (status === 'authenticated' && !authLoading) && 
+                  (userIsAdmin || (session?.user?.role && ['Super Admin', 'Admin'].includes(session?.user?.role)));
 
   // Handle dashboard click with proper authentication check
-  const handleDashboardClick = (e) => {
+  const handleDashboardClick = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     
-    // If session is still loading, wait
+    // Refresh session first to ensure we have latest data
+    try {
+      await updateSession();
+    } catch (error) {
+      console.error('Session update error:', error);
+    }
+
+    // Wait a moment for session to update
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Wait for session if still loading
     if (status === 'loading' || authLoading) {
+      // Wait a moment and try again
+      setTimeout(() => {
+        handleDashboardClick(e);
+      }, 500);
       return;
     }
 
     // Check authentication from both sources
-    const isAuthenticated = !!session || !!user;
+    const isAuthenticated = status === 'authenticated' || !!session || !!user;
     const userRole = session?.user?.role || user?.role;
     const hasAdminRole = userRole && ['Super Admin', 'Admin'].includes(userRole);
 
-    // If not authenticated, redirect to login
-    if (!isAuthenticated) {
-      router.push('/login?callbackUrl=/dashboard');
+    console.log('Dashboard navigation:', {
+      status,
+      hasSession: !!session,
+      hasUser: !!user,
+      userRole,
+      hasAdminRole
+    });
+
+    // If not authenticated, redirect to login with callback
+    if (!isAuthenticated || status === 'unauthenticated') {
+      const callbackUrl = encodeURIComponent(window.location.origin + '/dashboard');
+      window.location.href = `/login?callbackUrl=${callbackUrl}`;
       return;
     }
 
@@ -85,8 +111,9 @@ export default function MobileBottomNav() {
       return;
     }
 
-    // If admin, go to dashboard
-    router.push('/dashboard');
+    // If admin, go to dashboard - use window.location.href for mobile reliability
+    // This ensures middleware gets proper session token
+    window.location.href = '/dashboard';
   };
 
   // Dashboard nav item (only for admins)
