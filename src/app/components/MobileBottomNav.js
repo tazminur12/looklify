@@ -66,34 +66,32 @@ export default function MobileBottomNav() {
     e.preventDefault();
     e.stopPropagation();
     
-    // Wait for session if still loading
+    // Prevent multiple rapid clicks
+    const button = e.currentTarget;
+    if (button.disabled) return;
+    button.disabled = true;
+    
+    // Re-enable button after navigation attempt
+    setTimeout(() => {
+      button.disabled = false;
+    }, 2000);
+    
+    // If session is still loading, wait a moment
     if (status === 'loading' || authLoading) {
-      // Wait a moment and try again
       setTimeout(() => {
         handleDashboardClick(e);
       }, 300);
       return;
     }
 
-    // Check authentication from both sources
+    // Get current authentication state
     const isAuthenticated = status === 'authenticated' || !!session || !!user;
     const userRole = session?.user?.role || user?.role;
     const hasAdminRole = userRole && ['Super Admin', 'Admin'].includes(userRole);
 
-    // Debug logging (properly stringified)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Dashboard navigation:', JSON.stringify({
-        status,
-        hasSession: !!session,
-        hasUser: !!user,
-        userRole,
-        hasAdminRole
-      }, null, 2));
-    }
-
-    // If not authenticated, redirect to login with callback
+    // If not authenticated, redirect to login
     if (!isAuthenticated || status === 'unauthenticated') {
-      const callbackUrl = encodeURIComponent(window.location.origin + '/dashboard');
+      const callbackUrl = encodeURIComponent('/dashboard');
       window.location.href = `/login?callbackUrl=${callbackUrl}`;
       return;
     }
@@ -104,8 +102,9 @@ export default function MobileBottomNav() {
       return;
     }
 
-    // If admin, go to dashboard - use window.location.href for mobile reliability
-    // Middleware will handle authentication check on server side
+    // If admin, navigate to dashboard
+    // Use window.location.href for mobile reliability
+    // This ensures cookies/session are properly sent to middleware
     window.location.href = '/dashboard';
   };
 
