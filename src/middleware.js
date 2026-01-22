@@ -6,12 +6,13 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
     
-    // Debug logging for production issues
-    if (process.env.NODE_ENV === 'production' && pathname.startsWith('/dashboard')) {
-      console.log('Dashboard access attempt:', {
+    // Debug logging for troubleshooting
+    if (process.env.NODE_ENV === 'development' || (pathname.startsWith('/dashboard') || pathname.startsWith('/profile') || pathname.startsWith('/my-orders'))) {
+      console.log('Middleware check:', {
         pathname,
         hasToken: !!token,
         userRole: token?.role,
+        userEmail: token?.email,
         timestamp: new Date().toISOString()
       });
     }
@@ -52,7 +53,9 @@ export default withAuth(
     // Protected routes that require authentication
     if (pathname.startsWith('/profile') || pathname.startsWith('/orders') || pathname.startsWith('/my-orders')) {
       if (!token) {
-        return NextResponse.redirect(new URL('/login', req.url));
+        const loginUrl = new URL('/login', req.url);
+        loginUrl.searchParams.set('callbackUrl', req.url);
+        return NextResponse.redirect(loginUrl);
       }
     }
   },

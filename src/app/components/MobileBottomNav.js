@@ -37,15 +37,6 @@ const navItemsConfig = [
     ),
     badgeKey: 'cart',
   },
-  {
-    label: 'Order',
-    href: '/my-orders',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-      </svg>
-    ),
-  },
 ];
 
 export default function MobileBottomNav() {
@@ -61,51 +52,73 @@ export default function MobileBottomNav() {
   const isAdmin = (status === 'authenticated' && !authLoading) && 
                   (userIsAdmin || (session?.user?.role && ['Super Admin', 'Admin'].includes(session?.user?.role)));
 
-  // Handle dashboard click with proper authentication check
-  const handleDashboardClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Prevent multiple rapid clicks
-    const button = e.currentTarget;
-    if (button.disabled) return;
-    button.disabled = true;
-    
-    // Re-enable button after navigation attempt
-    setTimeout(() => {
-      button.disabled = false;
-    }, 2000);
-    
-    // If session is still loading, wait a moment
-    if (status === 'loading' || authLoading) {
+  // Generic handler for protected routes
+  const handleProtectedRoute = (route, requiresAdmin = false) => {
+    return (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Prevent multiple rapid clicks
+      const button = e.currentTarget;
+      if (button.disabled) return;
+      button.disabled = true;
+      
+      // Re-enable button after navigation attempt
       setTimeout(() => {
-        handleDashboardClick(e);
-      }, 300);
-      return;
-    }
+        button.disabled = false;
+      }, 2000);
+      
+      // Wait for session if still loading
+      if (status === 'loading' || authLoading) {
+        setTimeout(() => {
+          handleProtectedRoute(route, requiresAdmin)(e);
+        }, 300);
+        return;
+      }
 
-    // Get current authentication state
-    const isAuthenticated = status === 'authenticated' || !!session || !!user;
-    const userRole = session?.user?.role || user?.role;
-    const hasAdminRole = userRole && ['Super Admin', 'Admin'].includes(userRole);
+      // Get current authentication state
+      const isAuthenticated = status === 'authenticated' || !!session || !!user;
+      const userRole = session?.user?.role || user?.role;
+      const hasAdminRole = userRole && ['Super Admin', 'Admin'].includes(userRole);
 
-    // If not authenticated, redirect to login
-    if (!isAuthenticated || status === 'unauthenticated') {
-      const callbackUrl = encodeURIComponent('/dashboard');
-      window.location.href = `/login?callbackUrl=${callbackUrl}`;
-      return;
-    }
+      // If not authenticated, redirect to login
+      if (!isAuthenticated || status === 'unauthenticated') {
+        const callbackUrl = encodeURIComponent(route);
+        window.location.href = `/login?callbackUrl=${callbackUrl}`;
+        return;
+      }
 
-    // If authenticated but not admin, show unauthorized
-    if (!hasAdminRole) {
-      router.push('/unauthorized');
-      return;
-    }
+      // If requires admin but user is not admin
+      if (requiresAdmin && !hasAdminRole) {
+        router.push('/unauthorized');
+        return;
+      }
 
-    // If admin, navigate to dashboard
-    // Use window.location.href for mobile reliability
-    // This ensures cookies/session are properly sent to middleware
-    window.location.href = '/dashboard';
+      // Navigate to route - use router.push for better Next.js integration
+      // Middleware will verify authentication on server side
+      router.push(route);
+    };
+  };
+
+  // Handle dashboard click (admin only)
+  const handleDashboardClick = handleProtectedRoute('/dashboard', true);
+  
+  // Handle order click (authenticated users)
+  const handleOrderClick = handleProtectedRoute('/my-orders', false);
+  
+  // Handle profile click (authenticated users)
+  const handleProfileClick = handleProtectedRoute('/profile', false);
+
+  // Order nav item (authenticated users)
+  const orderNavItem = {
+    label: 'Order',
+    href: '/my-orders',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+      </svg>
+    ),
+    onClick: handleOrderClick,
   };
 
   // Dashboard nav item (only for admins)
@@ -128,12 +141,13 @@ export default function MobileBottomNav() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
       </svg>
     ),
+    onClick: session ? handleProfileClick : undefined,
   };
 
   // Build nav items array - include dashboard if user is admin
   const navItems = dashboardNavItem 
-    ? [...navItemsConfig, dashboardNavItem, userNavItem]
-    : [...navItemsConfig, userNavItem];
+    ? [...navItemsConfig, orderNavItem, dashboardNavItem, userNavItem]
+    : [...navItemsConfig, orderNavItem, userNavItem];
 
   const getBadgeValue = (key) => {
     if (key === 'cart') {
