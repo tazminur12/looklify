@@ -12,6 +12,10 @@ if (!process.env.NEXTAUTH_SECRET) {
   console.warn('Warning: NEXTAUTH_SECRET is not set. This may cause authentication issues.');
 }
 
+const useSecureCookies =
+  process.env.NODE_ENV === 'production' &&
+  (process.env.NEXTAUTH_URL || '').startsWith('https://');
+
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-change-in-production',
   debug: process.env.NODE_ENV === 'development',
@@ -85,25 +89,25 @@ export const authOptions = {
   },
   cookies: {
     sessionToken: {
-      name: process.env.NODE_ENV === 'production' 
-        ? '__Secure-next-auth.session-token' 
+      name: useSecureCookies
+        ? '__Secure-next-auth.session-token'
         : 'next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: useSecureCookies,
       },
     },
     callbackUrl: {
-      name: process.env.NODE_ENV === 'production'
+      name: useSecureCookies
         ? '__Secure-next-auth.callback-url'
         : 'next-auth.callback-url',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: useSecureCookies,
       },
     },
   },
