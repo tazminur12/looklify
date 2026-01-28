@@ -168,6 +168,8 @@ export async function POST(request) {
           description: promoCode.description,
           type: promoCode.type,
           value: promoCode.value,
+          minimumOrderAmount: promoCode.minimumOrderAmount,
+          maximumDiscountAmount: promoCode.maximumDiscountAmount,
           discountDisplay: promoCode.discountDisplay,
           stackable: promoCode.stackable,
           priority: promoCode.priority

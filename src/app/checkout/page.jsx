@@ -160,11 +160,27 @@ export default function CheckoutPage() {
     if (!appliedPromoCode) return 0;
     
     const subtotal = calculateSubtotal();
-    const discountResult = appliedPromoCode.calculateDiscount(subtotal);
     
-    if (!discountResult.valid) return 0;
+    // Check minimum order amount
+    if (appliedPromoCode.minimumOrderAmount && subtotal < appliedPromoCode.minimumOrderAmount) {
+      return 0;
+    }
     
-    return discountResult.discountAmount;
+    let discountAmount = 0;
+    
+    if (appliedPromoCode.type === 'percentage') {
+      discountAmount = (subtotal * appliedPromoCode.value) / 100;
+    } else if (appliedPromoCode.type === 'fixed_amount') {
+      discountAmount = appliedPromoCode.value;
+    }
+    
+    // Apply maximum discount limit
+    if (appliedPromoCode.maximumDiscountAmount && discountAmount > appliedPromoCode.maximumDiscountAmount) {
+      discountAmount = appliedPromoCode.maximumDiscountAmount;
+    }
+    
+    // Ensure discount doesn't exceed order amount
+    return Math.min(discountAmount, subtotal);
   };
 
   const calculateTotal = () => {
